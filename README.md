@@ -1,2 +1,3 @@
 # erc20manager
-- Member: test
+ - Admin: vuonghuuhung
+ - Member: test
