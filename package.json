@@ -1,5 +1,5 @@
 {
-  "name": "erc20manger_scaffold",
+  "name": "erc20manger",
   "private": true,
   "scripts": {
     "build": "turbo build",
