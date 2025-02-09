@@ -23,6 +23,10 @@
     "test": {
       "cache": false,
       "persistent": true
+    },
+    "add-components": {
+      "cache": false,
+      "persistent": true
     }
   }
 }
