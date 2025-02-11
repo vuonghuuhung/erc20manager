@@ -1,6 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -27,7 +30,9 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem
+    --radius: 0.5rem;
+    --textGray: #223354b3;
+    --textBlackGray: #223354;
   }
   .dark {
     --background: 240 10% 3.9%;
@@ -53,14 +58,14 @@
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%
+    --chart-5: 340 75% 55%;
   }
 }
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border font-inter box-border text-textBlackGray;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#F2F5F9] text-foreground;
   }
 }

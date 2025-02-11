@@ -4,12 +4,17 @@ export default {
     content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
   theme: {
   	extend: {
+		fontFamily: {
+			inter: ['Inter', 'sans-serif'],
+		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+			textGray: 'hsl(var(--textGray))',
+			textBlackGray: 'hsl(var(--textBlackGray))',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -50,7 +55,10 @@ export default {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			}
-  		}
+  		},
+		boxShadow: {
+			headerMain: "rgba(34, 51, 84, 0.2) 0px 2px 8px -3px, rgba(34, 51, 84, 0.1) 0px 5px 22px -4px"
+		}
   	}
   },
   plugins: [require("tailwindcss-animate")],
