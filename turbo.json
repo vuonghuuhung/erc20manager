@@ -35,6 +35,12 @@
     "add-components": {
       "cache": false,
       "persistent": true
+    },
+    "test:forge": {
+      "cache": false
+    },
+    "compile:forge": {
+      "cache": false
     }
   }
 }

@@ -16,8 +16,10 @@
   "scripts": {
     "dev:node": "hardhat node",
     "dev:mock": "hardhat run scripts/mock.ts --network localhost",
-    "test": "hardhat test; forge test",
-    "compile": "hardhat compile; forge build",
+    "test": "hardhat test",
+    "test:forge": "forge test",
+    "compile": "hardhat compile",
+    "compile:forge": "forge build",
     "build": "rm -fr dist/* && tsc -p tsconfig.json && tsc -p tsconfig.common.json"
   },
   "author": "",
