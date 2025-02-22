@@ -20,6 +20,9 @@
     "compile": {
       "cache": false
     },
+    "mock-deploy": {
+      "cache": false
+    },
     "test": {
       "cache": false,
       "persistent": true
