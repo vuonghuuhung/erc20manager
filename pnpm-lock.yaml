@@ -179,6 +179,9 @@ importers:
       hardhat:
         specifier: ^2.22.18
         version: 2.22.18(ts-node@10.9.2(@types/node@22.13.1)(typescript@5.7.3))(typescript@5.7.3)
+      solmate:
+        specifier: ^6.8.0
+        version: 6.8.0
 
   packages/eslint-config:
     devDependencies:
@@ -4195,6 +4198,9 @@ packages:
     hasBin: true
     peerDependencies:
       hardhat: ^2.11.0
+
+  solmate@6.8.0:
+    resolution: {integrity: sha512-/oI8kgEvSxGG1mrFv3FmCEZd0F8Z9VzRmoYMIhzmmzt6mjtPwfdCm3oh8yOL7bMHJBSfXJuMpnMPrM0uyaKsKg==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -9239,6 +9245,8 @@ snapshots:
       semver: 7.7.1
       shelljs: 0.8.5
       web3-utils: 1.10.4
+
+  solmate@6.8.0: {}
 
   source-map-js@1.2.1: {}
 
