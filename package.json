@@ -6,9 +6,9 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "compile": "turbo run compile --filter=contracts",
     "test": "turbo run test",
-    "add-components": "turbo run add-components --"
+    "add-components": "turbo run add-components --",
+    "compile": "turbo run compile --filter=contracts"
   },
   "devDependencies": {
     "prettier": "^3.4.2",
