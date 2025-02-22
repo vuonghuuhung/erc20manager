@@ -1,4 +1,4 @@
-import { ERC20Factory__factory } from "contracts";
+import { ERC20Factory__factory } from "@repo/contracts";
 import { getDefaultProvider } from "ethers";
 import express, { Request, Response } from "express";
 

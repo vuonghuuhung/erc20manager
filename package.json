@@ -3,13 +3,14 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
-    "dev": "turbo dev",
+    "dev:node": "turbo run dev:node",
+    "dev:app": "turbo run dev:app",
+    "dev:mock": "turbo run dev:mock",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "test": "turbo run test",
     "add-components": "turbo run add-components --",
-    "compile": "turbo run compile --filter=contracts",
-    "mock-deploy": "turbo run mock-deploy --filter=contracts"
+    "compile": "turbo run compile --filter=contracts"
   },
   "devDependencies": {
     "prettier": "^3.4.2",

@@ -1,15 +1,15 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import "@rainbow-me/rainbowkit/styles.css";
 import {
   getDefaultConfig,
   lightTheme,
   RainbowKitProvider,
 } from "@rainbow-me/rainbowkit";
+import "@rainbow-me/rainbowkit/styles.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import { WagmiProvider } from "wagmi";
-import { sepolia, mainnet } from "wagmi/chains";
-import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { hardhat, mainnet, sepolia } from "wagmi/chains";
 
 import App from "./App";
 import "./index.css";
@@ -17,7 +17,7 @@ import "./index.css";
 export const config = getDefaultConfig({
   appName: "My RainbowKit App",
   projectId: "YOUR_PROJECT_ID",
-  chains: [mainnet, sepolia],
+  chains: [mainnet, sepolia, hardhat],
   ssr: false,
 });
 

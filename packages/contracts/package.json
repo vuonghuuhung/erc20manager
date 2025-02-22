@@ -1,17 +1,24 @@
 {
-  "name": "contracts",
+  "name": "@repo/contracts",
   "version": "1.0.0",
   "description": "",
   "files": [
-    "dist/*"
+    "dist/"
   ],
-  "main": "dist/typechain-types/index.js",
+  "main": "dist/common/typechain-types/index.js",
+  "module": "dist/es/typechain-types/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/es/typechain-types/index.js",
+      "require": "./dist/common/typechain-types/index.js"
+    }
+  },
   "scripts": {
-    "dev": "hardhat node",
-    "mock-deploy": "hardhat run scripts/mock.ts --network localhost",
+    "dev:node": "hardhat node",
+    "dev:mock": "hardhat run scripts/mock.ts --network localhost",
     "test": "hardhat test; forge test",
     "compile": "hardhat compile; forge build",
-    "build": "tsc"
+    "build": "rm -fr dist/* && tsc -p tsconfig.json && tsc -p tsconfig.common.json"
   },
   "author": "",
   "license": "ISC",
@@ -23,6 +30,7 @@
     "@typechain/hardhat": "^9.1.0",
     "ethers": "^6.13.5",
     "hardhat": "^2.22.18",
-    "solmate": "^6.8.0"
+    "solmate": "^6.8.0",
+    "rollup": "^4.34.8"
   }
 }
