@@ -10,7 +10,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "test": "turbo run test",
     "add-components": "turbo run add-components --",
-    "compile": "turbo run compile --filter=contracts"
+    "compile": "turbo run compile --filter=@repo/contracts"
   },
   "devDependencies": {
     "prettier": "^3.4.2",
