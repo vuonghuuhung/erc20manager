@@ -15,6 +15,7 @@
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "ethers": "^6.13.5",
-    "hardhat": "^2.22.18"
+    "hardhat": "^2.22.18",
+    "solmate": "^6.8.0"
   }
 }
