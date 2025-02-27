@@ -1,7 +1,7 @@
 import IconCrypto from "@/assets/icons/IconCrypto";
-import path from "@/constants/path";
+import path, { routesPath } from "@/constants/path";
 import classNames from "classnames";
-import { NavLink } from "react-router-dom";
+import { Link,  useLocation } from "react-router-dom";
 import LogoLink from "../LogoLink";
 
 const listNav = [
@@ -12,12 +12,15 @@ const listNav = [
         icon: <IconCrypto />,
         name: "Dashboard",
         to: path.dashBoard,
+        listNavChild: routesPath,
       },
     ],
   },
 ];
 
 const SideNav = () => {
+  const { pathname } = useLocation();
+
   return (
     <div className="w-[290px] fixed inset-0 p-[20px] bg-[#11192A] text-[#ffffffb3]">
       <LogoLink />
@@ -28,26 +31,34 @@ const SideNav = () => {
             <div className="text-[#ffffff80] text-[12px] font-bold uppercase">
               {item.group}
             </div>
-            {item.listNav.map((itemNav, indexNav) => (
-              <NavLink
-                key={indexNav}
-                to={itemNav.to}
-                className={({ isActive }) =>
-                  classNames(
+            {item.listNav.map((itemNav, indexNav) => {
+              const isActive =
+                location.pathname === itemNav.to ||
+                itemNav.listNavChild.some((child) => {
+                  if (child.path.includes(":")) {
+                    return pathname.includes(child.path.split(":")[0]);
+                  }
+                  return pathname.includes(child.path);
+                });
+              return (
+                <Link
+                  key={indexNav}
+                  to={itemNav.to}
+                  className={classNames(
                     "py-3 px-7 transition-all duration-250 mt-2 rounded-[10px] flex items-center justify-start hover:text-white hover:bg-[#ffffff0f]",
                     {
                       "text-white bg-[#ffffff0f]": isActive,
                       "text-[#ffffffb3]": !isActive,
                     }
-                  )
-                }
-              >
-                {itemNav.icon}
-                <div className="ml-2 text-current font-semibold">
-                  {itemNav.name}
-                </div>
-              </NavLink>
-            ))}
+                  )}
+                >
+                  {itemNav.icon}
+                  <div className="ml-2 text-current font-semibold">
+                    {itemNav.name}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         ))}
       </div>

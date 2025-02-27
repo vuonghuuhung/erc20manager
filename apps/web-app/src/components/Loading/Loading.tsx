@@ -1,16 +1,9 @@
-import { Outlet } from "react-router-dom";
-import SideNav from "../components/SideNav";
-import HeaderMainLayout from "../components/HeaderMainLayout";
-const MainLayout = () => {
+const Loading = ({ isLoading }: { isLoading?: boolean }) => {
   return (
-    <main className="min-h-screen w-full bg-[#F2F5F9]">
-      <div className="hidden md:block">
-        <SideNav />
-      </div>
-      <div className="md:ml-[290px] ml-0">
-        <HeaderMainLayout />
-        <div className="bg-[#ffffff80] py-6 px-2 md:p-9 flex items-center shadow-titleShadow">
-          <div>
+    <>
+      {isLoading && (
+        <div className="fixed z-[1000] inset-0 flex items-center flex-col justify-center bg-[#0b0e149e]">
+          <div className="relative flex h-[285px] w-[195px] cursor-pointer flex-col items-center justify-center rounded-2xl text-white transition-transform duration-200 ease-in-out">
             <svg
               xmlnsXlink="http://www.w3.org/1999/xlink"
               viewBox="0 0 784.37 1277.39"
@@ -20,11 +13,11 @@ const MainLayout = () => {
               textRendering="geometricPrecision"
               shapeRendering="geometricPrecision"
               version="1.1"
-              height="70px"
-              width="70px"
+              height="100%"
+              width="100%"
               xmlSpace="preserve"
               xmlns="http://www.w3.org/2000/svg"
-              className="img"
+              className="absolute h-[30%] z-10 ease-in-out animate-float"
             >
               <g id="Layer_x0020_1">
                 <metadata id="CorelCorpID_0Corel-Layer" />
@@ -65,19 +58,10 @@ const MainLayout = () => {
               </g>
             </svg>
           </div>
-          <div>
-            <h1 className="text-[#223354] text-[25px] font-bold">Welcome</h1>
-            <h2 className="text-[#223354b3] text-[16px] font-normal">
-              Today is a good day to start trading crypto assets!
-            </h2>
-          </div>
         </div>
-        <div className="p-4 md:p-7">
-          <Outlet />
-        </div>
-      </div>
-    </main>
+      )}
+    </>
   );
 };
 
-export default MainLayout;
+export default Loading;
