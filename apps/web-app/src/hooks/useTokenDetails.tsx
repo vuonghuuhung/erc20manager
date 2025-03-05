@@ -42,8 +42,6 @@ const useTokenDetails = (tokenAddresses: `0x${string}`[] = []) => {
     contracts: calls,
   });
 
-  console.log("dataToken", data);
-
   const formattedData: TokenDetails[] =
     data && Array.isArray(data)
       ? tokenAddresses.map((address, index) => {
