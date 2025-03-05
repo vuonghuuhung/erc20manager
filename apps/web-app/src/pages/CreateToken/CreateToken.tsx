@@ -13,20 +13,27 @@ import {
 import InputNumber from "@/components/InputNumber";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount, useBalance, usePublicClient } from "wagmi";
 import ConnectButtonCustom from "@/components/ConnectButtonCustom/ConnectButtonCustom";
 import { simulateContract } from "@wagmi/core";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { ethers } from "ethers";
+import { ethers, toBigInt } from "ethers";
 import { config } from "@/main";
 import { contractAddress } from "@/config/config";
+import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
+import { useEffect, useState } from "react";
 
 const CreateToken = () => {
+  const publicClient = usePublicClient({
+    config,
+  });
+  const [stepModal, setStepModal] = useState<MODAL_STEP>(MODAL_STEP.READY);
+  const [messageError, setMessageError] = useState<string>("");
+
   const { isConnected, address } = useAccount();
-  const { data } = useBalance({
+  const { data: balanceETH } = useBalance({
     address,
   });
-  console.log("balance", data);
 
   const form = useForm<CreateTokenType>({
     resolver: zodResolver(createTokenSchema),
@@ -39,25 +46,58 @@ const CreateToken = () => {
   });
 
   const { writeContractAsync, data: txHash } = useWriteContract();
-  const { isFetching, status: statusWaitTx } = useWaitForTransactionReceipt({
+  const { isFetching, isFetched } = useWaitForTransactionReceipt({
     hash: txHash,
   });
 
   async function onSubmit(values: CreateTokenType) {
     try {
+      setMessageError("Transaction processing...");
+      setStepModal(MODAL_STEP.PROCESSING);
+      const gasPrice = (await publicClient?.getGasPrice()) as bigint;
       const { name, symbol, decimals, amount } = values;
-      const amountValue = ethers.parseUnits(amount, 18);
+      const amountValue = ethers.parseUnits(amount, Number(decimals || 18));
       const { request } = await simulateContract(config, {
         address: contractAddress.address,
         abi: ERC20Factory__factory.abi,
         functionName: "mintERC20Manager",
         args: [name, symbol, Number(decimals), amountValue],
       });
+      const estimatedGas = (await publicClient?.estimateContractGas({
+        address: contractAddress.address,
+        abi: ERC20Factory__factory.abi,
+        functionName: "mintERC20Manager",
+        args: [name, symbol, Number(decimals), amountValue],
+        account: address,
+      })) as bigint;
+
+      const gasCost = estimatedGas * gasPrice;
+      const num1 = toBigInt(balanceETH?.value || "0");
+      const num2 = toBigInt(gasCost);
+      if (num1 <= num2) {
+        setMessageError("You don't have enough ETH");
+        setStepModal(MODAL_STEP.FAILED);
+        return;
+      }
       await writeContractAsync(request);
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       console.log("error", { error });
+      if (error?.name === "ContractFunctionExecutionError") {
+        setMessageError(error?.shortMessage || "");
+        setStepModal(MODAL_STEP.FAILED);
+      }
     }
   }
+  useEffect(() => {
+    if (isFetched) {
+      setMessageError("");
+      setStepModal(MODAL_STEP.SUCCESS);
+    }
+    if (isFetching) {
+      setStepModal(MODAL_STEP.PROCESSING);
+    }
+  }, [isFetched, isFetching])
   return (
     <div>
       <BoxContent extendClassName="p-4 w-full max-w-[462px] mx-auto">
@@ -139,6 +179,12 @@ const CreateToken = () => {
           </Form>
         </div>
       </BoxContent>
+      <ModalStep
+        open={stepModal !== MODAL_STEP.READY}
+        setOpen={setStepModal}
+        contentStep={messageError}
+        statusStep={stepModal}
+      />
     </div>
   );
 };

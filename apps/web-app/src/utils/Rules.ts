@@ -22,4 +22,15 @@ export const createTokenSchema = z.object({
     .nonempty("This field is required")
     .max(160, "Length from 5 - 160 characters"),
 });
+
+export const readContractSchema = z.object({
+  balanceOf: z.string().nonempty("This field is required"),
+  ownerAddress: z.string().nonempty("This field is required"),
+  spenderAddress: z.string().nonempty("This field is required"),
+  amount: z
+    .string()
+    .nonempty("This field is required")
+    .max(160, "Length from 5 - 160 characters"),
+});
+export type ReadContractType = z.infer<typeof readContractSchema>;
 export type CreateTokenType = z.infer<typeof createTokenSchema>;

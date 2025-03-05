@@ -1,7 +1,7 @@
 import Loading from "@/components/Loading/Loading";
 import useTokenDetails from "@/hooks/useTokenDetails";
 import { ERC20Factory__factory } from "@repo/contracts";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useReadContract } from "wagmi";
 import { toast } from "sonner";
 import { DataTable } from "@/components/DataTable/DataTable";
