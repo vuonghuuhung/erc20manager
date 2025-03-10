@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {ERC20Manager} from "./ERC20Manger.sol";
+import {ERC20Manager} from "./ERC20Manager.sol";
 
 contract MultisigDAO {
     error MultisigDAO_NeedOwners();

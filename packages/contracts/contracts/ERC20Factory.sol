@@ -23,7 +23,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {ERC20Manager} from "./ERC20Manger.sol";
+import {ERC20Manager} from "./ERC20Manager.sol";
 import {MultisigDAO} from "./MultisigDAO.sol";
 
 contract ERC20Factory {
