@@ -8,7 +8,7 @@ import { ERC20Manager__factory } from "@repo/contracts";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { readContractSchema, ReadContractType } from "@/utils/Rules";
+import { contractSchema, ReadContractType } from "@/utils/Rules";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -22,7 +22,7 @@ import { useParams } from "react-router-dom";
 import LoadingQuery from "@/components/LoadingQuery/LoadingQuery";
 
 type AllowanceType = Pick<ReadContractType, "ownerAddress" | "spenderAddress">;
-const allowanceSchema = readContractSchema.pick({
+const allowanceSchema = contractSchema.pick({
   ownerAddress: true,
   spenderAddress: true,
 });

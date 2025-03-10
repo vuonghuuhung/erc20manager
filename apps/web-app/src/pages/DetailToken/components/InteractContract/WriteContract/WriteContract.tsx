@@ -1,6 +1,8 @@
 import { ClipboardListIcon } from "lucide-react";
 import Transfer from "./query/Transfer/Transfer";
 import { FC } from "react";
+import Approve from "./query/Approve/Approve";
+import TransferFrom from "./query/TransferFrom/TransferFrom";
 
 const WriteContract: FC<{ decimals: number }> = ({ decimals }) => {
   return (
@@ -11,6 +13,8 @@ const WriteContract: FC<{ decimals: number }> = ({ decimals }) => {
       </div>
       <div>
         <Transfer decimals={decimals} />
+        <Approve decimals={decimals}/>
+        <TransferFrom decimals={decimals}/>
       </div>
     </div>
   );

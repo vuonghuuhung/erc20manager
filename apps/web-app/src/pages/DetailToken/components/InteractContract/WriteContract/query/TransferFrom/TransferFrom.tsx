@@ -32,56 +32,68 @@ import {
 } from "wagmi";
 import { contractAddress } from "@/config/config";
 
-type TransferType = Pick<ReadContractType, "spenderAddress" | "amount">;
-const transferType = contractSchema.pick({
+type TransferFromType = Pick<
+  ReadContractType,
+  "spenderAddress" | "amount" | "ownerAddress"
+>;
+const transferFromType = contractSchema.pick({
   amount: true,
   spenderAddress: true,
+  ownerAddress: true,
 });
 
-const Transfer: FC<{ decimals?: number }> = ({ decimals }) => {
-  const form = useForm<TransferType>({
-    resolver: zodResolver(transferType),
-    defaultValues: {
-      spenderAddress: "",
-      amount: "",
-    },
+const TransferFrom: FC<{ decimals?: number }> = ({ decimals }) => {
+  const publicClient = usePublicClient({
+    config,
   });
   const { address } = useAccount();
   const { data: balance } = useBalance({
     address,
   });
-  const publicClient = usePublicClient({
-    config,
-  });
-
   const { writeContractAsync, data: txHash } = useWriteContract();
   const { isFetching, status: statusWaitTx } = useWaitForTransactionReceipt({
     hash: txHash,
   });
 
-  async function onSubmit(values: TransferType) {
+  const form = useForm<TransferFromType>({
+    resolver: zodResolver(transferFromType),
+    defaultValues: {
+      spenderAddress: "",
+      amount: "",
+    },
+  });
+
+  async function onSubmit(values: TransferFromType) {
     try {
-      const { amount, spenderAddress } = values;
-      const amountValue = ethers.parseUnits(amount, decimals || 18);
+      const { amount, spenderAddress, ownerAddress } = values;
       const gasPrice = (await publicClient?.getGasPrice()) as bigint;
+      const amountValue = ethers.parseUnits(amount, decimals || 18);
       const { request } = await simulateContract(config, {
         address: contractAddress.address,
         abi: ERC20Manager__factory.abi,
-        functionName: "transfer",
-        args: [spenderAddress as `0x${string}`, amountValue],
+        functionName: "transferFrom",
+        args: [
+          ownerAddress as `0x${string}`,
+          spenderAddress as `0x${string}`,
+          amountValue,
+        ],
       });
       const estimatedGas = (await publicClient?.estimateContractGas({
         address: contractAddress.address,
         abi: ERC20Manager__factory.abi,
-        functionName: "approve",
-        args: [spenderAddress as `0x${string}`, amountValue],
+        functionName: "transferFrom",
+        args: [
+          ownerAddress as `0x${string}`,
+          spenderAddress as `0x${string}`,
+          amountValue,
+        ],
         account: address,
       })) as bigint;
       const gasCost = estimatedGas * gasPrice;
       const num1 = toBigInt(balance?.value || "0");
       const num2 = toBigInt(gasCost);
       if (num1 <= num2) {
-        alert("You don't have enough ETH to create tweet");
+        alert("You don't have enough ETH");
         return;
       }
       await writeContractAsync(request);
@@ -92,12 +104,29 @@ const Transfer: FC<{ decimals?: number }> = ({ decimals }) => {
   return (
     <Collapsible className="border-[#e9ecef] border rounded-xl overflow-hidden mb-2">
       <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3">
-        transfer
+        transferFrom
       </CollapsibleTrigger>
       <CollapsibleContent className="py-2 px-3">
         <div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+              <div className="text-[12px] mb-1">_from (address)</div>
+              <FormField
+                control={form.control}
+                name="ownerAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        placeholder="_from (address)"
+                        {...field}
+                        className="block w-full p-3 h-[45px] text-white rounded-[8px] bg-[#161b26] text-[14px] font-medium border border-[#d0d5dd] outline-none"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="text-[12px] mb-1">_to (address)</div>
               <FormField
                 control={form.control}
@@ -150,4 +179,4 @@ const Transfer: FC<{ decimals?: number }> = ({ decimals }) => {
   );
 };
 
-export default Transfer;
+export default TransferFrom;
