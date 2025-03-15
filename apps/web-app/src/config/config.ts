@@ -1,3 +1,3 @@
 export const contractAddress = {
-    address: import.meta.env.VITE_CONTRACT_ADDRESS
+    ERC20FactoryAddress: import.meta.env.VITE_ERC20Factory,
 };

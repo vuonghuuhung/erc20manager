@@ -9,7 +9,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { WagmiProvider } from "wagmi";
-import { hardhat, mainnet, sepolia } from "wagmi/chains";
+import { hardhat, mainnet, sepolia, holesky  } from "wagmi/chains";
 
 import App from "./App";
 import "./index.css";
@@ -17,7 +17,7 @@ import "./index.css";
 export const config = getDefaultConfig({
   appName: "My RainbowKit App",
   projectId: "YOUR_PROJECT_ID",
-  chains: [mainnet, sepolia, hardhat],
+  chains: [mainnet, sepolia, hardhat, holesky],
   ssr: false,
 });
 

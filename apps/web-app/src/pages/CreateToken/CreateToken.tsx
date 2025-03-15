@@ -58,13 +58,13 @@ const CreateToken = () => {
       const { name, symbol, decimals, amount } = values;
       const amountValue = ethers.parseUnits(amount, Number(decimals || 18));
       const { request } = await simulateContract(config, {
-        address: contractAddress.address,
+        address: contractAddress.ERC20FactoryAddress,
         abi: ERC20Factory__factory.abi,
         functionName: "mintERC20Manager",
         args: [name, symbol, Number(decimals), amountValue],
       });
       const estimatedGas = (await publicClient?.estimateContractGas({
-        address: contractAddress.address,
+        address: contractAddress.ERC20FactoryAddress,
         abi: ERC20Factory__factory.abi,
         functionName: "mintERC20Manager",
         args: [name, symbol, Number(decimals), amountValue],

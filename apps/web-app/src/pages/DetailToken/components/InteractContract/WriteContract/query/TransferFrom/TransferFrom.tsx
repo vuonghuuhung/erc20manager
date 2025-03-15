@@ -3,8 +3,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ERC20Manager__factory } from "@repo/contracts";
-import { FC, useState } from "react";
+import { FC } from "react";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { contractSchema, ReadContractType } from "@/utils/Rules";
@@ -20,17 +19,9 @@ import { Button } from "@/components/ui/button";
 import { useParams } from "react-router-dom";
 import LoadingQuery from "@/components/LoadingQuery/LoadingQuery";
 import InputNumber from "@/components/InputNumber";
-import { ethers, toBigInt } from "ethers";
-import { simulateContract } from "@wagmi/core";
-import { config } from "@/main";
-import {
-  useAccount,
-  useBalance,
-  usePublicClient,
-  useWaitForTransactionReceipt,
-  useWriteContract,
-} from "wagmi";
-import { contractAddress } from "@/config/config";
+import { ethers } from "ethers";
+
+import { useTokenWrite } from "@/hooks/useToken";
 
 type TransferFromType = Pick<
   ReadContractType,
@@ -43,17 +34,7 @@ const transferFromType = contractSchema.pick({
 });
 
 const TransferFrom: FC<{ decimals?: number }> = ({ decimals }) => {
-  const publicClient = usePublicClient({
-    config,
-  });
-  const { address } = useAccount();
-  const { data: balance } = useBalance({
-    address,
-  });
-  const { writeContractAsync, data: txHash } = useWriteContract();
-  const { isFetching, status: statusWaitTx } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
+  const { id } = useParams<{ id: `0x${string}` }>();
 
   const form = useForm<TransferFromType>({
     resolver: zodResolver(transferFromType),
@@ -63,40 +44,21 @@ const TransferFrom: FC<{ decimals?: number }> = ({ decimals }) => {
     },
   });
 
+  const { write, isLoading, errorWrite, isErrorGas, isWriteSuccess } =
+    useTokenWrite({
+      functionName: "transferFrom",
+      tokenAddress: id as `0x${string}`,
+    });
+
   async function onSubmit(values: TransferFromType) {
     try {
       const { amount, spenderAddress, ownerAddress } = values;
-      const gasPrice = (await publicClient?.getGasPrice()) as bigint;
       const amountValue = ethers.parseUnits(amount, decimals || 18);
-      const { request } = await simulateContract(config, {
-        address: contractAddress.address,
-        abi: ERC20Manager__factory.abi,
-        functionName: "transferFrom",
-        args: [
-          ownerAddress as `0x${string}`,
-          spenderAddress as `0x${string}`,
-          amountValue,
-        ],
-      });
-      const estimatedGas = (await publicClient?.estimateContractGas({
-        address: contractAddress.address,
-        abi: ERC20Manager__factory.abi,
-        functionName: "transferFrom",
-        args: [
-          ownerAddress as `0x${string}`,
-          spenderAddress as `0x${string}`,
-          amountValue,
-        ],
-        account: address,
-      })) as bigint;
-      const gasCost = estimatedGas * gasPrice;
-      const num1 = toBigInt(balance?.value || "0");
-      const num2 = toBigInt(gasCost);
-      if (num1 <= num2) {
-        alert("You don't have enough ETH");
-        return;
-      }
-      await writeContractAsync(request);
+      await write([
+        ownerAddress as `0x${string}`,
+        spenderAddress as `0x${string}`,
+        amountValue,
+      ]);
     } catch (error) {
       console.log("error", { error });
     }
@@ -164,16 +126,21 @@ const TransferFrom: FC<{ decimals?: number }> = ({ decimals }) => {
               <Button className="!mt-4">Write</Button>
             </form>
           </Form>
-          {/* {isGetBalance && <LoadingQuery />}
-          {balanceToken !== undefined && (
-            <div className="mt-2">Response: {balanceToken}</div>
-          )} */}
+          {isLoading && <LoadingQuery />}
+          {isWriteSuccess && !isLoading && (
+            <div className="mt-2">Response: Transfer successful</div>
+          )}
         </div>
-        {/* {error && (
+        {errorWrite && !isErrorGas && (
           <div className="mt-2 text-sm font-medium text-destructive">
-            {error.shortMessage}
+            {errorWrite}
           </div>
-        )} */}
+        )}
+        {isErrorGas && (
+          <div className="mt-2 text-sm font-medium text-destructive">
+            {isErrorGas}
+          </div>
+        )}
       </CollapsibleContent>
     </Collapsible>
   );

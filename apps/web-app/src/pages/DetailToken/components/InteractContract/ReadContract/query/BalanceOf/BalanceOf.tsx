@@ -20,6 +20,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useParams } from "react-router-dom";
 import LoadingQuery from "@/components/LoadingQuery/LoadingQuery";
+import { handleConvertToToken } from "@/utils/convertNumber";
+import useTokenDetailStore from "@/store/tokenDetailState";
 
 type BalanceOfType = Pick<ReadContractType, "balanceOf">;
 const balanceSchema = contractSchema.pick({
@@ -49,8 +51,8 @@ const BalanceOf = () => {
     },
   });
 
-  console.log('balanceToken', balanceToken);
-  
+  const { tokenDetail } = useTokenDetailStore();
+
   async function onSubmit(values: BalanceOfType) {
     setAddressSearch(values.balanceOf);
   }
@@ -86,7 +88,10 @@ const BalanceOf = () => {
           </Form>
           {isGetBalance && <LoadingQuery />}
           {balanceToken !== undefined && (
-            <div className="mt-2">Response: {balanceToken}</div>
+            <div className="mt-2">
+              Response: {handleConvertToToken(balanceToken)}{" "}
+              {tokenDetail?.symbol}
+            </div>
           )}
         </div>
         {error && (

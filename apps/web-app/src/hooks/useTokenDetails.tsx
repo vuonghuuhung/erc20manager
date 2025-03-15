@@ -1,5 +1,6 @@
 import { handleConvertToToken } from "@/utils/convertNumber";
 import { ERC20Manager__factory } from "@repo/contracts";
+import { useEffect, useState } from "react";
 import { useReadContracts } from "wagmi";
 
 export interface TokenDetails {
@@ -11,6 +12,7 @@ export interface TokenDetails {
 }
 
 const useTokenDetails = (tokenAddresses: `0x${string}`[] = []) => {
+  const [isErrorContractAddress, setIsErrorContractAddress] = useState<boolean>(false)
   const calls = tokenAddresses.flatMap((address) => [
     {
       address,
@@ -38,9 +40,15 @@ const useTokenDetails = (tokenAddresses: `0x${string}`[] = []) => {
     },
   ]);
 
-  const { data, isLoading, isError } = useReadContracts({
+  const { data, isLoading, isError, ...rest } = useReadContracts({
     contracts: calls,
   });
+
+  useEffect(() => {
+    if (data && data?.length > 0 && data[0]?.error?.name == "InvalidAddressError") {
+      setIsErrorContractAddress(true)
+    }
+  }, [data])
 
   const formattedData: TokenDetails[] =
     data && Array.isArray(data)
@@ -59,7 +67,7 @@ const useTokenDetails = (tokenAddresses: `0x${string}`[] = []) => {
         })
       : [];
 
-  return { data: formattedData, isLoading, isError };
+  return { data: formattedData, isLoading, isError, isErrorContractAddress, ...rest };
 };
 
 export default useTokenDetails;

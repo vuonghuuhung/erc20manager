@@ -1,7 +1,7 @@
 import Loading from "@/components/Loading/Loading";
 import useTokenDetails from "@/hooks/useTokenDetails";
 import { ERC20Factory__factory } from "@repo/contracts";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useReadContract } from "wagmi";
 import { toast } from "sonner";
 import { DataTable } from "@/components/DataTable/DataTable";
@@ -17,19 +17,17 @@ const DashBoardPage = () => {
     isLoading: isLoadingGetListToken,
     isError: isErrorListToken,
   } = useReadContract({
-    address: contractAddress.address,
+    address: contractAddress.ERC20FactoryAddress,
     abi: ERC20Factory__factory.abi,
     functionName: "getListOfERC20ManagerCreated",
     args: [],
   });
-  console.log(listTokenAddress);
-  
+
   const {
     data,
     isLoading,
     isError: isErrorTokenDetail,
   } = useTokenDetails(listTokenAddress as `0x${string}`[]);
-
 
   useEffect(() => {
     if (isErrorListToken || isErrorTokenDetail) {

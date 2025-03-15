@@ -20,6 +20,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useParams } from "react-router-dom";
 import LoadingQuery from "@/components/LoadingQuery/LoadingQuery";
+import { handleConvertToToken } from "@/utils/convertNumber";
+import useTokenDetailStore from "@/store/tokenDetailState";
 
 type AllowanceType = Pick<ReadContractType, "ownerAddress" | "spenderAddress">;
 const allowanceSchema = contractSchema.pick({
@@ -29,6 +31,7 @@ const allowanceSchema = contractSchema.pick({
 const Allowance = () => {
   const [ownerAddress, setOwnerAddress] = useState<string>("");
   const [spenderAddress, setSpenderAddress] = useState<string>("");
+  const { tokenDetail } = useTokenDetailStore();
   const { id } = useParams<{ id: string }>();
   const form = useForm<AllowanceType>({
     resolver: zodResolver(allowanceSchema),
@@ -99,7 +102,11 @@ const Allowance = () => {
             </form>
           </Form>
           {isLoading && <LoadingQuery />}
-          {data !== undefined && <div className="mt-2">Response: {data}</div>}
+          {data !== undefined && (
+            <div className="mt-2">
+              Response: {handleConvertToToken(data)} {tokenDetail?.symbol}
+            </div>
+          )}
         </div>
         {error && (
           <div className="mt-2 text-sm font-medium text-destructive">
