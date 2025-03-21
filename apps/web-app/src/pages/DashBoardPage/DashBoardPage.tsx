@@ -17,19 +17,17 @@ const DashBoardPage = () => {
     isLoading: isLoadingGetListToken,
     isError: isErrorListToken,
   } = useReadContract({
-    address: contractAddress.address,
+    address: contractAddress.ERC20FactoryAddress,
     abi: ERC20Factory__factory.abi,
     functionName: "getListOfERC20ManagerCreated",
     args: [],
   });
-  console.log(listTokenAddress);
-  
+
   const {
     data,
     isLoading,
     isError: isErrorTokenDetail,
   } = useTokenDetails(listTokenAddress as `0x${string}`[]);
-
 
   useEffect(() => {
     if (isErrorListToken || isErrorTokenDetail) {

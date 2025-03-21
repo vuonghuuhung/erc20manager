@@ -24,47 +24,27 @@
 pragma solidity ^0.8.20;
 
 import {ERC20Manager} from "./ERC20Manager.sol";
+import {MultisigDAO} from "./MultisigDAO.sol";
 
 contract ERC20Factory {
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
-    address[] s_erc20;
+    address[] private s_erc20;
+    address[] private s_erc20DAO;
     mapping(address => address[]) s_addressToListOfERC20;
+    mapping(address => address) s_daoAddressToERC20;
     mapping(address => address) s_ERC20ToOwner;
-    address private immutable i_owner;
-
-    /*//////////////////////////////////////////////////////////////
-                                 ERRORS
-    //////////////////////////////////////////////////////////////*/
-    error ERC20Factory__NotOwner(address sender, address owner);
+    mapping(address => address) s_ERC20toDAO;
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
-    event ERC20Factory__Create(
+    event Create(
         address indexed owner,
         address indexed token,
         uint256 indexed amount
     );
-
-    /*//////////////////////////////////////////////////////////////
-                               CONSTRUCTOR
-    //////////////////////////////////////////////////////////////*/
-    constructor() {
-        i_owner = msg.sender;
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                                MODIFIERS
-    //////////////////////////////////////////////////////////////*/
-    modifier isOwner() {
-        require(
-            msg.sender == i_owner,
-            ERC20Factory__NotOwner(msg.sender, i_owner)
-        );
-        _;
-    }
 
     /*//////////////////////////////////////////////////////////////
                             PUBLIC FUNCTIONS
@@ -79,16 +59,36 @@ contract ERC20Factory {
             _name,
             _symbol,
             _decimals,
-            _amount
+            _amount,
+            msg.sender
         );
         s_erc20.push(address(erc20));
         s_addressToListOfERC20[msg.sender].push(address(erc20));
-        s_ERC20ToOwner[address(erc20)] = msg.sender;
-        emit ERC20Factory__Create(
-            msg.sender,
-            address(erc20),
-            erc20.totalSupply()
+        emit Create(msg.sender, address(erc20), erc20.totalSupply());
+    }
+
+    function mintERC20ManagerForDAO(
+        address[] memory _owners,
+        uint256 _required,
+        string memory _name,
+        string memory _symbol,
+        uint8 _decimals,
+        uint256 _amount
+    ) public {
+        MultisigDAO multiSigDAO = new MultisigDAO(
+            _owners,
+            _required,
+            _name,
+            _symbol,
+            _decimals,
+            _amount
         );
+        address token = address(multiSigDAO.erc20Manager());
+        address daoAddress = address(multiSigDAO);
+        s_erc20DAO.push(token);
+        s_ERC20toDAO[token] = daoAddress;
+        s_daoAddressToERC20[daoAddress] = token;
+        emit Create(daoAddress, token, ERC20Manager(token).totalSupply());
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -100,12 +100,18 @@ contract ERC20Factory {
         return s_addressToListOfERC20[user];
     }
 
-    function getOwnerOfERC20(address token) public view returns (address) {
-        return s_ERC20ToOwner[token];
+    function getERC20ofDAO(address dao) public view returns (address) {
+        return s_daoAddressToERC20[dao];
     }
 
-    function getOwner() public view returns (address) {
-        return i_owner;
+    function getDAOAddressOfERC20DAO(
+        address token
+    ) public view returns (address) {
+        return s_ERC20toDAO[token];
+    }
+
+    function getOwnerOfERC20(address token) public view returns (address) {
+        return s_ERC20ToOwner[token];
     }
 
     function getListOfERC20ManagerCreated()
@@ -114,5 +120,13 @@ contract ERC20Factory {
         returns (address[] memory)
     {
         return s_erc20;
+    }
+
+    function getListOfERC20ManagerDAOCreated()
+        public
+        view
+        returns (address[] memory)
+    {
+        return s_erc20DAO;
     }
 }

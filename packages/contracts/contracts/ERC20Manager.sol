@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.20;
 
-import {ERC20} from "solmate/src/tokens/ERC20.sol";
+import {ERC20} from "@solmate/tokens/ERC20.sol";
 
 contract ERC20Manager is ERC20 {
-    address immutable i_owner;
+    address private immutable i_owner;
 
     error ERC20Manager__NotOwner(address sender, address owner);
 
@@ -13,9 +13,10 @@ contract ERC20Manager is ERC20 {
         string memory _name,
         string memory _symbol,
         uint8 _decimals,
-        uint256 _amount
+        uint256 _amount,
+        address _owner
     ) ERC20(_name, _symbol, _decimals) {
-        i_owner = msg.sender;
+        i_owner = _owner;
         _mint(i_owner, _amount);
     }
 
@@ -29,5 +30,9 @@ contract ERC20Manager is ERC20 {
 
     function burn(address from, uint256 amount) external isOwner {
         _burn(from, amount);
+    }
+
+    function getOwner() external view returns (address) {
+        return i_owner;
     }
 }
