@@ -1,18 +1,29 @@
 import IconCrypto from "@/assets/icons/IconCrypto";
-import path, { routesPath } from "@/constants/path";
+import path, { routesPathDAO, routesPathToken } from "@/constants/path";
 import classNames from "classnames";
-import { Link,  useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import LogoLink from "../LogoLink";
 
 const listNav = [
   {
-    group: "Dashboards",
+    group: "ERC20",
     listNav: [
       {
         icon: <IconCrypto />,
         name: "Dashboard",
         to: path.dashBoard,
-        listNavChild: routesPath,
+        listNavChild: routesPathToken,
+      },
+    ],
+  },
+  {
+    group: "DAO",
+    listNav: [
+      {
+        icon: <IconCrypto />,
+        name: "DAO DAO",
+        to: path.DAODashboard,
+        listNavChild: routesPathDAO,
       },
     ],
   },
@@ -33,12 +44,12 @@ const SideNav = () => {
             </div>
             {item.listNav.map((itemNav, indexNav) => {
               const isActive =
-                location.pathname === itemNav.to ||
+                (pathname === itemNav.to) ||
                 itemNav.listNavChild.some((child) => {
                   if (child.path.includes(":")) {
                     return pathname.includes(child.path.split(":")[0]);
                   }
-                  return pathname.includes(child.path);
+                  return pathname.includes(child.path) && child.path !== '/';
                 });
               return (
                 <Link

@@ -4,6 +4,9 @@ import path from './constants/path';
 import DashBoardPage from './pages/DashBoardPage';
 import CreateToken from './pages/CreateToken';
 import DetailToken from './pages/DetailToken';
+import DAOCreate from './pages/DAO/DAOCreate/DAOCreate';
+import DAODashboard from './pages/DAO/DAODashboard/DAODashboard';
+import DAODetail from './pages/DAO/DAODetail/DAODetail';
 
 const useRouterElements = () => {
     const routeElements = useRoutes([
@@ -22,6 +25,18 @@ const useRouterElements = () => {
                 {
                     path: path.detailToken,
                     element: <DetailToken />,
+                },
+                {
+                    path: path.DAOCreate,
+                    element: <DAOCreate />,
+                },
+                {
+                    path: path.DAODashboard,
+                    element: <DAODashboard />,
+                },
+                {
+                    path: path.DAODetail,
+                    element: <DAODetail />,
                 },
             ],
         },

@@ -1,4 +1,4 @@
-import { IRoute, routesPath } from "@/constants/path";
+import { IRoute, routesPathDAO, routesPathToken } from "@/constants/path";
 import { useEffect, useState } from "react";
 import { Link, matchRoutes, useLocation } from "react-router-dom";
 import {
@@ -11,14 +11,16 @@ import { ChevronDown } from "lucide-react";
 const DynamicBreadcrumb = () => {
   const location = useLocation();
   const [crumbs, setCrumbs] = useState<IRoute[]>([]);
-
+  
   const getPaths = () => {
-    const allRoutes = matchRoutes(routesPath, location);
+    const routerCheck = location.pathname.includes("dao") ? routesPathDAO : routesPathToken;
+    const allRoutes = matchRoutes(routerCheck, location);
 
     const matchedRoute = allRoutes ? allRoutes[0] : null;
+    
     let breadcrumbs: IRoute[] = [];
     if (matchedRoute) {
-      breadcrumbs = routesPath
+      breadcrumbs = routerCheck
         .filter((x) => matchedRoute.route.path.includes(x.path))
         .map(({ path, ...rest }) => ({
           path: Object.keys(matchedRoute.params).length

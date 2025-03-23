@@ -1,0 +1,53 @@
+import AvatarDAO from "@/components/AvatarDAO/AvatarDAO";
+import BoxContent from "@/components/BoxContent";
+import imageDao from "@/assets/images/DAOIcon.png";
+import { Plus, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import ProposalItem from "../components/ProposalItem/ProposalItem";
+import Nodata from "@/components/Nodata";
+
+const DAODetail = () => {
+  return (
+    <BoxContent extendClassName="py-4 bg-[#151617]">
+      <div className="flex items-center gap-4 mb-12">
+        <div className="w-[108px] h-[108px]">
+          <AvatarDAO src={imageDao} />
+        </div>
+        <div>
+          <div className="text-4xl font-bold text-white">Cosmos Hub</div>
+          <div className="text-[14px] text-[#D1D5DB] mt-1">
+            Native chain governance for Cosmos Hub.
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-between min-h-[3.5rem] border-b border-t border-[#2D2E30]">
+        <div className="text-[#f3f6f8f2]">Create a proposal</div>
+        <button className="bg-[#fffffff2] text-[12px] text-[#151617] font-semibold flex items-center gap-2 px-4 py-2 rounded-lg">
+          <Plus />
+          <span>New proposal</span>
+        </button>
+      </div>
+      <div className="py-6">
+        <div className="font-semibold text-[#f3f6f8f2] mb-4">Proposals</div>
+        <div className="flex group flex-row items-center text-[#f3f6f880] gap-1 rounded-md ring-1 ring-[#f3f6f81a] transition focus-within:ring-2 focus-within:ring-border-interactive-focus p-2 mb-8">
+          <div>
+            <Search className="w-4 h-4 text-current group-focus-within:text-white transition duration-300" />
+          </div>
+          <div className="flex-1">
+            <Input
+              className="text-[8px] py-0 h-auto border-none grow bg-transparent leading-4 text-text-tertiary transition placeholder:text-text-tertiary focus:text-text-body focus:outline-none"
+              placeholder="Search proposals..."
+            />
+          </div>
+        </div>
+        <div className="text-white">
+          <ProposalItem />
+          <ProposalItem />
+          {/* <Nodata /> */}
+        </div>
+      </div>
+    </BoxContent>
+  );
+};
+
+export default DAODetail;
