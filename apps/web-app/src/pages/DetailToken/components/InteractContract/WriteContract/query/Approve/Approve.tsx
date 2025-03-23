@@ -37,11 +37,10 @@ const Approve: FC<{ decimals?: number }> = ({ decimals }) => {
     },
   });
   const { id } = useParams<{ id: `0x${string}` }>();
-  const { write, isLoading, errorWrite, isErrorGas, isWriteSuccess } =
-    useTokenWrite({
-      functionName: "approve",
-      tokenAddress: id as `0x${string}`,
-    });
+  const { write, isLoading, errorWrite, isWriteSuccess } = useTokenWrite({
+    functionName: "approve",
+    tokenAddress: id as `0x${string}`,
+  });
 
   async function onSubmit(values: ApproveType) {
     try {
@@ -103,14 +102,9 @@ const Approve: FC<{ decimals?: number }> = ({ decimals }) => {
             <div className="mt-2">Response: Approve successful</div>
           )}
         </div>
-        {errorWrite && !isErrorGas && (
+        {errorWrite && (
           <div className="mt-2 text-sm font-medium text-destructive">
             {errorWrite}
-          </div>
-        )}
-        {isErrorGas && (
-          <div className="mt-2 text-sm font-medium text-destructive">
-            {isErrorGas}
           </div>
         )}
       </CollapsibleContent>

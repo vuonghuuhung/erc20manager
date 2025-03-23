@@ -49,12 +49,11 @@ export function useTokenWrite({
   functionName: functionNameType;
   tokenAddress: `0x${string}`;
 }) {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({
     address,
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isErrorGas, setIsErrorGas] = useState<string>("");
   const [errorWrite, setErrorWrite] = useState<string>("");
 
   const publicClient = usePublicClient({
@@ -75,9 +74,12 @@ export function useTokenWrite({
   }, [isFetching]);
 
   const write = async (args: any = []) => {
+    if (!isConnected) {
+      setErrorWrite("You need to connect wallet");
+      return
+    }
     setIsLoading(true);
     setErrorWrite("");
-    setIsErrorGas("");
     try {
       const gasPrice = (await publicClient?.getGasPrice()) as bigint;
       const setUpMethod: any = {
@@ -95,7 +97,7 @@ export function useTokenWrite({
       const num2 = toBigInt(gasCost);
       if (num1 <= num2) {
         setIsLoading(false);
-        setIsErrorGas("You don't have enough money");
+        setErrorWrite("You don't have enough balance");
         return;
       }
       const { request } = await simulateContract(config, setUpMethod);
@@ -118,7 +120,6 @@ export function useTokenWrite({
   return {
     write,
     isLoading,
-    isErrorGas,
     errorWrite,
     isWriteSuccess: isSuccess,
     ...rest,

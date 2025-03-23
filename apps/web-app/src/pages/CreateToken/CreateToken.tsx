@@ -80,7 +80,7 @@ const CreateToken = () => {
         return;
       }
       await writeContractAsync(request);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log("error", { error });
       if (error?.name === "ContractFunctionExecutionError") {
@@ -97,7 +97,7 @@ const CreateToken = () => {
     if (isFetching) {
       setStepModal(MODAL_STEP.PROCESSING);
     }
-  }, [isFetched, isFetching])
+  }, [isFetched, isFetching]);
   return (
     <div>
       <BoxContent extendClassName="p-4 w-full max-w-[462px] mx-auto">
