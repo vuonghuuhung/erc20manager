@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import {ERC20Manager} from "./ERC20Manager.sol";
+import {ERC20Template} from "./ERC20Template.sol";
 
 contract MultisigDAO {
     error MultisigDAO_NeedOwners();
@@ -17,15 +17,20 @@ contract MultisigDAO {
         uint256 required,
         uint256 approvals
     );
+    error MultisigDAO_NotAuthorized();
+    error MultisigDAO_InvalidActionData();
 
     event Submit(uint256 indexed proposalId);
     event Approve(address indexed owner, uint256 indexed proposalId);
     event Revoke(address indexed owner, uint256 indexed proposalId);
     event Execute(uint256 indexed proposalId);
+    event MetadataUpdated(string oldMetadata, string newMetadata);
 
     enum Action {
-        Mint,
-        Burn
+        Distribute,
+        Burn,
+        Approve,
+        UpdateMetadata
     }
 
     struct Proposal {
@@ -39,7 +44,8 @@ contract MultisigDAO {
     address[] public s_owners;
     mapping(address => bool) public s_isOwner;
     uint256 public s_required;
-    ERC20Manager public erc20Manager;
+    ERC20Template public erc20Template;
+    string public s_metadata;
 
     Proposal[] public s_proposals;
     mapping(uint256 => mapping(address => bool)) public s_isApproved;
@@ -78,7 +84,8 @@ contract MultisigDAO {
         string memory _name,
         string memory _symbol,
         uint8 _decimals,
-        uint256 _amount
+        uint256 _amount,
+        string memory _metadata
     ) {
         require(_owners.length > 0, MultisigDAO_NeedOwners());
         require(
@@ -93,22 +100,83 @@ contract MultisigDAO {
             s_isOwner[owner] = true;
             s_owners.push(owner);
         }
-        erc20Manager = new ERC20Manager(
+        erc20Template = new ERC20Template(
             _name,
             _symbol,
-            _decimals,
             _amount,
             address(this)
         );
         s_required = _required;
+        s_metadata = _metadata;
     }
 
+    /**
+     * @notice Submits a new proposal.
+     * @param _to The target address (recipient for Distribute, spender for Approve). Ignored for Burn/UpdateMetadata.
+     * @param _value The amount (for Distribute, Burn, Approve). Ignored for UpdateMetadata.
+     * @param _action The type of action (Distribute, Burn, Approve, UpdateMetadata).
+     * @param _data Additional data. For UpdateMetadata: abi.encode(newMetadataString). Should be empty otherwise.
+     */
     function submitProposal(
         address _to,
         uint256 _value,
         Action _action,
         bytes calldata _data
     ) external onlyOwner {
+        // Validate parameters based on action
+        if (_action == Action.UpdateMetadata) {
+            require(
+                _data.length > 0,
+                "MultisigDAO: Data required for UpdateMetadata"
+            );
+            require(
+                _to == address(0),
+                "MultisigDAO: 'to' should be zero address for UpdateMetadata"
+            );
+            require(
+                _value == 0,
+                "MultisigDAO: 'value' should be zero for UpdateMetadata"
+            );
+        } else if (_action == Action.Distribute) {
+            require(
+                _to != address(0),
+                "MultisigDAO: Invalid recipient for Distribute"
+            );
+            require(
+                _value > 0,
+                "MultisigDAO: Value must be greater than zero for Distribute"
+            );
+            require(
+                _data.length == 0,
+                "MultisigDAO: Data should be empty for Distribute"
+            );
+        } else if (_action == Action.Burn) {
+            require(
+                _value > 0,
+                "MultisigDAO: Value must be greater than zero for Burn"
+            );
+            require(
+                _to == address(0),
+                "MultisigDAO: 'to' should be zero address for Burn"
+            );
+            require(
+                _data.length == 0,
+                "MultisigDAO: Data should be empty for Burn"
+            );
+        } else if (_action == Action.Approve) {
+            require(
+                _to != address(0),
+                "MultisigDAO: Invalid spender for Approve"
+            );
+            // Allow approving zero amount to revoke approval
+            require(
+                _data.length == 0,
+                "MultisigDAO: Data should be empty for Approve"
+            );
+        } else {
+            revert("MultisigDAO: Invalid action type");
+        }
+
         s_proposals.push(
             Proposal({
                 to: _to,
@@ -159,13 +227,29 @@ contract MultisigDAO {
         );
         Proposal storage proposal = s_proposals[_proposalId];
         proposal.isExecuted = true;
-        if (proposal.action == Action.Mint) {
-            erc20Manager.transfer(proposal.to, proposal.value);
-            emit Execute(_proposalId);
+
+        if (proposal.action == Action.Distribute) {
+            require(
+                proposal.to != address(0),
+                "Invalid recipient for distribute"
+            );
+            erc20Template.transfer(proposal.to, proposal.value);
+        } else if (proposal.action == Action.Burn) {
+            erc20Template.burn(address(this), proposal.value);
+        } else if (proposal.action == Action.Approve) {
+            require(proposal.to != address(0), "Invalid spender for approve");
+            erc20Template.approve(proposal.to, proposal.value);
+        } else if (proposal.action == Action.UpdateMetadata) {
+            string memory newMetadata = abi.decode(proposal.data, (string));
+            string memory oldMetadata = s_metadata;
+            s_metadata = newMetadata;
+            emit MetadataUpdated(oldMetadata, newMetadata);
         }
-        if (proposal.action == Action.Burn) {
-            erc20Manager.burn(address(this), proposal.value);
-            emit Execute(_proposalId);
-        }
+
+        emit Execute(_proposalId);
+    }
+
+    function getMetadata() external view returns (string memory) {
+        return s_metadata;
     }
 }

@@ -1,9 +1,14 @@
-import "@nomicfoundation/hardhat-ethers";
-import "@nomicfoundation/hardhat-foundry";
 import "@nomicfoundation/hardhat-toolbox";
 import "@typechain/hardhat";
+import "dotenv/config";
+import { ethers } from "ethers";
 import { HardhatUserConfig } from "hardhat/config";
 
+let privateKeys: string[] = [];
+for (let i = 0; i < 20; i++) {
+  const wallet = ethers.Wallet.createRandom();
+  privateKeys = [...privateKeys, wallet.privateKey];
+}
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -19,10 +24,10 @@ const config: HardhatUserConfig = {
     hardhat: {
       allowUnlimitedContractSize: true,
     },
-    sepolia: {     
-      url: "https://eth-sepolia.g.alchemy.com/v2/ooTTNOyUpAQIYuIQU9ZSNiNrEgzBHcSd",      
-      accounts: [`0xb2eb5049f078780bbeb3fc8207f2280dcd7c733fe017fb2b6acd1c8542ceacd8`],   
-     }
+    sepolia: {
+      url: "https://eth-sepolia.g.alchemy.com/v2/ooTTNOyUpAQIYuIQU9ZSNiNrEgzBHcSd",
+      accounts: [process.env.PRIVATE_KEY || "", ...privateKeys],
+    },
   },
 };
 

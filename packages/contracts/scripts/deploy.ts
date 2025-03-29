@@ -1,4 +1,6 @@
-import { ethers } from "hardhat";
+import * as hre from "hardhat";
+
+const { ethers } = hre;
 
 async function main() {
   console.log("Deploying ERC20Factory...");
