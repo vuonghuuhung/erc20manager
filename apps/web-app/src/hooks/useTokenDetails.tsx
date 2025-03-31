@@ -19,25 +19,25 @@ const useTokenDetails = (tokenAddresses: `0x${string}`[] = []) => {
       address,
       abi: ERC20Manager__factory.abi,
       functionName: "name",
-      ags: [],
+      args: [],
     },
     {
       address,
       abi: ERC20Manager__factory.abi,
       functionName: "symbol",
-      ags: [],
+      args: [],
     },
     {
       address,
       abi: ERC20Manager__factory.abi,
       functionName: "decimals",
-      ags: [],
+      args: [],
     },
     {
       address,
       abi: ERC20Manager__factory.abi,
       functionName: "totalSupply",
-      ags: [],
+      args: [],
     },
   ]);
 

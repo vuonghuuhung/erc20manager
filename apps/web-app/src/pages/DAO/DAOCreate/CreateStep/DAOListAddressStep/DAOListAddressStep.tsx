@@ -73,7 +73,6 @@ const DAOListAddressStep: FC<{
     const newListAddressError = [...listAddressError];
     newListAddress.splice(index, 1);
     newListAddressError.splice(index, 1);
-    console.log(newListAddress);
 
     setListAddress(newListAddress);
     setListAddressError(newListAddressError);
@@ -133,7 +132,7 @@ const DAOListAddressStep: FC<{
               {listAddress.length > 0 &&
                 listAddress.map((item, index) => {
                   return (
-                    <div className="flex items-center justify-between">
+                    <div key={index} className="flex items-center justify-between">
                       <div className="flex-1 mt-4">
                         <Input
                           placeholder={`Address ${index + 1}`}

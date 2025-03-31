@@ -15,6 +15,10 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FC } from "react";
+import { useContractWrite } from "@/hooks/useContracts";
+import ConnectButtonCustom from "@/components/ConnectButtonCustom/ConnectButtonCustom";
+import { ethers } from "ethers";
+import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
 
 export type DAOTokenInfoSchemaType = Pick<
   CreateDAOContractSchemaType,
@@ -28,7 +32,7 @@ const DAOTokenInfoSchema = createDAOContractSchema.pick({
 });
 const DAOTokenInfo: FC<{
   dataSubmit: CreateDAOContractSchemaType;
-}> = ({  dataSubmit }) => {
+}> = ({ dataSubmit }) => {
   const form = useForm<DAOTokenInfoSchemaType>({
     resolver: zodResolver(DAOTokenInfoSchema),
     defaultValues: {
@@ -39,14 +43,35 @@ const DAOTokenInfo: FC<{
     },
   });
 
+  const { write, stepModal, errorWrite, setStepModal, isConnected } =
+    useContractWrite({
+      functionName: "mintERC20ForDAO",
+    });
+
   async function onSubmit(values: DAOTokenInfoSchemaType) {
-    const dataSend = {...dataSubmit, ...values}
-    console.log(dataSend);
+    const dataSend = { ...dataSubmit, ...values };
+    try {
+      const { nameToken, symbol, decimals, amount, requireVote, listAddress } =
+        dataSend;
+      const amountValue = ethers.parseUnits(amount, Number(decimals || 18));
+      console.log('dataSend', dataSend);
+      
+      await write([
+        listAddress,
+        requireVote,
+        nameToken,
+        symbol,
+        Number(decimals),
+        amountValue,
+      ]);
+    } catch (error) {
+      console.log("error", { error });
+    }
   }
   return (
     <div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit(onSubmit, (errors) => console.log(errors))} className="space-y-8">
           <div>
             <div className="text-[20px] font-medium text-[#223354b3]">
               DAO Token information
@@ -113,20 +138,23 @@ const DAOTokenInfo: FC<{
               )}
             />
           </div>
-          <div className="flex justify-end items-center mt-4">
-            <Button className="w-[120px]">Continue</Button>
-          </div>
-          {/* <div className="mt-8 w-[400px] mx-auto">
+          <div className="mt-8 mx-auto">
             {isConnected ? (
-              <Button type="submit" className="block w-full">
-                Submit
-              </Button>
+              <div className="flex justify-end items-center mt-4">
+                <Button className="w-[120px]">Continue</Button>
+              </div>
             ) : (
               <ConnectButtonCustom />
             )}
-          </div> */}
+          </div>
         </form>
       </Form>
+      <ModalStep
+        open={stepModal !== MODAL_STEP.READY}
+        setOpen={setStepModal}
+        contentStep={errorWrite}
+        statusStep={stepModal}
+      />
     </div>
   );
 };

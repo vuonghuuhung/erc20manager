@@ -11,6 +11,8 @@ const path = {
   DAOCreate: "/dao/create",
   DAODashboard: "/dao",
   DAODetail: "/dao/detail/:id",
+  DAODetailProposal: "/dao/detail/:id",
+  DAOCreateProposal: "/dao/proposal/create/:id",
 } as const;
 
 export const routesPathToken: IRoute[] = [
@@ -40,6 +42,10 @@ export const routesPathDAO: IRoute[] = [
   {
     path: path.DAODetail,
     name: "Detail",
+  },
+  {
+    path: path.DAOCreateProposal,
+    name: "Proposal",
   },
 ];
 

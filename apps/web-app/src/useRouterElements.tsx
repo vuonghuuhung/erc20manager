@@ -7,6 +7,7 @@ import DetailToken from './pages/DetailToken';
 import DAOCreate from './pages/DAO/DAOCreate/DAOCreate';
 import DAODashboard from './pages/DAO/DAODashboard/DAODashboard';
 import DAODetail from './pages/DAO/DAODetail/DAODetail';
+import CreateProposal from './pages/DAO/CreateProposal/CreateProposal';
 
 const useRouterElements = () => {
     const routeElements = useRoutes([
@@ -37,6 +38,10 @@ const useRouterElements = () => {
                 {
                     path: path.DAODetail,
                     element: <DAODetail />,
+                },
+                {
+                    path: path.DAOCreateProposal,
+                    element: <CreateProposal />,
                 },
             ],
         },

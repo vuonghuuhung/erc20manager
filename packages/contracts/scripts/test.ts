@@ -1,5 +1,5 @@
-import hre from "hardhat";
-import { ERC20Factory__factory } from "../typechain-types";
+// import hre from "hardhat";
+// import { ERC20Factory__factory } from "../typechain-types";
 
 const main = async () => {
   const [account] = await hre.ethers.getSigners()
@@ -9,7 +9,7 @@ const main = async () => {
   console.log(res);
 };
 
-main().catch((error) => {
-  console.log(error);
-});
+// main().catch((error) => {
+//   console.log(error);
+// });
 

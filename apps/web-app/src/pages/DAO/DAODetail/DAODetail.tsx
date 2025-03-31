@@ -5,8 +5,33 @@ import { Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ProposalItem from "../components/ProposalItem/ProposalItem";
 import Nodata from "@/components/Nodata";
+import { Link, useParams } from "react-router-dom";
+import path from "@/constants/path";
+import useContractDetail from "@/hooks/useContractDetail";
+import { useEffect } from "react";
+import useDaoTokenInfoStore from "@/store/daoTokenInfo";
+import Loading from "@/components/Loading/Loading";
 
 const DAODetail = () => {
+  const { id } = useParams<{ id: string }>();
+  const {
+    data: infoToken,
+    isLoading: isLoadingInfo,
+    isErrorContractAddress,
+    error,
+  } = useContractDetail([id] as `0x${string}`[]);
+  const { tokenDetail, setTokenDetail } = useDaoTokenInfoStore();
+
+  useEffect(() => {
+    if (
+      infoToken &&
+      infoToken.length > 0 &&
+      JSON.stringify(infoToken[0]) !== JSON.stringify(tokenDetail)
+    ) {
+      setTokenDetail(infoToken[0]);
+    }
+  }, [infoToken, setTokenDetail, tokenDetail]);
+
   return (
     <BoxContent extendClassName="py-4 bg-[#151617]">
       <div className="flex items-center gap-4 mb-12">
@@ -22,10 +47,13 @@ const DAODetail = () => {
       </div>
       <div className="flex items-center justify-between min-h-[3.5rem] border-b border-t border-[#2D2E30]">
         <div className="text-[#f3f6f8f2]">Create a proposal</div>
-        <button className="bg-[#fffffff2] text-[12px] text-[#151617] font-semibold flex items-center gap-2 px-4 py-2 rounded-lg">
+        <Link
+          to={`/dao/proposal/create/${id}`}
+          className="bg-[#fffffff2] text-[12px] text-[#151617] font-semibold flex items-center gap-2 px-4 py-2 rounded-lg"
+        >
           <Plus />
           <span>New proposal</span>
-        </button>
+        </Link>
       </div>
       <div className="py-6">
         <div className="font-semibold text-[#f3f6f8f2] mb-4">Proposals</div>
@@ -46,6 +74,7 @@ const DAODetail = () => {
           {/* <Nodata /> */}
         </div>
       </div>
+      <Loading isLoading={isLoadingInfo} />
     </BoxContent>
   );
 };

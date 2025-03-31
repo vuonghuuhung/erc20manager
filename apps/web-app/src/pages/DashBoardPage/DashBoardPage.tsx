@@ -19,7 +19,7 @@ const DashBoardPage = () => {
   } = useReadContract({
     address: contractAddress.ERC20FactoryAddress,
     abi: ERC20Factory__factory.abi,
-    functionName: "getListOfERC20ManagerCreated",
+    functionName: "getListOfERC20Created",
     args: [],
   });
 

@@ -70,8 +70,25 @@ export const createDAOContractSchema = z.object({
     .max(160, "Length max 160 characters"),
 });
 
+export const createProposalSchema = z.object({
+  addressReceive: z
+    .string()
+    .nonempty("This field is required")
+    .max(160, "Length max 160 characters"),
+  amount: z
+    .string()
+    .nonempty("This field is required")
+    .max(160, "Length max 160 characters"),
+  action: z.string(),
+  description: z
+    .string()
+    .nonempty("This field is required")
+    .max(160, "Length max 160 characters"),
+});
+
 export type ReadContractType = z.infer<typeof contractSchema>;
 export type CreateTokenType = z.infer<typeof createTokenSchema>;
+export type CreateProposalType = z.infer<typeof createProposalSchema>;
 export type CreateDAOContractSchemaType = z.infer<
   typeof createDAOContractSchema
 >;
