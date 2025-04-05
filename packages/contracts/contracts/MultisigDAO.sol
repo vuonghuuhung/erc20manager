@@ -252,4 +252,79 @@ contract MultisigDAO {
     function getMetadata() external view returns (string memory) {
         return s_metadata;
     }
+
+    /**
+     * @notice Returns all proposals in the DAO
+     * @return An array of all proposals
+     */
+    function getAllProposals() external view returns (Proposal[] memory) {
+        Proposal[] memory proposals = new Proposal[](s_proposals.length);
+        for (uint256 i = 0; i < s_proposals.length; i++) {
+            proposals[i] = s_proposals[i];
+        }
+        return proposals;
+    }
+
+    /**
+     * @notice Returns filtered proposals by execution status
+     * @param _isExecuted Filter for executed (true) or pending (false) proposals
+     * @return An array of filtered proposals
+     */
+    function getProposalsByStatus(
+        bool _isExecuted
+    ) external view returns (Proposal[] memory) {
+        // First, count how many proposals match the filter
+        uint256 count = 0;
+        for (uint256 i = 0; i < s_proposals.length; i++) {
+            if (s_proposals[i].isExecuted == _isExecuted) {
+                count++;
+            }
+        }
+
+        // Create an array of the right size
+        Proposal[] memory filteredProposals = new Proposal[](count);
+
+        // Fill the array with matching proposals
+        uint256 index = 0;
+        for (uint256 i = 0; i < s_proposals.length; i++) {
+            if (s_proposals[i].isExecuted == _isExecuted) {
+                filteredProposals[index] = s_proposals[i];
+                index++;
+            }
+        }
+
+        return filteredProposals;
+    }
+
+    /**
+     * @notice Returns detailed information about a specific proposal including approval count
+     * @param _proposalId The ID of the proposal to get details for
+     * @return proposal The proposal struct
+     * @return approvalCount The number of approvals the proposal has received
+     * @return isApprovedByCurrentSender Whether the current message sender has approved this proposal
+     */
+    function getProposalDetails(
+        uint256 _proposalId
+    )
+        external
+        view
+        proposalExists(_proposalId)
+        returns (
+            Proposal memory proposal,
+            uint256 approvalCount,
+            bool isApprovedByCurrentSender
+        )
+    {
+        proposal = s_proposals[_proposalId];
+        approvalCount = _getApprovalCount(_proposalId);
+        isApprovedByCurrentSender = s_isApproved[_proposalId][msg.sender];
+    }
+
+    /**
+     * @notice Returns all owner addresses for this DAO
+     * @return An array of all owner addresses
+     */
+    function getOwners() external view returns (address[] memory) {
+        return s_owners;
+    }
 }

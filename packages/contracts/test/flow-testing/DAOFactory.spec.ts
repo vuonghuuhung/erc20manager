@@ -4,6 +4,34 @@ import {
 import { expect } from "chai";
 import hre from "hardhat";
 
+// Define the Proposal struct type that matches our contract
+interface Proposal {
+    to: string;
+    value: bigint;
+    action: number;
+    data: string;
+    isExecuted: boolean;
+}
+
+// Add type extensions for the MultisigDAO contract
+interface MultisigDAOExtended {
+    getAllProposals: () => Promise<Proposal[]>;
+    getProposalsByStatus: (isExecuted: boolean) => Promise<Proposal[]>;
+    getProposalDetails: (proposalId: number) => Promise<{
+        proposal: Proposal;
+        approvalCount: bigint;
+        isApprovedByCurrentSender: boolean;
+    }>;
+    getOwners: () => Promise<string[]>;
+    s_isOwner: (address: string) => Promise<boolean>;
+    s_required: () => Promise<bigint>;
+    s_proposals: (index: number) => Promise<Proposal>;
+    submitProposal: (to: string, value: bigint, action: number, data: string) => Promise<any>;
+    approveProposal: (proposalId: number) => Promise<any>;
+    executeProposal: (proposalId: number) => Promise<any>;
+    connect: (signer: any) => MultisigDAOExtended;
+}
+
 describe("DAOFactory Flow", function () {
     // We define a fixture to reuse the same setup in every test.
     // We use loadFixture to run this setup once, snapshot that state,
@@ -102,7 +130,7 @@ describe("DAOFactory Flow", function () {
                 const daoFactoryInterface = await hre.ethers.getContractFactory("DAOFactory").then(f => f.interface);
                 for (const log of receipt.logs) {
                     try {
-                        const parsedLog = daoFactoryInterface.parseLog(log as any); // Use 'as any' to bypass strict type checking here if needed
+                        const parsedLog = daoFactoryInterface.parseLog(log as any);
                         if (parsedLog && parsedLog.name === "Create") {
                             daoAddress = parsedLog.args.daoAddress;
                             tokenAddress = parsedLog.args.token;
@@ -731,6 +759,587 @@ describe("DAOFactory Flow", function () {
             });
 
             // Other execution failure cases covered by Distribute tests
+        });
+
+        describe("Proposal List Retrieval", function () {
+            it("Should retrieve an empty list when no proposals exist", async function () {
+                // Deploy a fresh DAO for this test to ensure no proposals exist
+                const { daoFactory, owner, otherAccount1, otherAccount2 } = await loadFixture(deployDAOFactoryFixture);
+
+                const daoOwners = [owner.address, otherAccount1.address, otherAccount2.address];
+                const requiredConfirmations = 2;
+                const tx = await daoFactory.createDAO(
+                    daoOwners,
+                    requiredConfirmations,
+                    "Clean DAO",
+                    "CDAO",
+                    18,
+                    hre.ethers.parseUnits("1000", 18),
+                    "clean-dao-metadata"
+                );
+                const receipt = await tx.wait();
+
+                // Extract DAO address from event
+                let daoAddress = "";
+                if (receipt?.logs) {
+                    const daoFactoryInterface = await hre.ethers.getContractFactory("DAOFactory").then(f => f.interface);
+                    for (const log of receipt.logs) {
+                        try {
+                            const parsedLog = daoFactoryInterface.parseLog(log as any);
+                            if (parsedLog && parsedLog.name === "Create") {
+                                daoAddress = parsedLog.args.daoAddress;
+                                break;
+                            }
+                        } catch (e) { /* Ignore */ }
+                    }
+                }
+
+                const newDAO = await hre.ethers.getContractAt("MultisigDAO", daoAddress);
+                // Get the length of the proposals array - there should be no proposals yet
+                // Using length() function if available, or checking if we can access a first element
+                try {
+                    // Check if proposal at index 0 exists
+                    await newDAO.s_proposals(0);
+                    // If it reaches here, it means a proposal was found
+                    expect.fail("Expected no proposals to exist");
+                } catch (error: any) {
+                    // Expected to throw if proposal doesn't exist
+                    expect(error.message).to.include("reverted");
+                }
+            });
+
+            it("Should retrieve all proposals that have been submitted", async function () {
+                const { multisigDAO, owner, otherAccount1, recipient } = await loadFixture(deployDAOFactoryFixture);
+
+                // Create multiple proposals of different types
+                // Distribute proposal
+                await multisigDAO.connect(owner).submitProposal(
+                    recipient.address,
+                    hre.ethers.parseUnits("100", 18),
+                    Action.Distribute,
+                    "0x"
+                );
+
+                // Burn proposal
+                await multisigDAO.connect(owner).submitProposal(
+                    hre.ethers.ZeroAddress,
+                    hre.ethers.parseUnits("50", 18),
+                    Action.Burn,
+                    "0x"
+                );
+
+                // Approve proposal
+                await multisigDAO.connect(owner).submitProposal(
+                    otherAccount1.address,
+                    hre.ethers.parseUnits("75", 18),
+                    Action.Approve,
+                    "0x"
+                );
+
+                // UpdateMetadata proposal
+                const newMetadata = "ipfs://updated-metadata-hash";
+                const encodedMetadata = hre.ethers.AbiCoder.defaultAbiCoder().encode(["string"], [newMetadata]);
+                await multisigDAO.connect(owner).submitProposal(
+                    hre.ethers.ZeroAddress,
+                    0,
+                    Action.UpdateMetadata,
+                    encodedMetadata
+                );
+
+                // Check that we can retrieve all proposals
+                // First check the total count
+                let proposalCount = 0;
+                // Count manually by accessing each index until we get an error
+                let hasMoreProposals = true;
+                while (hasMoreProposals) {
+                    try {
+                        await multisigDAO.s_proposals(proposalCount);
+                        proposalCount++;
+                    } catch (error: any) {
+                        hasMoreProposals = false;
+                    }
+                }
+                expect(proposalCount).to.equal(4);
+
+                // Check each proposal
+                for (let i = 0; i < proposalCount; i++) {
+                    const proposal = await multisigDAO.s_proposals(i);
+                    expect(proposal).to.not.be.undefined;
+
+                    // Verify specific proposal details
+                    if (i === 0) {
+                        // Distribute proposal
+                        expect(proposal.action).to.equal(Action.Distribute);
+                        expect(proposal.to).to.equal(recipient.address);
+                        expect(proposal.value).to.equal(hre.ethers.parseUnits("100", 18));
+                    } else if (i === 1) {
+                        // Burn proposal
+                        expect(proposal.action).to.equal(Action.Burn);
+                        expect(proposal.to).to.equal(hre.ethers.ZeroAddress);
+                        expect(proposal.value).to.equal(hre.ethers.parseUnits("50", 18));
+                    } else if (i === 2) {
+                        // Approve proposal
+                        expect(proposal.action).to.equal(Action.Approve);
+                        expect(proposal.to).to.equal(otherAccount1.address);
+                        expect(proposal.value).to.equal(hre.ethers.parseUnits("75", 18));
+                    } else if (i === 3) {
+                        // UpdateMetadata proposal
+                        expect(proposal.action).to.equal(Action.UpdateMetadata);
+                        expect(proposal.to).to.equal(hre.ethers.ZeroAddress);
+                        expect(proposal.value).to.equal(0);
+                        expect(proposal.data).to.equal(encodedMetadata);
+                    }
+                }
+            });
+
+            it("Should track executed status correctly for proposals", async function () {
+                const { multisigDAO, erc20DAO, owner, otherAccount1, recipient } = await loadFixture(deployDAOFactoryFixture);
+
+                // Create two proposals
+                await multisigDAO.connect(owner).submitProposal(
+                    recipient.address,
+                    hre.ethers.parseUnits("10", 18),
+                    Action.Distribute,
+                    "0x"
+                );
+
+                await multisigDAO.connect(owner).submitProposal(
+                    recipient.address,
+                    hre.ethers.parseUnits("20", 18),
+                    Action.Distribute,
+                    "0x"
+                );
+
+                // Approve and execute only the first proposal
+                await multisigDAO.connect(owner).approveProposal(0);
+                await multisigDAO.connect(otherAccount1).approveProposal(0);
+                await multisigDAO.connect(owner).executeProposal(0);
+
+                // Verify executed status for both proposals
+                const proposal0 = await multisigDAO.s_proposals(0);
+                const proposal1 = await multisigDAO.s_proposals(1);
+
+                expect(proposal0.isExecuted).to.be.true;
+                expect(proposal1.isExecuted).to.be.false;
+            });
+
+            it("Should allow filtering executed and pending proposals", async function () {
+                const { multisigDAO, owner, otherAccount1, recipient } = await loadFixture(deployDAOFactoryFixture);
+
+                // Create multiple proposals
+                for (let i = 0; i < 5; i++) {
+                    await multisigDAO.connect(owner).submitProposal(
+                        recipient.address,
+                        hre.ethers.parseUnits((10 * (i + 1)).toString(), 18),
+                        Action.Distribute,
+                        "0x"
+                    );
+                }
+
+                // Execute only proposals with even index
+                for (let i = 0; i < 5; i += 2) {
+                    await multisigDAO.connect(owner).approveProposal(i);
+                    await multisigDAO.connect(otherAccount1).approveProposal(i);
+                    await multisigDAO.connect(owner).executeProposal(i);
+                }
+
+                // Function to manually filter proposals
+                async function filterProposals(executed: boolean) {
+                    const result = [];
+                    const count = 5; // We know we created 5 proposals
+
+                    for (let i = 0; i < count; i++) {
+                        const proposal = await multisigDAO.s_proposals(i);
+                        if (proposal.isExecuted === executed) {
+                            result.push({
+                                id: i,
+                                proposal
+                            });
+                        }
+                    }
+                    return result;
+                }
+
+                // Get executed and pending proposals
+                const executedProposals = await filterProposals(true);
+                const pendingProposals = await filterProposals(false);
+
+                // Verify our filters
+                expect(executedProposals.length).to.equal(3); // 0, 2, 4
+                expect(pendingProposals.length).to.equal(2);  // 1, 3
+
+                // Verify specific proposal IDs
+                expect(executedProposals.map(p => p.id)).to.deep.equal([0, 2, 4]);
+                expect(pendingProposals.map(p => p.id)).to.deep.equal([1, 3]);
+            });
+
+            it("Should correctly track and retrieve proposal approvals", async function () {
+                const { multisigDAO, owner, otherAccount1, otherAccount2, recipient } = await loadFixture(deployDAOFactoryFixture);
+
+                // Create a proposal
+                await multisigDAO.connect(owner).submitProposal(
+                    recipient.address,
+                    hre.ethers.parseUnits("50", 18),
+                    Action.Distribute,
+                    "0x"
+                );
+                const proposalId = 0;
+
+                // Check initial proposal details before any approvals
+                let details = await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).getProposalDetails(proposalId);
+                expect(details.proposal.to).to.equal(recipient.address);
+                expect(details.proposal.value).to.equal(hre.ethers.parseUnits("50", 18));
+                expect(details.proposal.action).to.equal(Action.Distribute);
+                expect(details.proposal.isExecuted).to.be.false;
+                expect(details.approvalCount).to.equal(0);
+                expect(details.isApprovedByCurrentSender).to.be.false;
+
+                // Have the first owner approve
+                await multisigDAO.connect(owner).approveProposal(proposalId);
+
+                // Check details after first approval
+                details = await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).getProposalDetails(proposalId);
+                expect(details.approvalCount).to.equal(1);
+                expect(details.isApprovedByCurrentSender).to.be.true;
+
+                // Check from a different owner's perspective
+                details = await (multisigDAO.connect(otherAccount1) as unknown as MultisigDAOExtended).getProposalDetails(proposalId);
+                expect(details.approvalCount).to.equal(1); // Still 1 approval total
+                expect(details.isApprovedByCurrentSender).to.be.false; // But this owner hasn't approved
+
+                // Second owner approves
+                await multisigDAO.connect(otherAccount1).approveProposal(proposalId);
+
+                // Check details after second approval
+                details = await (multisigDAO.connect(otherAccount2) as unknown as MultisigDAOExtended).getProposalDetails(proposalId);
+                expect(details.approvalCount).to.equal(2);
+                expect(details.isApprovedByCurrentSender).to.be.false; // Third owner hasn't approved
+
+                // Execute the proposal
+                await multisigDAO.connect(owner).executeProposal(proposalId);
+
+                // Check details after execution
+                details = await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).getProposalDetails(proposalId);
+                expect(details.proposal.isExecuted).to.be.true;
+                expect(details.approvalCount).to.equal(2); // Approval count unchanged
+            });
+
+            it("Should retrieve all proposals with getAllProposals function", async function () {
+                const { multisigDAO, owner, otherAccount1, recipient } = await loadFixture(deployDAOFactoryFixture);
+
+                // Create multiple proposals of different types
+                // Distribute proposal
+                await multisigDAO.connect(owner).submitProposal(
+                    recipient.address,
+                    hre.ethers.parseUnits("100", 18),
+                    Action.Distribute,
+                    "0x"
+                );
+
+                // Burn proposal
+                await multisigDAO.connect(owner).submitProposal(
+                    hre.ethers.ZeroAddress,
+                    hre.ethers.parseUnits("50", 18),
+                    Action.Burn,
+                    "0x"
+                );
+
+                // Approve proposal
+                await multisigDAO.connect(owner).submitProposal(
+                    otherAccount1.address,
+                    hre.ethers.parseUnits("75", 18),
+                    Action.Approve,
+                    "0x"
+                );
+
+                // UpdateMetadata proposal
+                const newMetadata = "ipfs://updated-metadata-hash";
+                const encodedMetadata = hre.ethers.AbiCoder.defaultAbiCoder().encode(["string"], [newMetadata]);
+                await multisigDAO.connect(owner).submitProposal(
+                    hre.ethers.ZeroAddress,
+                    0,
+                    Action.UpdateMetadata,
+                    encodedMetadata
+                );
+
+                // Execute the first proposal
+                await multisigDAO.connect(owner).approveProposal(0);
+                await multisigDAO.connect(otherAccount1).approveProposal(0);
+                await multisigDAO.connect(owner).executeProposal(0);
+
+                // Get all proposals using our new function
+                const allProposals = await (multisigDAO as unknown as MultisigDAOExtended).getAllProposals();
+
+                // Verify the number of proposals
+                expect(allProposals.length).to.equal(4);
+
+                // Verify specific properties of each proposal
+                // Proposal 1 (Distribute) - executed
+                expect(allProposals[0].to).to.equal(recipient.address);
+                expect(allProposals[0].value).to.equal(hre.ethers.parseUnits("100", 18));
+                expect(allProposals[0].action).to.equal(Action.Distribute);
+                expect(allProposals[0].isExecuted).to.be.true;
+
+                // Proposal 2 (Burn) - not executed
+                expect(allProposals[1].to).to.equal(hre.ethers.ZeroAddress);
+                expect(allProposals[1].value).to.equal(hre.ethers.parseUnits("50", 18));
+                expect(allProposals[1].action).to.equal(Action.Burn);
+                expect(allProposals[1].isExecuted).to.be.false;
+
+                // Proposal 3 (Approve) - not executed
+                expect(allProposals[2].to).to.equal(otherAccount1.address);
+                expect(allProposals[2].value).to.equal(hre.ethers.parseUnits("75", 18));
+                expect(allProposals[2].action).to.equal(Action.Approve);
+                expect(allProposals[2].isExecuted).to.be.false;
+
+                // Proposal 4 (UpdateMetadata) - not executed
+                expect(allProposals[3].to).to.equal(hre.ethers.ZeroAddress);
+                expect(allProposals[3].value).to.equal(0);
+                expect(allProposals[3].action).to.equal(Action.UpdateMetadata);
+                expect(allProposals[3].data).to.equal(encodedMetadata);
+                expect(allProposals[3].isExecuted).to.be.false;
+            });
+
+            it("Should return an empty array when no proposals exist", async function () {
+                // Deploy a fresh DAO for this test to ensure no proposals exist
+                const { daoFactory, owner, otherAccount1, otherAccount2 } = await loadFixture(deployDAOFactoryFixture);
+
+                const daoOwners = [owner.address, otherAccount1.address, otherAccount2.address];
+                const requiredConfirmations = 2;
+                const tx = await daoFactory.createDAO(
+                    daoOwners,
+                    requiredConfirmations,
+                    "Empty DAO",
+                    "EDAO",
+                    18,
+                    hre.ethers.parseUnits("1000", 18),
+                    "empty-dao-metadata"
+                );
+                const receipt = await tx.wait();
+
+                // Extract DAO address from event
+                let daoAddress = "";
+                if (receipt?.logs) {
+                    const daoFactoryInterface = await hre.ethers.getContractFactory("DAOFactory").then(f => f.interface);
+                    for (const log of receipt.logs) {
+                        try {
+                            const parsedLog = daoFactoryInterface.parseLog(log as any);
+                            if (parsedLog && parsedLog.name === "Create") {
+                                daoAddress = parsedLog.args.daoAddress;
+                                break;
+                            }
+                        } catch (e) { /* Ignore */ }
+                    }
+                }
+
+                const newDAO = await hre.ethers.getContractAt("MultisigDAO", daoAddress);
+                const proposals = await (newDAO as unknown as MultisigDAOExtended).getAllProposals();
+
+                // Verify it's an empty array
+                expect(proposals.length).to.equal(0);
+            });
+
+            it("Should filter proposals by execution status", async function () {
+                const { multisigDAO, owner, otherAccount1, recipient } = await loadFixture(deployDAOFactoryFixture);
+
+                // Create 5 proposals
+                for (let i = 0; i < 5; i++) {
+                    await multisigDAO.connect(owner).submitProposal(
+                        recipient.address,
+                        hre.ethers.parseUnits((10 * (i + 1)).toString(), 18),
+                        Action.Distribute,
+                        "0x"
+                    );
+                }
+
+                // Execute only proposals with even index (0, 2, 4)
+                for (let i = 0; i < 5; i += 2) {
+                    await multisigDAO.connect(owner).approveProposal(i);
+                    await multisigDAO.connect(otherAccount1).approveProposal(i);
+                    await multisigDAO.connect(owner).executeProposal(i);
+                }
+
+                // Get executed proposals
+                const executedProposals = await (multisigDAO as unknown as MultisigDAOExtended).getProposalsByStatus(true);
+
+                // Get pending proposals
+                const pendingProposals = await (multisigDAO as unknown as MultisigDAOExtended).getProposalsByStatus(false);
+
+                // Verify counts
+                expect(executedProposals.length).to.equal(3); // Proposals 0, 2, 4
+                expect(pendingProposals.length).to.equal(2);  // Proposals 1, 3
+
+                // Verify executed proposals are the right ones
+                expect(executedProposals[0].value).to.equal(hre.ethers.parseUnits("10", 18)); // First proposal (index 0)
+                expect(executedProposals[1].value).to.equal(hre.ethers.parseUnits("30", 18)); // Third proposal (index 2)
+                expect(executedProposals[2].value).to.equal(hre.ethers.parseUnits("50", 18)); // Fifth proposal (index 4)
+
+                // Verify pending proposals are the right ones
+                expect(pendingProposals[0].value).to.equal(hre.ethers.parseUnits("20", 18)); // Second proposal (index 1)
+                expect(pendingProposals[1].value).to.equal(hre.ethers.parseUnits("40", 18)); // Fourth proposal (index 3)
+
+                // Verify all filtered proposals have the correct execution status
+                for (const proposal of executedProposals) {
+                    expect(proposal.isExecuted).to.be.true;
+                }
+
+                for (const proposal of pendingProposals) {
+                    expect(proposal.isExecuted).to.be.false;
+                }
+            });
+
+            it("Should retrieve detailed proposal information with getProposalDetails", async function () {
+                const { multisigDAO, owner, otherAccount1, otherAccount2, recipient } = await loadFixture(deployDAOFactoryFixture);
+
+                // Create a proposal
+                await multisigDAO.connect(owner).submitProposal(
+                    recipient.address,
+                    hre.ethers.parseUnits("50", 18),
+                    Action.Distribute,
+                    "0x"
+                );
+                const proposalId = 0;
+
+                // Check initial proposal details before any approvals
+                let details = await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).getProposalDetails(proposalId);
+                expect(details.proposal.to).to.equal(recipient.address);
+                expect(details.proposal.value).to.equal(hre.ethers.parseUnits("50", 18));
+                expect(details.proposal.action).to.equal(Action.Distribute);
+                expect(details.proposal.isExecuted).to.be.false;
+                expect(details.approvalCount).to.equal(0);
+                expect(details.isApprovedByCurrentSender).to.be.false;
+
+                // Have the first owner approve
+                await multisigDAO.connect(owner).approveProposal(proposalId);
+
+                // Check details after first approval
+                details = await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).getProposalDetails(proposalId);
+                expect(details.approvalCount).to.equal(1);
+                expect(details.isApprovedByCurrentSender).to.be.true;
+
+                // Check from a different owner's perspective
+                details = await (multisigDAO.connect(otherAccount1) as unknown as MultisigDAOExtended).getProposalDetails(proposalId);
+                expect(details.approvalCount).to.equal(1); // Still 1 approval total
+                expect(details.isApprovedByCurrentSender).to.be.false; // But this owner hasn't approved
+
+                // Second owner approves
+                await multisigDAO.connect(otherAccount1).approveProposal(proposalId);
+
+                // Check details after second approval
+                details = await (multisigDAO.connect(otherAccount2) as unknown as MultisigDAOExtended).getProposalDetails(proposalId);
+                expect(details.approvalCount).to.equal(2);
+                expect(details.isApprovedByCurrentSender).to.be.false; // Third owner hasn't approved
+
+                // Execute the proposal
+                await multisigDAO.connect(owner).executeProposal(proposalId);
+
+                // Check details after execution
+                details = await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).getProposalDetails(proposalId);
+                expect(details.proposal.isExecuted).to.be.true;
+                expect(details.approvalCount).to.equal(2); // Approval count unchanged
+            });
+
+            it("Should return the list of DAO owners", async function () {
+                const { multisigDAO, owner, otherAccount1, otherAccount2 } = await loadFixture(deployDAOFactoryFixture);
+
+                const owners = await (multisigDAO as unknown as MultisigDAOExtended).getOwners();
+
+                // Verify owner count
+                expect(owners.length).to.equal(3);
+
+                // Verify specific owners
+                expect(owners).to.include(owner.address);
+                expect(owners).to.include(otherAccount1.address);
+                expect(owners).to.include(otherAccount2.address);
+
+                // Verify non-owner is not included
+                const [, , , nonOwner] = await hre.ethers.getSigners();
+                expect(owners).to.not.include(nonOwner.address);
+            });
+        });
+
+        describe("DAO Ownership Management", function () {
+            it("Should correctly set initial owners during DAO creation", async function () {
+                const { daoFactory, owner, otherAccount1, otherAccount2 } = await loadFixture(deployDAOFactoryFixture);
+
+                const daoOwners = [owner.address, otherAccount1.address, otherAccount2.address];
+                const tokenName = "Ownership Test DAO";
+                const tokenSymbol = "OTD";
+
+                // Create new DAO
+                const tx = await daoFactory.createDAO(
+                    daoOwners,
+                    2, // Required confirmations
+                    tokenName,
+                    tokenSymbol,
+                    18,
+                    hre.ethers.parseUnits("1000", 18),
+                    "test-metadata"
+                );
+                const receipt = await tx.wait();
+
+                // Extract DAO address
+                let daoAddress = "";
+                if (receipt?.logs) {
+                    const daoFactoryInterface = await hre.ethers.getContractFactory("DAOFactory").then(f => f.interface);
+                    for (const log of receipt.logs) {
+                        try {
+                            const parsedLog = daoFactoryInterface.parseLog(log as any);
+                            if (parsedLog && parsedLog.name === "Create") {
+                                daoAddress = parsedLog.args.daoAddress;
+                                break;
+                            }
+                        } catch (e) { /* Ignore */ }
+                    }
+                }
+
+                // Get DAO contract
+                const multisigDAO = await hre.ethers.getContractAt("MultisigDAO", daoAddress);
+
+                // Verify each owner
+                for (const ownerAddress of daoOwners) {
+                    expect(await multisigDAO.s_isOwner(ownerAddress)).to.be.true;
+                }
+
+                // Verify non-owners
+                const [, , , nonOwner] = await hre.ethers.getSigners();
+                expect(await multisigDAO.s_isOwner(nonOwner.address)).to.be.false;
+
+                // Verify required confirmations
+                expect(await multisigDAO.s_required()).to.equal(2);
+            });
+
+            it("Should restrict actions to owners only", async function () {
+                const { multisigDAO, owner, otherAccount3, recipient } = await loadFixture(deployDAOFactoryFixture);
+
+                // Try actions with non-owner
+                await expect(
+                    multisigDAO.connect(otherAccount3).submitProposal(
+                        recipient.address,
+                        hre.ethers.parseUnits("10", 18),
+                        Action.Distribute,
+                        "0x"
+                    )
+                ).to.be.revertedWithCustomError(multisigDAO, "MultisigDAO_InvalidOwner");
+
+                // Submit with valid owner
+                await multisigDAO.connect(owner).submitProposal(
+                    recipient.address,
+                    hre.ethers.parseUnits("10", 18),
+                    Action.Distribute,
+                    "0x"
+                );
+
+                // Try approve with non-owner
+                await expect(
+                    multisigDAO.connect(otherAccount3).approveProposal(0)
+                ).to.be.revertedWithCustomError(multisigDAO, "MultisigDAO_InvalidOwner");
+
+                // Try execute with non-owner
+                await expect(
+                    multisigDAO.connect(otherAccount3).executeProposal(0)
+                ).to.be.revertedWithCustomError(multisigDAO, "MultisigDAO_InvalidOwner");
+            });
         });
     });
 });
