@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { config } from "@/main";
-import { ERC20Factory__factory } from "@repo/contracts";
-import { toBigInt } from "ethers";
+import { ERC20Factory__factory, DAOFactory__factory } from "@repo/contracts";
+import { ethers, toBigInt } from "ethers";
 import { useEffect, useState } from "react";
 import type { Abi } from "viem";
 import {
@@ -17,6 +18,9 @@ import type { Config, UseReadContractParameters } from "wagmi";
 import { simulateContract } from "@wagmi/core";
 import { contractAddress } from "@/config/config";
 import { MODAL_STEP } from "@/components/ModalStep/ModalStep";
+import { pinata } from "@/utils/http";
+import { CreateDAOContractSchemaType } from "@/utils/Rules";
+import { DECIMALS } from "@/constants/token";
 
 type UseContractReadParameters = Omit<
   UseReadContractParameters,
@@ -38,7 +42,7 @@ export function useContractRead<T = unknown>(
   });
 }
 
-type functionNameType = "mintERC20" | "mintERC20ForDAO";
+type functionNameType = "mintERC20" | "createDAO";
 
 export function useContractWrite({
   functionName,
@@ -76,7 +80,7 @@ export function useContractWrite({
     }
   }, [isSuccess]);
 
-  const write = async (args: any = []) => {
+  const write = async (args: any = [], daoInfo?: CreateDAOContractSchemaType) => {
     if (!isConnected) {
       setErrorWrite("You need to connect wallet");
       return;
@@ -85,13 +89,30 @@ export function useContractWrite({
     setErrorWrite("");
     try {
       const gasPrice = (await publicClient?.getGasPrice()) as bigint;
-      const setUpMethod: any = {
-        abi: ERC20Factory__factory.abi,
-        address: contractAddress.ERC20FactoryAddress,
-        args,
-        functionName,
-        account: address,
-      };
+      const amountValue = ethers.parseUnits(daoInfo?.amount || "0", DECIMALS);
+      const setUpMethod: any = daoInfo
+        ? {
+            abi: DAOFactory__factory.abi,
+            address: contractAddress.DAOFactoryAddress,
+            args: [
+              daoInfo.listAddress,
+              daoInfo.requireVote,
+              daoInfo.nameToken,
+              daoInfo.symbol,
+              18,
+              amountValue,
+              "",
+            ],
+            functionName,
+            account: address,
+          }
+        : {
+            abi: ERC20Factory__factory.abi,
+            address: contractAddress.ERC20FactoryAddress,
+            args,
+            functionName,
+            account: address,
+          };
       const estimatedGas = (await publicClient?.estimateContractGas(
         setUpMethod
       )) as bigint;
@@ -104,8 +125,36 @@ export function useContractWrite({
         return;
       }
       const { request } = await simulateContract(config, setUpMethod);
-      await writeContractAsync(request);
+      if (daoInfo && daoInfo.avatarFile) {
+        const upload = await pinata.upload.public
+          .file(daoInfo.avatarFile)
+          .group("87de2c19-9d65-4cff-9fd1-08a426a68411");
+        const gatewayUrlImg = await pinata.gateways.public.convert(upload.cid);
+        const uploadDataJson = await pinata.upload.public
+          .json({
+            name: daoInfo.nameDAO,
+            description: daoInfo.descriptionDao,
+            image: gatewayUrlImg,
+          })
+          .group("eda38d13-ccf0-4bf8-bddd-43245a3851c1");
+        await writeContractAsync({
+          ...request,
+          args: [
+            daoInfo.listAddress,
+            daoInfo.requireVote,
+            daoInfo.nameToken,
+            daoInfo.symbol,
+            18,
+            amountValue,
+            uploadDataJson.cid,
+          ],
+        });
+      } else {
+        await writeContractAsync(request);
+      }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
+      console.log("error", { error });
       if (
         error?.shortMessage.includes(
           "Arithmetic operation resulted in underflow or overflow"
@@ -113,10 +162,10 @@ export function useContractWrite({
       ) {
         setErrorWrite("You don't have enough balance");
       } else {
-        setErrorWrite(error?.shortMessage);
+        setErrorWrite(error?.shortMessage || "Something went wrong");
       }
       setStepModal(MODAL_STEP.FAILED);
-    } 
+    }
   };
 
   return {

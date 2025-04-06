@@ -1,16 +1,15 @@
 import AvatarDAO from "@/components/AvatarDAO/AvatarDAO";
 import BoxContent from "@/components/BoxContent";
-import imageDao from "@/assets/images/DAOIcon.png";
 import { Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ProposalItem from "../components/ProposalItem/ProposalItem";
 import Nodata from "@/components/Nodata";
 import { Link, useParams } from "react-router-dom";
-import path from "@/constants/path";
-import useContractDetail from "@/hooks/useContractDetail";
+import useDAODetail from "@/hooks/useDAODetail";
 import { useEffect } from "react";
-import useDaoTokenInfoStore from "@/store/daoTokenInfo";
 import Loading from "@/components/Loading/Loading";
+import useGetMetaData from "@/hooks/useGetMetaData";
+import { toast } from "sonner";
 
 const DAODetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,30 +17,32 @@ const DAODetail = () => {
     data: infoToken,
     isLoading: isLoadingInfo,
     isErrorContractAddress,
-    error,
-  } = useContractDetail([id] as `0x${string}`[]);
-  const { tokenDetail, setTokenDetail } = useDaoTokenInfoStore();
+  } = useDAODetail([id] as `0x${string}`[]);
+
+  const {
+    data: metaDataDao,
+    isError: isErrorMetaDataDao,
+    isLoading: isLoadingMetaDataDao,
+  } = useGetMetaData([id] as `0x${string}`[]);
 
   useEffect(() => {
-    if (
-      infoToken &&
-      infoToken.length > 0 &&
-      JSON.stringify(infoToken[0]) !== JSON.stringify(tokenDetail)
-    ) {
-      setTokenDetail(infoToken[0]);
+    if (isErrorContractAddress || isErrorMetaDataDao) {
+      toast("Something went wrong");
     }
-  }, [infoToken, setTokenDetail, tokenDetail]);
+  }, [isErrorContractAddress, isErrorMetaDataDao]);
 
   return (
     <BoxContent extendClassName="py-4 bg-[#151617]">
       <div className="flex items-center gap-4 mb-12">
         <div className="w-[108px] h-[108px]">
-          <AvatarDAO src={imageDao} />
+          <AvatarDAO src={metaDataDao[0]?.image} />
         </div>
         <div>
-          <div className="text-4xl font-bold text-white">Cosmos Hub</div>
+          <div className="text-4xl font-bold text-white">
+            {metaDataDao[0]?.name}
+          </div>
           <div className="text-[14px] text-[#D1D5DB] mt-1">
-            Native chain governance for Cosmos Hub.
+            {metaDataDao[0]?.description}
           </div>
         </div>
       </div>
@@ -74,7 +75,7 @@ const DAODetail = () => {
           {/* <Nodata /> */}
         </div>
       </div>
-      <Loading isLoading={isLoadingInfo} />
+      <Loading isLoading={isLoadingInfo || isLoadingMetaDataDao} />
     </BoxContent>
   );
 };

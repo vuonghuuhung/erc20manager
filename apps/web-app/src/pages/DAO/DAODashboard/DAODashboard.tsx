@@ -3,98 +3,15 @@ import DAOItemCard from "@/components/DAOItemCard/DAOItemCard";
 import path from "@/constants/path";
 import { CirclePlus, ClipboardList } from "lucide-react";
 import { Link } from "react-router-dom";
-import imageDao from "@/assets/images/DAOIcon.png";
 import { useReadContract } from "wagmi";
 import { contractAddress } from "@/config/config";
-import { ERC20Factory__factory } from "@repo/contracts";
+import { DAOFactory__factory } from "@repo/contracts";
 import Loading from "@/components/Loading/Loading";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import useContractDetail from "@/hooks/useContractDetail";
+import useDAODetail from "@/hooks/useDAODetail";
 import Nodata from "@/components/Nodata";
-
-const mock = [
-  {
-    image: imageDao,
-    name: "Cosmos Hub",
-    description: "Native chain governance for Cosmos Hub.",
-    totalSupply: "$113.33K est. USD value",
-    totalProposal: 50,
-    address: 123,
-  },
-  {
-    image: imageDao,
-    name: "Cosmos Hub",
-    description: "Native chain governance for Cosmos Hub.",
-    totalSupply: "$113.33K est. USD value",
-    totalProposal: 50,
-    address: 123,
-  },
-  {
-    image: imageDao,
-    name: "Cosmos Hub",
-    description: "Native chain governance for Cosmos Hub.",
-    totalSupply: "$113.33K est. USD value",
-    totalProposal: 50,
-    address: 123,
-  },
-  {
-    image: imageDao,
-    name: "Cosmos Hub",
-    description: "Native chain governance for Cosmos Hub.",
-    totalSupply: "$113.33K est. USD value",
-    totalProposal: 50,
-    address: 123,
-  },
-  {
-    image: imageDao,
-    name: "Cosmos Hub",
-    description: "Native chain governance for Cosmos Hub.",
-    totalSupply: "$113.33K est. USD value",
-    totalProposal: 50,
-    address: 123,
-  },
-  {
-    image: imageDao,
-    name: "Cosmos Hub",
-    description: "Native chain governance for Cosmos Hub.",
-    totalSupply: "$113.33K est. USD value",
-    totalProposal: 50,
-    address: 123,
-  },
-  {
-    image: imageDao,
-    name: "Cosmos Hub",
-    description: "Native chain governance for Cosmos Hub.",
-    totalSupply: "$113.33K est. USD value",
-    totalProposal: 50,
-    address: 123,
-  },
-  {
-    image: imageDao,
-    name: "Cosmos Hub",
-    description: "Native chain governance for Cosmos Hub.",
-    totalSupply: "$113.33K est. USD value",
-    totalProposal: 50,
-    address: 123,
-  },
-  {
-    image: imageDao,
-    name: "Cosmos Hub",
-    description: "Native chain governance for Cosmos Hub.",
-    totalSupply: "$113.33K est. USD value",
-    totalProposal: 50,
-    address: 123,
-  },
-  {
-    image: imageDao,
-    name: "Cosmos Hub",
-    description: "Native chain governance for Cosmos Hub.",
-    totalSupply: "$113.33K est. USD value",
-    totalProposal: 50,
-    address: 123,
-  },
-];
+import useGetMetaData from "@/hooks/useGetMetaData";
 
 const DAODashboard = () => {
   const {
@@ -102,8 +19,8 @@ const DAODashboard = () => {
     isLoading: isLoadingGetListDaoAddress,
     isError: isErrorListDaoAddress,
   } = useReadContract({
-    address: contractAddress.ERC20FactoryAddress,
-    abi: ERC20Factory__factory.abi,
+    address: contractAddress.DAOFactoryAddress,
+    abi: DAOFactory__factory.abi,
     functionName: "getListOfDAO",
     args: [],
   });
@@ -112,14 +29,22 @@ const DAODashboard = () => {
     data: listDaoInfo,
     isLoading,
     isError: isErrorTokenDetail,
-  } = useContractDetail(listDaoAddress as `0x${string}`[]);
-  console.log("data contract", listDaoInfo);
+  } = useDAODetail(listDaoAddress as `0x${string}`[]);
+
+  const {
+    data: metaDataDao,
+    isError: isErrorMetaDataDao,
+    isLoading: isLoadingMetaDataDao,
+  } = useGetMetaData(listDaoAddress as `0x${string}`[]);
+
+  console.log("metaDataDao", metaDataDao);
+  console.log("listDaoInfo", listDaoInfo);
 
   useEffect(() => {
-    if (isErrorListDaoAddress || isErrorTokenDetail) {
+    if (isErrorListDaoAddress || isErrorTokenDetail || isErrorMetaDataDao) {
       toast("Something went wrong");
     }
-  }, [isErrorListDaoAddress, isErrorTokenDetail]);
+  }, [isErrorListDaoAddress, isErrorTokenDetail, isErrorMetaDataDao]);
 
   return (
     <div>
@@ -154,20 +79,31 @@ const DAODashboard = () => {
       <BoxContent extendClassName="py-4">
         {listDaoInfo && listDaoInfo.length === 0 && <Nodata />}
         {listDaoInfo && listDaoInfo.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
             {listDaoInfo.map((item, index) => (
               <Link
                 to={`/dao/detail/${item.addressDao}`}
                 key={index}
                 className="col-span-1"
               >
-                <DAOItemCard totalProposal={item.listProposal?.length} />
+                <DAOItemCard
+                  avatarDao={metaDataDao[index]?.image}
+                  nameDao={metaDataDao[index]?.name}
+                  description={metaDataDao[index]?.description}
+                  totalSupply={item?.totalSupply}
+                  symbol={item?.symbol}
+                  totalProposal={0}
+                />
               </Link>
             ))}
           </div>
         )}
       </BoxContent>
-      <Loading isLoading={isLoading || isLoadingGetListDaoAddress} />
+      <Loading
+        isLoading={
+          isLoading || isLoadingGetListDaoAddress || isLoadingMetaDataDao
+        }
+      />
     </div>
   );
 };

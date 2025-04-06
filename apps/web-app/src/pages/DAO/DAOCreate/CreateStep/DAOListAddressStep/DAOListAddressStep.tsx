@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 
 import { Plus } from "lucide-react";
 
@@ -27,8 +27,9 @@ const DAOListAddressSchema = createDAOContractSchema.pick({
 });
 
 const DAOListAddressStep: FC<{
+  dataSubmit: CreateDAOContractSchemaType;
   handleUpdateStep: (step: number, data: DAOListAddressSchemaType) => void;
-}> = ({ handleUpdateStep }) => {
+}> = ({ handleUpdateStep, dataSubmit }) => {
   const form = useForm<DAOListAddressSchemaType>({
     resolver: zodResolver(DAOListAddressSchema),
     defaultValues: {
@@ -79,6 +80,14 @@ const DAOListAddressStep: FC<{
   };
 
   async function onSubmit(values: DAOListAddressSchemaType) {
+    if (Number(values.requireVote) > listAddress.length) {
+      form.setError("requireVote", {
+        type: "manual",
+        message:
+          "Number of votes must be less than or equal to the number of members",
+      });
+      return;
+    }
     handleUpdateStep(3, values);
   }
 
@@ -98,10 +107,31 @@ const DAOListAddressStep: FC<{
       listAddress.length >= 0 &&
       listAddressError.every((item) => item === "")
     ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       form.setValue("listAddress", listAddress);
     }
   };
+
+  const listAddressWatch = form.watch("listAddress");
+  const requireVoteWatch = form.watch("requireVote");
+
+  const handleGoBack = () => {
+    handleUpdateStep(1, {
+      listAddress:listAddressWatch,
+      requireVote: requireVoteWatch,
+    });
+  };
+
+  useEffect(() => {
+    form.setValue("listAddress", dataSubmit.listAddress);
+    form.setValue("requireVote", dataSubmit.requireVote);
+    if (dataSubmit.listAddress.length > 0) {
+      setListAddress(dataSubmit.listAddress);
+    }
+  }, [dataSubmit, form]);
+
+  useEffect(() => {
+    form.setValue("listAddress", listAddress);
+  }, [listAddress, form]);
 
   return (
     <div>
@@ -132,7 +162,10 @@ const DAOListAddressStep: FC<{
               {listAddress.length > 0 &&
                 listAddress.map((item, index) => {
                   return (
-                    <div key={index} className="flex items-center justify-between">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between"
+                    >
                       <div className="flex-1 mt-4">
                         <Input
                           placeholder={`Address ${index + 1}`}
@@ -179,7 +212,10 @@ const DAOListAddressStep: FC<{
               {form.formState.errors.listAddress?.message}
             </div>
           </div>
-          <div className="flex justify-end items-center mt-4">
+          <div className="flex justify-between items-center mt-4">
+            <Button onClick={handleGoBack} type="button" className="w-[120px]">
+              Back
+            </Button>
             <Button
               onClick={handleCheckAddress}
               type={isError ? "button" : "submit"}
@@ -188,15 +224,6 @@ const DAOListAddressStep: FC<{
               Continue
             </Button>
           </div>
-          {/* <div className="mt-8 w-[400px] mx-auto">
-        {isConnected ? (
-          <Button type="submit" className="block w-full">
-            Submit
-          </Button>
-        ) : (
-          <ConnectButtonCustom />
-        )}
-      </div> */}
         </form>
       </Form>
     </div>

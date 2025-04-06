@@ -41,7 +41,7 @@ const DashBoardPage = () => {
         <div className="flex justify-between items-center mb-8">
           <div className="text-[24px] flex items-center font-semibold">
             <ClipboardList className="mr-2" />
-            List Tokens
+            Listed tokens
           </div>
           <div>
             <div className="flex items-center justify-center">

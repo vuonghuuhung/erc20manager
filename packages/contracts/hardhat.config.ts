@@ -24,8 +24,8 @@ const config: HardhatUserConfig = {
     hardhat: {
       allowUnlimitedContractSize: true,
     },
-    sepolia: {
-      url: "https://eth-sepolia.g.alchemy.com/v2/ooTTNOyUpAQIYuIQU9ZSNiNrEgzBHcSd",
+    holesky: {
+      url: "https://eth-holesky.g.alchemy.com/v2/cOQtLz0U1KR-mxS_zXyuFMZaI1-FPMvh",
       accounts: [process.env.PRIVATE_KEY || "", ...privateKeys],
     },
   },

@@ -1,5 +1,5 @@
 import { handleConvertToToken } from "@/utils/convertNumber";
-import { ERC20Manager__factory } from "@repo/contracts";
+import { ERC20Template__factory } from "@repo/contracts";
 import { useEffect, useState } from "react";
 import { useReadContracts } from "wagmi";
 
@@ -17,25 +17,25 @@ const useTokenDetails = (tokenAddresses: `0x${string}`[] = []) => {
   const calls = tokenAddresses.flatMap((address) => [
     {
       address,
-      abi: ERC20Manager__factory.abi,
+      abi: ERC20Template__factory.abi,
       functionName: "name",
       args: [],
     },
     {
       address,
-      abi: ERC20Manager__factory.abi,
+      abi: ERC20Template__factory.abi,
       functionName: "symbol",
       args: [],
     },
     {
       address,
-      abi: ERC20Manager__factory.abi,
+      abi: ERC20Template__factory.abi,
       functionName: "decimals",
       args: [],
     },
     {
       address,
-      abi: ERC20Manager__factory.abi,
+      abi: ERC20Template__factory.abi,
       functionName: "totalSupply",
       args: [],
     },

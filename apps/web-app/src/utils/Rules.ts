@@ -9,14 +9,6 @@ export const createTokenSchema = z.object({
     .string()
     .nonempty("This field is required")
     .max(160, "Length max 160 characters"),
-  decimals: z
-    .string()
-    .nonempty("This field is required")
-    .max(160, "Length max 160 characters")
-    .refine((val) => {
-      const num = Number(val);
-      return !isNaN(num) && num >= 0 && num <= 18;
-    }, "Value must be between 0 and 18"),
   amount: z
     .string()
     .nonempty("This field is required")
@@ -42,12 +34,17 @@ export const createDAOContractSchema = z.object({
     .string()
     .nonempty("This field is required")
     .max(160, "Length max 160 characters"),
-  listAddress: z.string().optional().array().min(1, "This DAO has no members.").max(160, "Maximum of 160 addresses allowed"),
+  listAddress: z.string().array().min(1, "This DAO has no members.").max(160, "Maximum of 160 addresses allowed"),
   requireVote: z
     .string()
     .nonempty("This field is required")
     .max(160, "Length max 160 characters"),
-  avatar: z.string().max(1000, "Length max 1000 characters"),
+  avatarFile: z
+    .instanceof(File)
+    .optional()
+    .refine((file) => file instanceof File || file === undefined, {
+      message: "This field is required",
+    }),
   nameToken: z
     .string()
     .nonempty("This field is required")
@@ -56,14 +53,6 @@ export const createDAOContractSchema = z.object({
     .string()
     .nonempty("This field is required")
     .max(160, "Length max 160 characters"),
-  decimals: z
-    .string()
-    .nonempty("This field is required")
-    .max(160, "Length max 160 characters")
-    .refine((val) => {
-      const num = Number(val);
-      return !isNaN(num) && num >= 0 && num <= 18;
-    }, "Value must be between 0 and 18"),
   amount: z
     .string()
     .nonempty("This field is required")

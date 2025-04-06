@@ -1,6 +1,6 @@
 import { CircleX } from "lucide-react";
 import InputFile from "@/components/InputFile/InputFile";
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -19,39 +19,79 @@ import { Button } from "@/components/ui/button";
 
 export type CreateDAOInfoSchemaType = Pick<
   CreateDAOContractSchemaType,
-  "avatar" | "descriptionDao" | "nameDAO"
+  "descriptionDao" | "nameDAO" | "avatarFile"
 >;
 const createDAOInfoSchema = createDAOContractSchema.pick({
   nameDAO: true,
-  avatar: true,
   descriptionDao: true,
+  avatarFile: true,
 });
 
 const DAOInfoStep: FC<{
+  dataSubmit: CreateDAOContractSchemaType;
   handleUpdateStep: (step: number, data: CreateDAOInfoSchemaType) => void;
-}> = ({ handleUpdateStep }) => {
+}> = ({ handleUpdateStep, dataSubmit }) => {
   const [file, setFile] = useState<File>();
   const form = useForm<CreateDAOInfoSchemaType>({
     resolver: zodResolver(createDAOInfoSchema),
     defaultValues: {
       nameDAO: "",
-      avatar: "",
       descriptionDao: "",
+      avatarFile: undefined,
     },
   });
   const previewImage = useMemo(() => {
     return file ? URL.createObjectURL(file) : "";
   }, [file]);
 
-  const avatar = form.watch("avatar");
-
   const handleChangeFile = (file?: File) => {
     setFile(file);
   };
 
   async function onSubmit(values: CreateDAOInfoSchemaType) {
-    handleUpdateStep(2, values);
+    handleUpdateStep(2, {
+      ...values,
+      avatarFile: file,
+    });
+    // try {
+    //   setIsLoading(true);
+    //   if (file) {
+    //     const upload = await pinata.upload.public
+    //       .file(file)
+    //       .group("87de2c19-9d65-4cff-9fd1-08a426a68411");
+    //     console.log(upload);
+    //     const gatewayUrlImg = await pinata.gateways.public.convert(upload.cid);
+    //     const uploadDataJson = await pinata.upload.public
+    //       .json({
+    //         name: values.nameDAO,
+    //         description: values.descriptionDao,
+    //         image: gatewayUrlImg,
+    //       })
+    //       .group("eda38d13-ccf0-4bf8-bddd-43245a3851c1");
+    //     setIsLoading(false);
+    //     if (uploadDataJson) {
+    //       handleUpdateStep(2, {
+    //         ...values,
+    //         avatarFile: file,
+    //         avatarUpload: uploadDataJson.cid,
+    //       });
+    //     }
+    //   }
+    // } catch (error) {
+    //   console.log(error);
+    //   setIsLoading(false);
+    //   toast.error("Something went wrong");
+    // }
   }
+
+  useEffect(() => {
+    form.setValue("nameDAO", dataSubmit.nameDAO);
+    form.setValue("descriptionDao", dataSubmit.descriptionDao);
+    if (dataSubmit.avatarFile) {
+      setFile(dataSubmit.avatarFile);
+    }
+  }, [dataSubmit, form]);
+
   return (
     <div>
       <Form {...form}>
@@ -78,7 +118,7 @@ const DAOInfoStep: FC<{
               <div className="h-full">
                 <InputFile onChange={handleChangeFile} />
                 <div className="text-sm font-medium text-destructive mt-2">
-                  {form.formState.errors.avatar?.message}
+                  {form.formState.errors.avatarFile?.message}
                 </div>
               </div>
             )}

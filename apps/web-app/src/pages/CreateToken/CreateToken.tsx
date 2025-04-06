@@ -17,6 +17,7 @@ import ConnectButtonCustom from "@/components/ConnectButtonCustom/ConnectButtonC
 import { ethers } from "ethers";
 import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
 import { useContractWrite } from "@/hooks/useContracts";
+import { DECIMALS } from "@/constants/token";
 
 const CreateToken = () => {
   const { write, stepModal, errorWrite, setStepModal, isConnected } =
@@ -28,17 +29,16 @@ const CreateToken = () => {
     defaultValues: {
       name: "",
       symbol: "",
-      decimals: "",
       amount: "",
     },
   });
 
   async function onSubmit(values: CreateTokenType) {
     try {
-      const { name, symbol, decimals, amount } = values;
-      const amountValue = ethers.parseUnits(amount, Number(decimals || 18));
+      const { name, symbol, amount } = values;
+      const amountValue = ethers.parseUnits(amount, DECIMALS);
 
-      await write([name, symbol, Number(decimals), amountValue]);
+      await write([name, symbol, amountValue]);
     } catch (error) {
       console.log("error", { error });
     }
@@ -59,7 +59,6 @@ const CreateToken = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <FormLabel className="font-normal">Burn</FormLabel>
                       <Input
                         placeholder="Token"
                         {...field}
@@ -81,18 +80,6 @@ const CreateToken = () => {
                         {...field}
                         className="block w-full p-3 h-[45px] text-white rounded-[8px] bg-[#161b26] text-[14px] font-medium border border-[#d0d5dd] outline-none"
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="decimals"
-                render={({ field }) => (
-                  <FormItem className="!mt-4">
-                    <FormControl>
-                      <InputNumber placeholder="Decimals" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

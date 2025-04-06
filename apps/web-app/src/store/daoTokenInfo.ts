@@ -1,4 +1,4 @@
-import { DaoTokenDetails } from "@/hooks/useContractDetail";
+import { DaoTokenDetails } from "@/hooks/useDAODetail";
 import { create } from "zustand";
 
 type State = {
@@ -11,7 +11,7 @@ type Actions = {
 };
 
 const initialState: State = {
-    tokenDetail: null
+  tokenDetail: null,
 };
 
 const useDaoTokenInfoStore = create<State & Actions>()((set) => ({

@@ -24,7 +24,7 @@ import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
 import { useContractWrite } from "@/hooks/useContracts";
 import useDaoTokenInfoStore from "@/store/daoTokenInfo";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import useContractDetail from "@/hooks/useContractDetail";
+import useDAODetail from "@/hooks/useDAODetail";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Loading from "@/components/Loading/Loading";
@@ -50,15 +50,23 @@ const CreateProposal = () => {
     isLoading: isLoadingInfo,
     isErrorContractAddress,
     error,
-  } = useContractDetail([id] as `0x${string}`[]);
+  } = useDAODetail([id] as `0x${string}`[]);
 
   async function onSubmit(values: CreateProposalType) {
     console.log("values", values);
 
     try {
       const { amount } = values;
-      const amountValue = ethers.parseUnits(amount, Number(infoToken[0]?.decimals || 18));
-      await write([name, symbol, Number(infoToken[0]?.decimals || 18), amountValue]);
+      const amountValue = ethers.parseUnits(
+        amount,
+        Number(infoToken[0]?.decimals || 18)
+      );
+      await write([
+        name,
+        symbol,
+        Number(infoToken[0]?.decimals || 18),
+        amountValue,
+      ]);
     } catch (error) {
       console.log("error", { error });
     }

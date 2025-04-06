@@ -14,30 +14,28 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { useContractWrite } from "@/hooks/useContracts";
 import ConnectButtonCustom from "@/components/ConnectButtonCustom/ConnectButtonCustom";
-import { ethers } from "ethers";
 import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
 
 export type DAOTokenInfoSchemaType = Pick<
   CreateDAOContractSchemaType,
-  "amount" | "decimals" | "symbol" | "nameToken"
+  "amount" | "symbol" | "nameToken"
 >;
 const DAOTokenInfoSchema = createDAOContractSchema.pick({
   amount: true,
-  decimals: true,
   symbol: true,
   nameToken: true,
 });
 const DAOTokenInfo: FC<{
   dataSubmit: CreateDAOContractSchemaType;
-}> = ({ dataSubmit }) => {
+  handleUpdateStep: (step: number, data: DAOTokenInfoSchemaType) => void;
+}> = ({ dataSubmit, handleUpdateStep }) => {
   const form = useForm<DAOTokenInfoSchemaType>({
     resolver: zodResolver(DAOTokenInfoSchema),
     defaultValues: {
       amount: "",
-      decimals: "",
       symbol: "",
       nameToken: "",
     },
@@ -45,33 +43,46 @@ const DAOTokenInfo: FC<{
 
   const { write, stepModal, errorWrite, setStepModal, isConnected } =
     useContractWrite({
-      functionName: "mintERC20ForDAO",
+      functionName: "createDAO",
     });
 
   async function onSubmit(values: DAOTokenInfoSchemaType) {
     const dataSend = { ...dataSubmit, ...values };
     try {
-      const { nameToken, symbol, decimals, amount, requireVote, listAddress } =
-        dataSend;
-      const amountValue = ethers.parseUnits(amount, Number(decimals || 18));
-      console.log('dataSend', dataSend);
-      
-      await write([
-        listAddress,
-        requireVote,
-        nameToken,
-        symbol,
-        Number(decimals),
-        amountValue,
-      ]);
+      console.log("dataSend", dataSend);
+      await write([], dataSend);
     } catch (error) {
       console.log("error", { error });
     }
   }
+
+  const amountWatch = form.watch("amount");
+  const symbolWatch = form.watch("symbol");
+  const nameTokenWatch = form.watch("nameToken");
+
+  const handleGoBack = () => {
+    handleUpdateStep(2, {
+      amount: amountWatch,
+      symbol: symbolWatch,
+      nameToken: nameTokenWatch,
+    });
+  };
+
+  useEffect(() => {
+    form.setValue("amount", dataSubmit.amount);
+    form.setValue("symbol", dataSubmit.symbol);
+    form.setValue("nameToken", dataSubmit.nameToken);
+  }, [dataSubmit, form]);
+
   return (
     <div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit, (errors) => console.log(errors))} className="space-y-8">
+        <form
+          onSubmit={form.handleSubmit(onSubmit, (errors) =>
+            console.log(errors)
+          )}
+          className="space-y-8"
+        >
           <div>
             <div className="text-[20px] font-medium text-[#223354b3]">
               DAO Token information
@@ -110,18 +121,6 @@ const DAOTokenInfo: FC<{
             />
             <FormField
               control={form.control}
-              name="decimals"
-              render={({ field }) => (
-                <FormItem className="!mt-4">
-                  <FormControl>
-                    <InputNumber placeholder="Decimals" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
               name="amount"
               render={({ field }) => (
                 <FormItem className="!mt-4">
@@ -140,7 +139,14 @@ const DAOTokenInfo: FC<{
           </div>
           <div className="mt-8 mx-auto">
             {isConnected ? (
-              <div className="flex justify-end items-center mt-4">
+              <div className="flex justify-between items-center mt-4">
+                <Button
+                  onClick={handleGoBack}
+                  type="button"
+                  className="w-[120px]"
+                >
+                  Back
+                </Button>
                 <Button className="w-[120px]">Continue</Button>
               </div>
             ) : (

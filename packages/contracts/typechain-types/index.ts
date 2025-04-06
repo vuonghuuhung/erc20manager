@@ -3,6 +3,8 @@
 /* eslint-disable */
 import type * as openzeppelin from "./@openzeppelin";
 export type { openzeppelin };
+import type * as solmate from "./@solmate";
+export type { solmate };
 import type * as contracts from "./contracts";
 export type { contracts };
 export * as factories from "./factories";
@@ -26,6 +28,8 @@ export type { DAOFactory } from "./contracts/DAOFactory";
 export { DAOFactory__factory } from "./factories/contracts/DAOFactory__factory";
 export type { ERC20Factory } from "./contracts/ERC20Factory";
 export { ERC20Factory__factory } from "./factories/contracts/ERC20Factory__factory";
+export type { ERC20Manager } from "./contracts/ERC20Manager";
+export { ERC20Manager__factory } from "./factories/contracts/ERC20Manager__factory";
 export type { ERC20Template } from "./contracts/ERC20Template";
 export { ERC20Template__factory } from "./factories/contracts/ERC20Template__factory";
 export type { Lock } from "./contracts/Lock";
