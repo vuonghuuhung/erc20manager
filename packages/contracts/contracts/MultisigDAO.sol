@@ -26,6 +26,13 @@ contract MultisigDAO {
     event Execute(uint256 indexed proposalId);
     event MetadataUpdated(string oldMetadata, string newMetadata);
 
+    enum ProposalStatus {
+        OnVoting, // Proposal exists but doesn't have enough approvals yet
+        Passed, // Proposal has enough approvals to be executed
+        Executed, // Proposal has been executed
+        Rejected // Proposal has been explicitly rejected (Not implemented yet)
+    }
+
     enum Action {
         Distribute,
         Burn,
@@ -40,6 +47,7 @@ contract MultisigDAO {
         bytes data;
         bool isExecuted;
         string metadataURI;
+        bool isRejected;
     }
 
     address[] public s_owners;
@@ -50,6 +58,8 @@ contract MultisigDAO {
 
     Proposal[] public s_proposals;
     mapping(uint256 => mapping(address => bool)) public s_isApproved;
+    mapping(uint256 => mapping(address => bool)) public s_isRejected;
+    mapping(uint256 => uint256) public s_rejectionCount;
 
     modifier onlyOwner() {
         require(s_isOwner[msg.sender], MultisigDAO_InvalidOwner());
@@ -75,6 +85,14 @@ contract MultisigDAO {
         require(
             !s_proposals[_proposalId].isExecuted,
             MultisigDAO_AlreadyExecutedd(_proposalId)
+        );
+        _;
+    }
+
+    modifier notRejected(uint256 _proposalId) {
+        require(
+            !s_proposals[_proposalId].isRejected,
+            "MultisigDAO: Proposal has been rejected"
         );
         _;
     }
@@ -169,7 +187,8 @@ contract MultisigDAO {
                 action: _action,
                 data: _data,
                 isExecuted: false,
-                metadataURI: _metadataURI
+                metadataURI: _metadataURI,
+                isRejected: false
             })
         );
         emit Submit(s_proposals.length - 1);
@@ -203,6 +222,7 @@ contract MultisigDAO {
         proposalExists(_proposalId)
         notApproved(_proposalId)
         notExecuted(_proposalId)
+        notRejected(_proposalId)
     {
         s_isApproved[_proposalId][msg.sender] = true;
         emit Approve(msg.sender, _proposalId);
@@ -221,7 +241,13 @@ contract MultisigDAO {
 
     function executeProposal(
         uint256 _proposalId
-    ) external onlyOwner proposalExists(_proposalId) notExecuted(_proposalId) {
+    )
+        external
+        onlyOwner
+        proposalExists(_proposalId)
+        notExecuted(_proposalId)
+        notRejected(_proposalId)
+    {
         uint256 approvalCount = _getApprovalCount(_proposalId);
         require(
             approvalCount >= s_required,
@@ -310,6 +336,9 @@ contract MultisigDAO {
      * @return proposal The proposal struct
      * @return approvalCount The number of approvals the proposal has received
      * @return isApprovedByCurrentSender Whether the current message sender has approved this proposal
+     * @return status The current status of the proposal
+     * @return rejectionCount The number of rejections the proposal has received
+     * @return isRejectedByCurrentSender Whether the current message sender has rejected this proposal
      */
     function getProposalDetails(
         uint256 _proposalId
@@ -320,12 +349,28 @@ contract MultisigDAO {
         returns (
             Proposal memory proposal,
             uint256 approvalCount,
-            bool isApprovedByCurrentSender
+            bool isApprovedByCurrentSender,
+            ProposalStatus status,
+            uint256 rejectionCount,
+            bool isRejectedByCurrentSender
         )
     {
         proposal = s_proposals[_proposalId];
         approvalCount = _getApprovalCount(_proposalId);
         isApprovedByCurrentSender = s_isApproved[_proposalId][msg.sender];
+        rejectionCount = s_rejectionCount[_proposalId];
+        isRejectedByCurrentSender = s_isRejected[_proposalId][msg.sender];
+
+        // Determine the status
+        if (proposal.isExecuted) {
+            status = ProposalStatus.Executed;
+        } else if (proposal.isRejected) {
+            status = ProposalStatus.Rejected;
+        } else if (approvalCount >= s_required) {
+            status = ProposalStatus.Passed;
+        } else {
+            status = ProposalStatus.OnVoting;
+        }
     }
 
     /**
@@ -334,5 +379,190 @@ contract MultisigDAO {
      */
     function getOwners() external view returns (address[] memory) {
         return s_owners;
+    }
+
+    /**
+     * @notice Gets the current status of a proposal
+     * @param _proposalId The ID of the proposal to check status
+     * @return status The current status of the proposal
+     */
+    function getProposalStatus(
+        uint256 _proposalId
+    ) external view proposalExists(_proposalId) returns (ProposalStatus) {
+        Proposal storage proposal = s_proposals[_proposalId];
+
+        // If already executed, return Executed status
+        if (proposal.isExecuted) {
+            return ProposalStatus.Executed;
+        }
+
+        // If rejected, return Rejected status
+        if (proposal.isRejected) {
+            return ProposalStatus.Rejected;
+        }
+
+        // Check if proposal has enough approvals to execute
+        uint256 approvalCount = _getApprovalCount(_proposalId);
+        if (approvalCount >= s_required) {
+            return ProposalStatus.Passed;
+        }
+
+        // Otherwise proposal is still on voting
+        return ProposalStatus.OnVoting;
+    }
+
+    /**
+     * @notice Rejects a proposal
+     * @param _proposalId The ID of the proposal to reject
+     */
+    function rejectProposal(
+        uint256 _proposalId
+    ) external onlyOwner proposalExists(_proposalId) notExecuted(_proposalId) {
+        require(
+            !s_isRejected[_proposalId][msg.sender],
+            "MultisigDAO: Already rejected this proposal"
+        );
+
+        s_isRejected[_proposalId][msg.sender] = true;
+        s_rejectionCount[_proposalId] += 1;
+
+        // If majority of owners have rejected, mark the proposal as rejected
+        uint256 rejectionThreshold = (s_owners.length / 2) + 1;
+        if (s_rejectionCount[_proposalId] >= rejectionThreshold) {
+            s_proposals[_proposalId].isRejected = true;
+        }
+
+        emit Revoke(msg.sender, _proposalId);
+    }
+
+    /**
+     * @notice Returns rejection count and status for a specific proposal
+     * @param _proposalId The ID of the proposal to get rejection details
+     * @return rejectionCount The number of rejections the proposal has received
+     * @return isRejected Whether the proposal has been rejected
+     * @return isRejectedByCurrentSender Whether the current message sender has rejected this proposal
+     */
+    function getProposalRejectionDetails(
+        uint256 _proposalId
+    )
+        external
+        view
+        proposalExists(_proposalId)
+        returns (
+            uint256 rejectionCount,
+            bool isRejected,
+            bool isRejectedByCurrentSender
+        )
+    {
+        rejectionCount = s_rejectionCount[_proposalId];
+        isRejected = s_proposals[_proposalId].isRejected;
+        isRejectedByCurrentSender = s_isRejected[_proposalId][msg.sender];
+    }
+
+    /**
+     * @notice Returns statuses for all proposals
+     * @return statuses Array of statuses for all proposals
+     * @return proposalIds Array of proposal IDs
+     */
+    function getAllProposalStatuses()
+        external
+        view
+        returns (ProposalStatus[] memory statuses, uint256[] memory proposalIds)
+    {
+        uint256 proposalCount = s_proposals.length;
+        statuses = new ProposalStatus[](proposalCount);
+        proposalIds = new uint256[](proposalCount);
+
+        for (uint256 i = 0; i < proposalCount; i++) {
+            Proposal storage proposal = s_proposals[i];
+            proposalIds[i] = i;
+
+            // Determine the status
+            if (proposal.isExecuted) {
+                statuses[i] = ProposalStatus.Executed;
+            } else if (proposal.isRejected) {
+                statuses[i] = ProposalStatus.Rejected;
+            } else {
+                uint256 approvalCount = _getApprovalCount(i);
+                if (approvalCount >= s_required) {
+                    statuses[i] = ProposalStatus.Passed;
+                } else {
+                    statuses[i] = ProposalStatus.OnVoting;
+                }
+            }
+        }
+    }
+
+    /**
+     * @notice Returns all proposals filtered by status
+     * @param _status The status to filter by
+     * @return filteredProposals Array of proposals with the specified status
+     * @return proposalIds Array of corresponding proposal IDs
+     */
+    function getProposalsByProposalStatus(
+        ProposalStatus _status
+    )
+        external
+        view
+        returns (
+            Proposal[] memory filteredProposals,
+            uint256[] memory proposalIds
+        )
+    {
+        uint256 proposalCount = s_proposals.length;
+
+        // First, count proposals with the specified status
+        uint256 matchCount = 0;
+        for (uint256 i = 0; i < proposalCount; i++) {
+            ProposalStatus status;
+            Proposal storage proposal = s_proposals[i];
+
+            if (proposal.isExecuted) {
+                status = ProposalStatus.Executed;
+            } else if (proposal.isRejected) {
+                status = ProposalStatus.Rejected;
+            } else {
+                uint256 approvalCount = _getApprovalCount(i);
+                if (approvalCount >= s_required) {
+                    status = ProposalStatus.Passed;
+                } else {
+                    status = ProposalStatus.OnVoting;
+                }
+            }
+
+            if (status == _status) {
+                matchCount++;
+            }
+        }
+
+        // Allocate arrays of the right size
+        filteredProposals = new Proposal[](matchCount);
+        proposalIds = new uint256[](matchCount);
+
+        // Fill arrays with matching proposals
+        uint256 index = 0;
+        for (uint256 i = 0; i < proposalCount; i++) {
+            ProposalStatus status;
+            Proposal storage proposal = s_proposals[i];
+
+            if (proposal.isExecuted) {
+                status = ProposalStatus.Executed;
+            } else if (proposal.isRejected) {
+                status = ProposalStatus.Rejected;
+            } else {
+                uint256 approvalCount = _getApprovalCount(i);
+                if (approvalCount >= s_required) {
+                    status = ProposalStatus.Passed;
+                } else {
+                    status = ProposalStatus.OnVoting;
+                }
+            }
+
+            if (status == _status) {
+                filteredProposals[index] = proposal;
+                proposalIds[index] = i;
+                index++;
+            }
+        }
     }
 }
