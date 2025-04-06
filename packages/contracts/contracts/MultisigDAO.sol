@@ -39,6 +39,7 @@ contract MultisigDAO {
         Action action;
         bytes data;
         bool isExecuted;
+        string metadataURI;
     }
 
     address[] public s_owners;
@@ -111,18 +112,15 @@ contract MultisigDAO {
     }
 
     /**
-     * @notice Submits a new proposal.
-     * @param _to The target address (recipient for Distribute, spender for Approve). Ignored for Burn/UpdateMetadata.
-     * @param _value The amount (for Distribute, Burn, Approve). Ignored for UpdateMetadata.
-     * @param _action The type of action (Distribute, Burn, Approve, UpdateMetadata).
-     * @param _data Additional data. For UpdateMetadata: abi.encode(newMetadataString). Should be empty otherwise.
+     * @notice Internal function to submit a new proposal
      */
-    function submitProposal(
+    function _submitProposal(
         address _to,
         uint256 _value,
         Action _action,
-        bytes calldata _data
-    ) external onlyOwner {
+        bytes calldata _data,
+        string memory _metadataURI
+    ) internal {
         // Validate parameters based on action
         if (_action == Action.UpdateMetadata) {
             require(
@@ -146,10 +144,6 @@ contract MultisigDAO {
                 _value > 0,
                 "MultisigDAO: Value must be greater than zero for Distribute"
             );
-            require(
-                _data.length == 0,
-                "MultisigDAO: Data should be empty for Distribute"
-            );
         } else if (_action == Action.Burn) {
             require(
                 _value > 0,
@@ -159,19 +153,10 @@ contract MultisigDAO {
                 _to == address(0),
                 "MultisigDAO: 'to' should be zero address for Burn"
             );
-            require(
-                _data.length == 0,
-                "MultisigDAO: Data should be empty for Burn"
-            );
         } else if (_action == Action.Approve) {
             require(
                 _to != address(0),
                 "MultisigDAO: Invalid spender for Approve"
-            );
-            // Allow approving zero amount to revoke approval
-            require(
-                _data.length == 0,
-                "MultisigDAO: Data should be empty for Approve"
             );
         } else {
             revert("MultisigDAO: Invalid action type");
@@ -183,10 +168,31 @@ contract MultisigDAO {
                 value: _value,
                 action: _action,
                 data: _data,
-                isExecuted: false
+                isExecuted: false,
+                metadataURI: _metadataURI
             })
         );
         emit Submit(s_proposals.length - 1);
+    }
+
+    /**
+     * @notice Submits a new proposal.
+     * @param _to The target address (recipient for Distribute, spender for Approve). Ignored for Burn/UpdateMetadata.
+     * @param _value The amount (for Distribute, Burn, Approve). Ignored for UpdateMetadata.
+     * @param _action The type of action (Distribute, Burn, Approve, UpdateMetadata).
+     * @param _data Additional data based on action type:
+     *        - For UpdateMetadata: abi.encode(newMetadataString)
+     *        - For other actions: empty bytes
+     * @param _metadataURI IPFS URI pointing to proposal metadata (title, description, etc.)
+     */
+    function submitProposal(
+        address _to,
+        uint256 _value,
+        Action _action,
+        bytes calldata _data,
+        string memory _metadataURI
+    ) external onlyOwner {
+        _submitProposal(_to, _value, _action, _data, _metadataURI);
     }
 
     function approveProposal(
@@ -240,7 +246,9 @@ contract MultisigDAO {
             require(proposal.to != address(0), "Invalid spender for approve");
             erc20Template.approve(proposal.to, proposal.value);
         } else if (proposal.action == Action.UpdateMetadata) {
+            // Extract the metadata from the data
             string memory newMetadata = abi.decode(proposal.data, (string));
+
             string memory oldMetadata = s_metadata;
             s_metadata = newMetadata;
             emit MetadataUpdated(oldMetadata, newMetadata);
