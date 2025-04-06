@@ -7,9 +7,7 @@ const ProposalItem = () => {
       <div className="w-20 shrink-0">
         <div className="link-text flex flex-row items-center gap-1.5 text-[#39a699f2]">
           <IconPassed />
-          <p className="shrink-0 truncate text-current text-[13px]">
-            Passed
-          </p>
+          <p className="shrink-0 truncate text-current text-[13px]">Passed</p>
         </div>
       </div>
       <div className="flex min-w-0 grow flex-row items-center gap-2">
@@ -17,9 +15,7 @@ const ProposalItem = () => {
           Community Pool USDC deployment via Hydro
         </p>
       </div>
-      <p
-        className="caption-text shrink-0 break-words text-right font-mono text-[12px] text-[#f3f6f880]"
-      >
+      <p className="caption-text shrink-0 break-words text-right font-mono text-[12px] text-[#f3f6f880]">
         March 19
       </p>
     </div>

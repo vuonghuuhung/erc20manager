@@ -19,6 +19,8 @@ const DAODetail = () => {
     isErrorContractAddress,
   } = useDAODetail([id] as `0x${string}`[]);
 
+  console.log("infoToken", infoToken);
+
   const {
     data: metaDataDao,
     isError: isErrorMetaDataDao,
@@ -70,9 +72,10 @@ const DAODetail = () => {
           </div>
         </div>
         <div className="text-white">
-          <ProposalItem />
-          <ProposalItem />
-          {/* <Nodata /> */}
+          {infoToken && infoToken[0]?.listProposal?.length === 0 && <Nodata />}
+          {infoToken &&
+            infoToken.length > 0 &&
+            infoToken[0]?.listProposal?.map((item, index) => <ProposalItem />)}
         </div>
       </div>
       <Loading isLoading={isLoadingInfo || isLoadingMetaDataDao} />

@@ -46,13 +46,11 @@ const DAOInfoStep: FC<{
 
   const handleChangeFile = (file?: File) => {
     setFile(file);
+    form.setValue("avatarFile", file);
   };
 
   async function onSubmit(values: CreateDAOInfoSchemaType) {
-    handleUpdateStep(2, {
-      ...values,
-      avatarFile: file,
-    });
+    handleUpdateStep(2, values);
     // try {
     //   setIsLoading(true);
     //   if (file) {

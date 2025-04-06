@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { contractAddress } from "@/config/config";
-import { DAOFactory__factory } from "@repo/contracts";
+import { DAOFactory__factory, MultisigDAO__factory } from "@repo/contracts";
 import { useEffect, useState } from "react";
 import { useReadContracts } from "wagmi";
 
@@ -30,11 +30,19 @@ const useDAODetail = (daoAddresses: `0x${string}`[] = []) => {
       functionName: "getERC20MetadataOfDAO",
       args: [address],
     },
+    {
+      address: address,
+      abi: MultisigDAO__factory.abi,
+      functionName: "getAllProposals",
+      args: [],
+    },
   ]);
 
   const { data, isLoading, isFetching, isError, ...rest } = useReadContracts({
     contracts: calls,
   });
+
+  console.log("data", data);
 
   useEffect(() => {
     if (data && data?.length > 0) {
@@ -54,26 +62,11 @@ const useDAODetail = (daoAddresses: `0x${string}`[] = []) => {
           const DataType = data as any;
           return {
             addressDao: address as string,
-            addressToken:
-              (data[baseIndex]?.result &&
-                (DataType[baseIndex]?.result[0] as string)) ||
-              "",
-            name:
-              (data[baseIndex]?.result &&
-                (DataType[baseIndex]?.result[1] as string)) ||
-              "",
-            symbol:
-              (data[baseIndex]?.result &&
-                (DataType[baseIndex]?.result[2] as string)) ||
-              "",
-            decimals:
-              (data[baseIndex]?.result &&
-                (DataType[baseIndex]?.result[3] as any)) ||
-              18,
-            totalSupply:
-              (data[baseIndex]?.result &&
-                (DataType[baseIndex]?.result[4] as any)) ||
-              BigInt(0),
+            addressToken: (DataType[baseIndex]?.result[0] as string) || "",
+            name: (DataType[baseIndex]?.result[1] as string) || "",
+            symbol: (DataType[baseIndex]?.result[2] as string) || "",
+            decimals: (DataType[baseIndex]?.result[3] as any) || 18,
+            totalSupply: (DataType[baseIndex]?.result[4] as any) || BigInt(0),
             listProposal: (DataType[baseIndex + 1]?.result as any) || [],
           };
         })

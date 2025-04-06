@@ -34,17 +34,18 @@ export const createDAOContractSchema = z.object({
     .string()
     .nonempty("This field is required")
     .max(160, "Length max 160 characters"),
-  listAddress: z.string().array().min(1, "This DAO has no members.").max(160, "Maximum of 160 addresses allowed"),
+  listAddress: z
+    .string()
+    .array()
+    .min(1, "This DAO has no members.")
+    .max(160, "Maximum of 160 addresses allowed"),
   requireVote: z
     .string()
     .nonempty("This field is required")
     .max(160, "Length max 160 characters"),
-  avatarFile: z
-    .instanceof(File)
-    .optional()
-    .refine((file) => file instanceof File || file === undefined, {
-      message: "This field is required",
-    }),
+  avatarFile: z.instanceof(File).refine((file) => file instanceof File, {
+    message: "This field is required",
+  }),
   nameToken: z
     .string()
     .nonempty("This field is required")

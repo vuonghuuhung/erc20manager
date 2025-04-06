@@ -80,7 +80,10 @@ export function useContractWrite({
     }
   }, [isSuccess]);
 
-  const write = async (args: any = [], daoInfo?: CreateDAOContractSchemaType) => {
+  const write = async (
+    args: any = [],
+    daoInfo?: CreateDAOContractSchemaType
+  ) => {
     if (!isConnected) {
       setErrorWrite("You need to connect wallet");
       return;
@@ -152,7 +155,7 @@ export function useContractWrite({
       } else {
         await writeContractAsync(request);
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log("error", { error });
       if (
@@ -161,9 +164,27 @@ export function useContractWrite({
         )
       ) {
         setErrorWrite("You don't have enough balance");
-      } else {
-        setErrorWrite(error?.shortMessage || "Something went wrong");
+        setStepModal(MODAL_STEP.FAILED);
+        return;
       }
+
+      if (error?.shortMessage.includes("0x42494dfc")) {
+        setErrorWrite(
+          "The member list must not contain the 0x0 (zero address)."
+        );
+        setStepModal(MODAL_STEP.FAILED);
+        return;
+      }
+
+      if (error?.shortMessage.includes("0xdcc42366")) {
+        setErrorWrite(
+          "The owner list contains duplicate addresses. Please ensure all addresses are unique."
+        );
+        setStepModal(MODAL_STEP.FAILED);
+        return;
+      }
+
+      setErrorWrite("Something went wrong. Please try again.");
       setStepModal(MODAL_STEP.FAILED);
     }
   };

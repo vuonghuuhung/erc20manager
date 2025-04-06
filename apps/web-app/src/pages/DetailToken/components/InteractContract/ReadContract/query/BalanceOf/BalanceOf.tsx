@@ -4,7 +4,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useReadContract } from "wagmi";
-import { ERC20Manager__factory } from "@repo/contracts";
+import { ERC20Template__factory } from "@repo/contracts";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -42,7 +42,7 @@ const BalanceOf = () => {
     isLoading: isGetBalance,
     error,
   } = useReadContract({
-    abi: ERC20Manager__factory.abi,
+    abi: ERC20Template__factory.abi,
     address: id as `0x${string}`,
     functionName: "balanceOf",
     args: [addressSearch as `0x${string}`],

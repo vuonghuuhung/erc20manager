@@ -58,10 +58,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC20Factory__factory>;
     getContractFactory(
-      name: "ERC20Manager",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC20Manager__factory>;
-    getContractFactory(
       name: "ERC20Template",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC20Template__factory>;
@@ -130,11 +126,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.ERC20Factory>;
     getContractAt(
-      name: "ERC20Manager",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC20Manager>;
-    getContractAt(
       name: "ERC20Template",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -194,10 +185,6 @@ declare module "hardhat/types/runtime" {
       name: "ERC20Factory",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ERC20Factory>;
-    deployContract(
-      name: "ERC20Manager",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20Manager>;
     deployContract(
       name: "ERC20Template",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -266,11 +253,6 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.ERC20Factory>;
-    deployContract(
-      name: "ERC20Manager",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.ERC20Manager>;
     deployContract(
       name: "ERC20Template",
       args: any[],

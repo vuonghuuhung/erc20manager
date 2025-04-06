@@ -20,7 +20,7 @@ const DAOItemCard: FC<{
   avatarDao,
 }) => {
   return (
-    <div className="p-4 bg-[#202223] rounded-lg">
+    <div className="p-4 bg-[#202223] rounded-lg min-h-[254px]">
       <div>
         <div className="w-20 h-20 mx-auto">
           <AvatarDAO src={avatarDao || ""} />

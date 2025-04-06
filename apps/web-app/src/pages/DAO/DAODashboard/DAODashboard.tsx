@@ -37,9 +37,6 @@ const DAODashboard = () => {
     isLoading: isLoadingMetaDataDao,
   } = useGetMetaData(listDaoAddress as `0x${string}`[]);
 
-  console.log("metaDataDao", metaDataDao);
-  console.log("listDaoInfo", listDaoInfo);
-
   useEffect(() => {
     if (isErrorListDaoAddress || isErrorTokenDetail || isErrorMetaDataDao) {
       toast("Something went wrong");
