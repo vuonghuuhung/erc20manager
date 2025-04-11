@@ -3,6 +3,7 @@ import { MultisigDAO__factory } from "@repo/contracts";
 import { useEffect, useState } from "react";
 import { useReadContracts } from "wagmi";
 import { MetaDataDaoType } from "./useDAODetail";
+import { ethers } from "ethers";
 
 const useGetMetaData = (daoAddresses: `0x${string}`[] = []) => {
   const [isErrorContractAddress, setIsErrorContractAddress] =
@@ -26,32 +27,6 @@ const useGetMetaData = (daoAddresses: `0x${string}`[] = []) => {
     },
   });
 
-  // useEffect(() => {
-  //   const handleGetMetaData = async (url: string) => {
-  //     try {
-  //       setIsGetMetaData(true);
-  //       const gatewaysMetadata = await pinata.gateways.public.get(url);
-  //       setDataMetaDataReturn((prev) => [
-  //         ...prev,
-  //         gatewaysMetadata.data as any,
-  //       ]);
-  //       setIsGetMetaData(false);
-  //     } catch (error) {
-  //       console.log(error);
-  //       setIsGetMetaData(false);
-  //     }
-  //   };
-  //   if (data && data?.length > 0) {
-  //     for (let index = 0; index < data.length; index++) {
-  //       if (data[index]?.error) {
-  //         setIsErrorContractAddress(true);
-  //         return;
-  //       } else {
-  //         handleGetMetaData(data[index].result as string);
-  //       }
-  //     }
-  //   }
-  // }, [data]);
 
   useEffect(() => {
     const handleGetAllMetaData = async () => {
@@ -64,8 +39,12 @@ const useGetMetaData = (daoAddresses: `0x${string}`[] = []) => {
             return null;
           }
           try {
+            const decodedData = ethers.AbiCoder.defaultAbiCoder().decode(
+              ["string"],
+              item?.result as string
+            );
             const res = await pinata.gateways.public
-              .get(item.result as string)
+              .get(decodedData[0])
               .then((res) => {
                 return res.data;
               });
@@ -77,8 +56,6 @@ const useGetMetaData = (daoAddresses: `0x${string}`[] = []) => {
             return null;
           }
         });
-        console.log("metadataPromises", metadataPromises);
-
         const allMetaData = await Promise.all(metadataPromises as []);
         setDataMetaDataReturn(allMetaData as MetaDataDaoType[]);
       } catch (err) {

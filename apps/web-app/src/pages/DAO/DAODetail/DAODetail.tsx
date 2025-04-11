@@ -10,16 +10,14 @@ import { useEffect } from "react";
 import Loading from "@/components/Loading/Loading";
 import useGetMetaData from "@/hooks/useGetMetaData";
 import { toast } from "sonner";
-
+import useGetStatusProposal from "@/hooks/useGetStatusProposal";
 const DAODetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: `0x${string}` }>();
   const {
     data: infoToken,
     isLoading: isLoadingInfo,
     isErrorContractAddress,
   } = useDAODetail([id] as `0x${string}`[]);
-
-  console.log("infoToken", infoToken);
 
   const {
     data: metaDataDao,
@@ -27,11 +25,32 @@ const DAODetail = () => {
     isLoading: isLoadingMetaDataDao,
   } = useGetMetaData([id] as `0x${string}`[]);
 
+  const {
+    data: statusProposal,
+    isError: isErrorStatusProposal,
+    isLoading: isLoadingStatusProposal,
+    refetch,
+  } = useGetStatusProposal(id, infoToken[0]?.listProposal || []);
+
+  console.log("statusProposal", statusProposal);
+
+  // const { data } = useReadContract({
+  //   address: id,
+  //   abi: MultisigDAO__factory.abi,
+  //   functionName: "s_isRejected",
+  //   query: {
+  //     enabled: address !== undefined,
+  //   },
+  //   args: [0n, address as `0x${string}`],
+  // });
+
+  // console.log("data proposal approve", data);
+
   useEffect(() => {
-    if (isErrorContractAddress || isErrorMetaDataDao) {
+    if (isErrorContractAddress || isErrorMetaDataDao || isErrorStatusProposal) {
       toast("Something went wrong");
     }
-  }, [isErrorContractAddress, isErrorMetaDataDao]);
+  }, [isErrorContractAddress, isErrorMetaDataDao, isErrorStatusProposal]);
 
   return (
     <BoxContent extendClassName="py-4 bg-[#151617]">
@@ -72,13 +91,28 @@ const DAODetail = () => {
           </div>
         </div>
         <div className="text-white">
-          {infoToken && infoToken[0]?.listProposal?.length === 0 && <Nodata />}
-          {infoToken &&
-            infoToken.length > 0 &&
-            infoToken[0]?.listProposal?.map((item, index) => <ProposalItem />)}
+          {!statusProposal || (statusProposal.length === 0 && <Nodata />)}
+          {statusProposal &&
+            statusProposal.length > 0 &&
+            statusProposal.map((item, index) => (
+              <ProposalItem
+                key={index}
+                refetch={refetch}
+                idProposal={index}
+                status={item.status}
+                description={item.description}
+                isOwner={item.isOwner}
+                isApproved={item.isApproved}
+                isRejected={item.isRejected}
+              />
+            ))}
         </div>
       </div>
-      <Loading isLoading={isLoadingInfo || isLoadingMetaDataDao} />
+      <Loading
+        isLoading={
+          isLoadingInfo || isLoadingMetaDataDao || isLoadingStatusProposal
+        }
+      />
     </BoxContent>
   );
 };

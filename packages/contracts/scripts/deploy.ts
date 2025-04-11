@@ -15,7 +15,7 @@ async function main() {
   );
 
   console.log(
-    `✅ ERC20Factory deployed at: ${await daoFactory.getAddress()}`
+    `✅ DaoFactory deployed at: ${await daoFactory.getAddress()}`
   );
 
   console.log("🎉 All contracts deployed successfully!");

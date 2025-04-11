@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-
+import { contractAddress } from "@/config/config";
 import { config } from "@/main";
-import { ERC20Factory__factory, DAOFactory__factory } from "@repo/contracts";
-import { ethers, toBigInt } from "ethers";
+import { ERC20Factory__factory } from "@repo/contracts";
+import { toBigInt } from "ethers";
 import { useEffect, useState } from "react";
 import type { Abi } from "viem";
 import {
@@ -16,12 +15,7 @@ import {
 } from "wagmi";
 import type { Config, UseReadContractParameters } from "wagmi";
 import { simulateContract } from "@wagmi/core";
-import { contractAddress } from "@/config/config";
 import { MODAL_STEP } from "@/components/ModalStep/ModalStep";
-import { pinata } from "@/utils/http";
-import { CreateDAOContractSchemaType } from "@/utils/Rules";
-import { DECIMALS } from "@/constants/token";
-
 type UseContractReadParameters = Omit<
   UseReadContractParameters,
   "abi" | "address" | "functionName" | "args"
@@ -42,13 +36,7 @@ export function useContractRead<T = unknown>(
   });
 }
 
-type functionNameType = "mintERC20" | "createDAO";
-
-export function useContractWrite({
-  functionName,
-}: {
-  functionName: functionNameType;
-}) {
+export function useContractWrite() {
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({
     address,
@@ -75,47 +63,37 @@ export function useContractWrite({
   useEffect(() => {
     if (isSuccess) {
       setStepModal(MODAL_STEP.SUCCESS);
-    } else {
-      setStepModal(MODAL_STEP.READY);
     }
   }, [isSuccess]);
 
-  const write = async (
-    args: any = [],
-    daoInfo?: CreateDAOContractSchemaType
-  ) => {
+  const write = async ({
+    abi,
+    args,
+    functionName,
+    contractAddress,
+    messageInitial,
+  }: {
+    args: any;
+    abi: Abi;
+    contractAddress: any;
+    functionName: string;
+    messageInitial?: string;
+  }) => {
     if (!isConnected) {
       setErrorWrite("You need to connect wallet");
       return;
     }
     setStepModal(MODAL_STEP.PROCESSING);
-    setErrorWrite("");
+    setErrorWrite(messageInitial || "");
     try {
       const gasPrice = (await publicClient?.getGasPrice()) as bigint;
-      const amountValue = ethers.parseUnits(daoInfo?.amount || "0", DECIMALS);
-      const setUpMethod: any = daoInfo
-        ? {
-            abi: DAOFactory__factory.abi,
-            address: contractAddress.DAOFactoryAddress,
-            args: [
-              daoInfo.listAddress,
-              daoInfo.requireVote,
-              daoInfo.nameToken,
-              daoInfo.symbol,
-              18,
-              amountValue,
-              "",
-            ],
-            functionName,
-            account: address,
-          }
-        : {
-            abi: ERC20Factory__factory.abi,
-            address: contractAddress.ERC20FactoryAddress,
-            args,
-            functionName,
-            account: address,
-          };
+      const setUpMethod: any = {
+        abi: abi,
+        address: contractAddress,
+        args,
+        functionName,
+        account: address,
+      };
       const estimatedGas = (await publicClient?.estimateContractGas(
         setUpMethod
       )) as bigint;
@@ -128,34 +106,7 @@ export function useContractWrite({
         return;
       }
       const { request } = await simulateContract(config, setUpMethod);
-      if (daoInfo && daoInfo.avatarFile) {
-        const upload = await pinata.upload.public
-          .file(daoInfo.avatarFile)
-          .group("87de2c19-9d65-4cff-9fd1-08a426a68411");
-        const gatewayUrlImg = await pinata.gateways.public.convert(upload.cid);
-        const uploadDataJson = await pinata.upload.public
-          .json({
-            name: daoInfo.nameDAO,
-            description: daoInfo.descriptionDao,
-            image: gatewayUrlImg,
-          })
-          .group("eda38d13-ccf0-4bf8-bddd-43245a3851c1");
-        await writeContractAsync({
-          ...request,
-          args: [
-            daoInfo.listAddress,
-            daoInfo.requireVote,
-            daoInfo.nameToken,
-            daoInfo.symbol,
-            18,
-            amountValue,
-            uploadDataJson.cid,
-          ],
-        });
-      } else {
-        await writeContractAsync(request);
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await writeContractAsync(request);
     } catch (error: any) {
       console.log("error", { error });
       if (
@@ -184,7 +135,24 @@ export function useContractWrite({
         return;
       }
 
-      setErrorWrite("Something went wrong. Please try again.");
+      if (error?.shortMessage.includes("MultisigDAO:")) {
+        const reason = error?.shortMessage?.split("MultisigDAO:")[1]?.trim();
+        setErrorWrite(reason);
+        setStepModal(MODAL_STEP.FAILED);
+        return;
+      }
+
+      if (error?.cause?.data?.errorName === "MultisigDAO_InvalidOwner") {
+        setErrorWrite(
+          "You are not the owner of this DAO. Please contact the owner for assistance."
+        );
+        setStepModal(MODAL_STEP.FAILED);
+        return;
+      }
+
+      setErrorWrite(
+        error?.shortMessage || "Something went wrong. Please try again."
+      );
       setStepModal(MODAL_STEP.FAILED);
     }
   };
@@ -193,6 +161,7 @@ export function useContractWrite({
     write,
     stepModal,
     setStepModal,
+    setErrorWrite,
     isConnected,
     errorWrite,
     isWriteSuccess: isSuccess,

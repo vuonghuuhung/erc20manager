@@ -89,7 +89,7 @@ const DAODashboard = () => {
                   description={metaDataDao[index]?.description}
                   totalSupply={item?.totalSupply}
                   symbol={item?.symbol}
-                  totalProposal={0}
+                  totalProposal={item?.listProposal?.length || 0}
                 />
               </Link>
             ))}

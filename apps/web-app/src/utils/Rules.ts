@@ -69,11 +69,11 @@ export const createProposalSchema = z.object({
     .string()
     .nonempty("This field is required")
     .max(160, "Length max 160 characters"),
-  action: z.string(),
   description: z
     .string()
     .nonempty("This field is required")
     .max(160, "Length max 160 characters"),
+  
 });
 
 export type ReadContractType = z.infer<typeof contractSchema>;

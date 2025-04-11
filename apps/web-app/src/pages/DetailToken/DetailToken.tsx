@@ -32,7 +32,7 @@ const DetailToken = () => {
   }, [infoToken, setTokenDetail, tokenDetail, error]);
 
   return (
-    <p>
+    <div>
       {!isErrorContractAddress ? (
         <div>
           <div className="flex items-center pb-5 border-b border-b-[#dadbdd]">
@@ -79,7 +79,7 @@ const DetailToken = () => {
       ) : (
         <div>Some thing went wrong</div>
       )}
-    </p>
+    </div>
   );
 };
 

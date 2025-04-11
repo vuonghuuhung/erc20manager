@@ -1,182 +1,62 @@
 import BoxContent from "@/components/BoxContent";
-import {
-  createProposalSchema,
-  CreateProposalType,
-  createTokenSchema,
-  CreateTokenType,
-} from "@/utils/Rules";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import InputNumber from "@/components/InputNumber";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import ConnectButtonCustom from "@/components/ConnectButtonCustom/ConnectButtonCustom";
-import { ethers } from "ethers";
-import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
-import { useContractWrite } from "@/hooks/useContracts";
-import useDaoTokenInfoStore from "@/store/daoTokenInfo";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import useDAODetail from "@/hooks/useDAODetail";
-import { useEffect } from "react";
-import { useParams } from "react-router-dom";
-import Loading from "@/components/Loading/Loading";
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DistributeProposal from "../components/DistributeProposal/DistributeProposal";
+import BurnProposal from "../components/BurnProposal/BurnProposal";
+import ApproveProposal from "../components/ApproveProposal/ApproveProposal";
+import UpdateMetadataDAO from "../components/UpdateMetadataDAO/UpdateMetadataDAO";
 
 const CreateProposal = () => {
-  const { write, stepModal, errorWrite, setStepModal, isConnected } =
-    useContractWrite({
-      functionName: "mintERC20",
-    });
-  const form = useForm<CreateProposalType>({
-    resolver: zodResolver(createProposalSchema),
-    defaultValues: {
-      action: "mint",
-      addressReceive: "",
-      amount: "",
-      description: "",
-    },
-  });
-
-  const { id } = useParams<{ id: string }>();
-  const {
-    data: infoToken,
-    isLoading: isLoadingInfo,
-    isErrorContractAddress,
-    error,
-  } = useDAODetail([id] as `0x${string}`[]);
-
-  async function onSubmit(values: CreateProposalType) {
-    console.log("values", values);
-
-    try {
-      const { amount } = values;
-      const amountValue = ethers.parseUnits(
-        amount,
-        Number(infoToken[0]?.decimals || 18)
-      );
-      await write([
-        name,
-        symbol,
-        Number(infoToken[0]?.decimals || 18),
-        amountValue,
-      ]);
-    } catch (error) {
-      console.log("error", { error });
-    }
-  }
 
   return (
     <div>
-      <BoxContent extendClassName="p-4 w-full max-w-[462px] mx-auto">
+      <BoxContent extendClassName="p-4 pb-8 w-full">
         <h3 className="text-[25px] text-[#223354] font-bold mb-6">
           Create proposal
         </h3>
-        <div>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="addressReceive"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        placeholder="Address"
-                        {...field}
-                        className="block w-full p-3 h-[45px] text-white rounded-[8px] bg-[#161b26] text-[14px] font-medium border border-[#d0d5dd] outline-none"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="action"
-                render={({ field }) => (
-                  <FormItem className="!mt-4">
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="mint" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Mint</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="burn" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Burn</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem className="!mt-4">
-                    <FormControl>
-                      <InputNumber
-                        min={4}
-                        max={5}
-                        placeholder="Amount"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem className="!mt-4">
-                    <FormControl>
-                      <Input
-                        placeholder="Description"
-                        {...field}
-                        className="block w-full p-3 h-[45px] text-white rounded-[8px] bg-[#161b26] text-[14px] font-medium border border-[#d0d5dd] outline-none"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {isConnected ? (
-                <Button type="submit" className="block w-full">
-                  Submit
-                </Button>
-              ) : (
-                <ConnectButtonCustom />
-              )}
-            </form>
-          </Form>
+        <div className="max-w-[935px] mx-auto">
+          <Tabs defaultValue="distribute" className="w-full">
+            <TabsList className="w-full border-t-[1px] pt-0 border-[#E4E7EC] bg-transparent rounded-none">
+              <TabsTrigger
+                value="distribute"
+                className="flex-1 !shadow-none data-[state=active]:border-t-black data-[state=active]:border-t rounded-none "
+              >
+                Distribute
+              </TabsTrigger>
+              <TabsTrigger
+                value="burn"
+                className="flex-1 !shadow-none data-[state=active]:border-t-black data-[state=active]:border-t rounded-none "
+              >
+                Burn
+              </TabsTrigger>
+              <TabsTrigger
+                value="approve"
+                className="flex-1 !shadow-none data-[state=active]:border-t-black data-[state=active]:border-t rounded-none "
+              >
+                Approve
+              </TabsTrigger>
+              <TabsTrigger
+                value="updateMetadata"
+                className="flex-1 !shadow-none data-[state=active]:border-t-black data-[state=active]:border-t rounded-none "
+              >
+                Metadata
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="distribute">
+              <DistributeProposal />
+            </TabsContent>
+            <TabsContent value="burn">
+              <BurnProposal />
+            </TabsContent>
+            <TabsContent value="approve">
+              <ApproveProposal />
+            </TabsContent>
+            <TabsContent value="updateMetadata">
+              <UpdateMetadataDAO />
+            </TabsContent>
+          </Tabs>
         </div>
       </BoxContent>
-      <ModalStep
-        open={stepModal !== MODAL_STEP.READY}
-        setOpen={setStepModal}
-        contentStep={errorWrite}
-        statusStep={stepModal}
-      />
-      <Loading isLoading={isLoadingInfo} />
     </div>
   );
 };

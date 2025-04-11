@@ -9,7 +9,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import type { Config, UseReadContractParameters } from "wagmi";
-import { ERC20Factory__factory } from "@repo/contracts";
+import { ERC20Template__factory } from "@repo/contracts";
 import { config } from "@/main";
 import { useEffect, useState } from "react";
 import { simulateContract } from "@wagmi/core";
@@ -27,7 +27,7 @@ export function useTokenRead<T = unknown>(
   options?: UseTokenReadParameters
 ) {
   return useReadContract<Abi, string, Array<any>, Config, T>({
-    abi: ERC20Factory__factory.abi,
+    abi: ERC20Template__factory.abi,
     address: tokenAddress,
     functionName: functionName,
     args,
@@ -83,7 +83,7 @@ export function useTokenWrite({
     try {
       const gasPrice = (await publicClient?.getGasPrice()) as bigint;
       const setUpMethod: any = {
-        abi: ERC20Factory__factory.abi,
+        abi: ERC20Template__factory.abi,
         address: tokenAddress,
         args,
         functionName,

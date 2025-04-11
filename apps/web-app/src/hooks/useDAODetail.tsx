@@ -3,6 +3,7 @@ import { contractAddress } from "@/config/config";
 import { DAOFactory__factory, MultisigDAO__factory } from "@repo/contracts";
 import { useEffect, useState } from "react";
 import { useReadContracts } from "wagmi";
+import { Proposal } from "./useGetStatusProposal";
 
 export interface MetaDataDaoType {
   name: string;
@@ -17,7 +18,7 @@ export interface DaoTokenDetails {
   symbol: string;
   decimals: number;
   totalSupply: bigint;
-  listProposal?: any[];
+  listProposal?: Proposal[];
 }
 
 const useDAODetail = (daoAddresses: `0x${string}`[] = []) => {
@@ -41,8 +42,6 @@ const useDAODetail = (daoAddresses: `0x${string}`[] = []) => {
   const { data, isLoading, isFetching, isError, ...rest } = useReadContracts({
     contracts: calls,
   });
-
-  console.log("data", data);
 
   useEffect(() => {
     if (data && data?.length > 0) {

@@ -17,12 +17,12 @@ import { ethers } from "ethers";
 import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
 import { useContractWrite } from "@/hooks/useContracts";
 import { DECIMALS } from "@/constants/token";
+import { ERC20Factory__factory } from "@repo/contracts";
+import { contractAddress } from "@/config/config";
 
 const CreateToken = () => {
   const { write, stepModal, errorWrite, setStepModal, isConnected } =
-    useContractWrite({
-      functionName: "mintERC20",
-    });
+    useContractWrite();
   const form = useForm<CreateTokenType>({
     resolver: zodResolver(createTokenSchema),
     defaultValues: {
@@ -37,7 +37,12 @@ const CreateToken = () => {
       const { name, symbol, amount } = values;
       const amountValue = ethers.parseUnits(amount, DECIMALS);
 
-      await write([name, symbol, amountValue]);
+      await write({
+        args: [name, symbol, amountValue],
+        functionName: "mintERC20",
+        abi: ERC20Factory__factory.abi,
+        contractAddress: contractAddress.ERC20FactoryAddress
+      });
     } catch (error) {
       console.log("error", { error });
     }

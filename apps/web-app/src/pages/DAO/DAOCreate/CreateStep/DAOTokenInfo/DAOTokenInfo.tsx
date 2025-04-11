@@ -18,6 +18,11 @@ import { FC, useEffect } from "react";
 import { useContractWrite } from "@/hooks/useContracts";
 import ConnectButtonCustom from "@/components/ConnectButtonCustom/ConnectButtonCustom";
 import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
+import { pinata } from "@/utils/http";
+import { DECIMALS } from "@/constants/token";
+import { ethers } from "ethers";
+import { DAOFactory__factory } from "@repo/contracts";
+import { contractAddress } from "@/config/config";
 
 export type DAOTokenInfoSchemaType = Pick<
   CreateDAOContractSchemaType,
@@ -41,18 +46,56 @@ const DAOTokenInfo: FC<{
     },
   });
 
-  const { write, stepModal, errorWrite, setStepModal, isConnected } =
-    useContractWrite({
-      functionName: "createDAO",
-    });
+  const {
+    write,
+    stepModal,
+    errorWrite,
+    setStepModal,
+    setErrorWrite,
+    isConnected,
+  } = useContractWrite();
 
   async function onSubmit(values: DAOTokenInfoSchemaType) {
     const dataSend = { ...dataSubmit, ...values };
+    const amountValue = ethers.parseUnits(dataSend.amount, DECIMALS);
     try {
-      console.log("dataSend", dataSend);
-      await write([], dataSend);
+      setStepModal(MODAL_STEP.PROCESSING);
+      setErrorWrite("");
+      const upload = await pinata.upload.public
+        .file(dataSend.avatarFile)
+        .group("87de2c19-9d65-4cff-9fd1-08a426a68411");
+      const gatewayUrlImg = await pinata.gateways.public.convert(upload.cid);
+      const uploadDataJson = await pinata.upload.public
+        .json({
+          name: dataSend.nameDAO,
+          description: dataSend.descriptionDao,
+          image: gatewayUrlImg,
+        })
+        .group("eda38d13-ccf0-4bf8-bddd-43245a3851c1");
+      const encodedData = ethers.AbiCoder.defaultAbiCoder().encode(
+        ["string"],
+        [uploadDataJson.cid]
+      );
+
+      await write({
+        args: [
+          dataSend.listAddress,
+          dataSend.requireVote,
+          dataSend.nameToken,
+          dataSend.symbol,
+          DECIMALS,
+          amountValue,
+          encodedData,
+        ],
+        functionName: "createDAO",
+        abi: DAOFactory__factory.abi,
+        contractAddress: contractAddress.DAOFactoryAddress,
+      });
     } catch (error) {
       console.log("error", { error });
+      if (!errorWrite) {
+        setErrorWrite("Something went wrong, please try again later");
+      }
     }
   }
 

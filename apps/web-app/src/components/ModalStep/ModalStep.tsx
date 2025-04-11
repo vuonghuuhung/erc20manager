@@ -17,18 +17,23 @@ interface Props {
   setOpen: React.Dispatch<React.SetStateAction<MODAL_STEP>>;
   statusStep: MODAL_STEP | null;
   contentStep?: string;
+  handleClose?: () => void;
 }
 
 interface PropsContent {
   content?: string;
   setOpen?: React.Dispatch<React.SetStateAction<MODAL_STEP>>;
+  handleClose?: () => void;
 }
 
-const SuccessContent = ({ content, setOpen }: PropsContent) => {
+const SuccessContent = ({ content, setOpen, handleClose }: PropsContent) => {
   return (
     <div className={`flex items-center justify-center gap-4 flex-col`}>
       <button
-        onClick={() => setOpen?.(MODAL_STEP.READY)}
+        onClick={() => {
+          setOpen?.(MODAL_STEP.READY);
+          handleClose?.();
+        }}
         className="absolute right-4 top-4"
       >
         <X className="h-4 w-4" />
@@ -40,11 +45,14 @@ const SuccessContent = ({ content, setOpen }: PropsContent) => {
   );
 };
 
-const FailedContent = ({ content, setOpen }: PropsContent) => {
+const FailedContent = ({ content, setOpen, handleClose }: PropsContent) => {
   return (
     <div className={`flex items-center justify-center gap-4 flex-col`}>
       <button
-        onClick={() => setOpen?.(MODAL_STEP.READY)}
+        onClick={() => {
+          setOpen?.(MODAL_STEP.READY);
+          handleClose?.();
+        }}
         className="absolute right-4 top-4"
       >
         <X className="h-4 w-4" />
@@ -125,6 +133,7 @@ const ModalStep = ({
   setOpen,
   statusStep,
   contentStep,
+  handleClose
 }: Props) => {
   return (
     <AlertDialog open={open}>
@@ -135,10 +144,10 @@ const ModalStep = ({
             <ProcessingContent content={contentStep} />
           )}
           {statusStep === MODAL_STEP.SUCCESS && (
-            <SuccessContent setOpen={setOpen} content={contentStep} />
+            <SuccessContent setOpen={setOpen} content={contentStep} handleClose={handleClose}/>
           )}
           {statusStep === MODAL_STEP.FAILED && (
-            <FailedContent setOpen={setOpen} content={contentStep} />
+            <FailedContent setOpen={setOpen} content={contentStep} handleClose={handleClose}/>
           )}
         </div>
       </AlertDialogContent>
