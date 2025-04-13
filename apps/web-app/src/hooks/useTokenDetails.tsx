@@ -1,5 +1,5 @@
 import { handleConvertToToken } from "@/utils/convertNumber";
-import { ERC20Manager__factory } from "@repo/contracts";
+import { ERC20Template__factory } from "@repo/contracts";
 import { useEffect, useState } from "react";
 import { useReadContracts } from "wagmi";
 
@@ -12,46 +12,51 @@ export interface TokenDetails {
 }
 
 const useTokenDetails = (tokenAddresses: `0x${string}`[] = []) => {
-  const [isErrorContractAddress, setIsErrorContractAddress] = useState<boolean>(false)
+  const [isErrorContractAddress, setIsErrorContractAddress] =
+    useState<boolean>(false);
   const calls = tokenAddresses.flatMap((address) => [
     {
       address,
-      abi: ERC20Manager__factory.abi,
+      abi: ERC20Template__factory.abi,
       functionName: "name",
-      ags: [],
+      args: [],
     },
     {
       address,
-      abi: ERC20Manager__factory.abi,
+      abi: ERC20Template__factory.abi,
       functionName: "symbol",
-      ags: [],
+      args: [],
     },
     {
       address,
-      abi: ERC20Manager__factory.abi,
+      abi: ERC20Template__factory.abi,
       functionName: "decimals",
-      ags: [],
+      args: [],
     },
     {
       address,
-      abi: ERC20Manager__factory.abi,
+      abi: ERC20Template__factory.abi,
       functionName: "totalSupply",
-      ags: [],
+      args: [],
     },
   ]);
 
-  const { data, isLoading, isError, ...rest } = useReadContracts({
+  const { data, isLoading, isFetching, isError, ...rest } = useReadContracts({
     contracts: calls,
   });
 
   useEffect(() => {
-    if (data && data?.length > 0 && data[0]?.error?.name == "InvalidAddressError") {
-      setIsErrorContractAddress(true)
+    if (
+      data &&
+      data?.length > 0 &&
+      data[0]?.error?.name == "InvalidAddressError"
+    ) {
+      setIsErrorContractAddress(true);
     }
-  }, [data])
+  }, [data]);
 
   const formattedData: TokenDetails[] =
-    data && Array.isArray(data)
+    data && Array.isArray(data) && data.length > 0
       ? tokenAddresses.map((address, index) => {
           const baseIndex = index * 4; // Mỗi token có 4 phần tử trong dataToken
           return {
@@ -67,7 +72,14 @@ const useTokenDetails = (tokenAddresses: `0x${string}`[] = []) => {
         })
       : [];
 
-  return { data: formattedData, isLoading, isError, isErrorContractAddress, ...rest };
+  return {
+    data: formattedData,
+    isLoading: isFetching || isLoading,
+    isFetching,
+    isError,
+    isErrorContractAddress,
+    ...rest,
+  };
 };
 
 export default useTokenDetails;

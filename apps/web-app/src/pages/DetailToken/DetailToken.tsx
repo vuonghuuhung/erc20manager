@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import InteractContract from "./components/InteractContract/InteractContract";
 import { useEffect } from "react";
 import useTokenDetailStore from "@/store/tokenDetailState";
+import Transfers from "./components/Transfers/Transfers";
 
 const DetailToken = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,12 +33,12 @@ const DetailToken = () => {
   }, [infoToken, setTokenDetail, tokenDetail, error]);
 
   return (
-    <p>
+    <div>
       {!isErrorContractAddress ? (
         <div>
           <div className="flex items-center pb-5 border-b border-b-[#dadbdd]">
-            <CoinsIcon className="w-10 h-10" />
-            <h2 className="ml-3 mr-1 text-[20px] font-semibold">
+            <CoinsIcon className="w-10 h-10 text-white" />
+            <h2 className="ml-3 mr-1 text-[20px] font-semibold text-white">
               {infoToken ? infoToken[0]?.name : ""}
             </h2>
             <h3 className="text-[20px] text-[#6c757d] font-semibold">
@@ -66,7 +67,7 @@ const DetailToken = () => {
               </TabsList>
               <BoxContent extendClassName="min-h-[200px] p-4">
                 <TabsContent value="Transfers">
-                  Make changes to your account here.
+                  <Transfers />
                 </TabsContent>
                 <TabsContent value="Contract">
                   <InteractContract tokenDetails={infoToken[0]} />
@@ -79,7 +80,7 @@ const DetailToken = () => {
       ) : (
         <div>Some thing went wrong</div>
       )}
-    </p>
+    </div>
   );
 };
 

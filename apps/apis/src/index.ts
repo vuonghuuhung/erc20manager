@@ -12,7 +12,7 @@ const erc20Factory = ERC20Factory__factory.connect(
 );
 
 const filterTest =
-  erc20Factory.filters["ERC20Factory__Create(address,address,uint256)"];
+  erc20Factory.filters["Create(address,address,uint256)"];
 erc20Factory.on(filterTest, (owner, token, amount) => {
   console.log("receive events", {
     owner,
@@ -26,7 +26,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.get("/list", async (req: Request, res: Response) => {
-  const list = await erc20Factory.getListOfERC20ManagerCreated();
+  const list = await erc20Factory.getListOfERC20Created();
   res.status(200).json(list);
 });
 

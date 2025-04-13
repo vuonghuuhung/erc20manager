@@ -44,11 +44,10 @@ const TransferFrom: FC<{ decimals?: number }> = ({ decimals }) => {
     },
   });
 
-  const { write, isLoading, errorWrite, isErrorGas, isWriteSuccess } =
-    useTokenWrite({
-      functionName: "transferFrom",
-      tokenAddress: id as `0x${string}`,
-    });
+  const { write, isLoading, errorWrite, isWriteSuccess } = useTokenWrite({
+    functionName: "transferFrom",
+    tokenAddress: id as `0x${string}`,
+  });
 
   async function onSubmit(values: TransferFromType) {
     try {
@@ -131,14 +130,9 @@ const TransferFrom: FC<{ decimals?: number }> = ({ decimals }) => {
             <div className="mt-2">Response: Transfer successful</div>
           )}
         </div>
-        {errorWrite && !isErrorGas && (
+        {errorWrite && (
           <div className="mt-2 text-sm font-medium text-destructive">
             {errorWrite}
-          </div>
-        )}
-        {isErrorGas && (
-          <div className="mt-2 text-sm font-medium text-destructive">
-            {isErrorGas}
           </div>
         )}
       </CollapsibleContent>

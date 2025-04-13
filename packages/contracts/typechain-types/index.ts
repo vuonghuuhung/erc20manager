@@ -3,6 +3,8 @@
 /* eslint-disable */
 import type * as openzeppelin from "./@openzeppelin";
 export type { openzeppelin };
+import type * as solmate from "./@solmate";
+export type { solmate };
 import type * as contracts from "./contracts";
 export type { contracts };
 export * as factories from "./factories";
