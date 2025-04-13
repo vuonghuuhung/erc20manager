@@ -24,7 +24,7 @@ contract MultisigDAO {
     event Approve(address indexed owner, uint256 indexed proposalId);
     event Revoke(address indexed owner, uint256 indexed proposalId);
     event Execute(uint256 indexed proposalId);
-    event MetadataUpdated(string oldMetadata, string newMetadata);
+    event MetadataUpdated(bytes oldMetadata, bytes newMetadata);
 
     enum ProposalStatus {
         OnVoting, // Proposal exists but doesn't have enough approvals yet
@@ -46,7 +46,7 @@ contract MultisigDAO {
         Action action;
         bytes data;
         bool isExecuted;
-        string metadataURI;
+        bytes metadataURI;
         bool isRejected;
     }
 
@@ -54,7 +54,7 @@ contract MultisigDAO {
     mapping(address => bool) public s_isOwner;
     uint256 public s_required;
     ERC20Template public erc20Template;
-    string public s_metadata;
+    bytes public s_metadata;
 
     Proposal[] public s_proposals;
     mapping(uint256 => mapping(address => bool)) public s_isApproved;
@@ -104,7 +104,7 @@ contract MultisigDAO {
         string memory _symbol,
         uint8 _decimals,
         uint256 _amount,
-        string memory _metadata
+        bytes memory _metadata
     ) {
         require(_owners.length > 0, MultisigDAO_NeedOwners());
         require(
@@ -137,7 +137,7 @@ contract MultisigDAO {
         uint256 _value,
         Action _action,
         bytes calldata _data,
-        string memory _metadataURI
+        bytes memory _metadataURI
     ) internal {
         // Validate parameters based on action
         if (_action == Action.UpdateMetadata) {
@@ -200,7 +200,7 @@ contract MultisigDAO {
      * @param _value The amount (for Distribute, Burn, Approve). Ignored for UpdateMetadata.
      * @param _action The type of action (Distribute, Burn, Approve, UpdateMetadata).
      * @param _data Additional data based on action type:
-     *        - For UpdateMetadata: abi.encode(newMetadataString)
+     *        - For UpdateMetadata: abi.encode(newMetadataBytes)
      *        - For other actions: empty bytes
      * @param _metadataURI IPFS URI pointing to proposal metadata (title, description, etc.)
      */
@@ -209,7 +209,7 @@ contract MultisigDAO {
         uint256 _value,
         Action _action,
         bytes calldata _data,
-        string memory _metadataURI
+        bytes memory _metadataURI
     ) external onlyOwner {
         _submitProposal(_to, _value, _action, _data, _metadataURI);
     }
@@ -224,6 +224,12 @@ contract MultisigDAO {
         notExecuted(_proposalId)
         notRejected(_proposalId)
     {
+        // Add check: Ensure the proposal can still potentially pass
+        require(
+            s_owners.length - s_rejectionCount[_proposalId] >= s_required,
+            "MultisigDAO: Proposal cannot pass due to rejections"
+        );
+
         s_isApproved[_proposalId][msg.sender] = true;
         emit Approve(msg.sender, _proposalId);
     }
@@ -273,9 +279,9 @@ contract MultisigDAO {
             erc20Template.approve(proposal.to, proposal.value);
         } else if (proposal.action == Action.UpdateMetadata) {
             // Extract the metadata from the data
-            string memory newMetadata = abi.decode(proposal.data, (string));
+            bytes memory newMetadata = abi.decode(proposal.data, (bytes));
 
-            string memory oldMetadata = s_metadata;
+            bytes memory oldMetadata = s_metadata;
             s_metadata = newMetadata;
             emit MetadataUpdated(oldMetadata, newMetadata);
         }
@@ -283,7 +289,7 @@ contract MultisigDAO {
         emit Execute(_proposalId);
     }
 
-    function getMetadata() external view returns (string memory) {
+    function getMetadata() external view returns (bytes memory) {
         return s_metadata;
     }
 
@@ -366,6 +372,9 @@ contract MultisigDAO {
             status = ProposalStatus.Executed;
         } else if (proposal.isRejected) {
             status = ProposalStatus.Rejected;
+        } else if (s_owners.length - rejectionCount < s_required) {
+            // Check if the proposal can still potentially pass based on rejections
+            status = ProposalStatus.Rejected;
         } else if (approvalCount >= s_required) {
             status = ProposalStatus.Passed;
         } else {
@@ -398,6 +407,11 @@ contract MultisigDAO {
 
         // If rejected, return Rejected status
         if (proposal.isRejected) {
+            return ProposalStatus.Rejected;
+        }
+
+        // Check if the proposal can still potentially pass based on rejections
+        if (s_owners.length - s_rejectionCount[_proposalId] < s_required) {
             return ProposalStatus.Rejected;
         }
 

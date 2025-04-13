@@ -54,7 +54,7 @@ contract DAOFactory {
         string memory _symbol,
         uint8 _decimals,
         uint256 _amount,
-        string memory _metadata
+        bytes memory _metadata
     ) public {
         MultisigDAO multiSigDAO = new MultisigDAO(
             _owners,

@@ -45,6 +45,7 @@ interface MultisigDAOExtended {
     s_isOwner: (address: string) => Promise<boolean>;
     s_required: () => Promise<bigint>;
     s_metadata: () => Promise<string>;
+    getMetadata: () => Promise<string>;
     s_proposals: (index: number) => Promise<Proposal>;
     submitProposal: (to: string, value: bigint, action: number, data: string, metadataURI: string) => Promise<any>;
     approveProposal: (proposalId: bigint) => Promise<any>;
@@ -84,7 +85,7 @@ async function deployDAOFixture() {
     const tokenSymbol = "DTT";
     const tokenDecimals = 18;
     const tokenInitialSupply = hre.ethers.parseUnits("1000", tokenDecimals);
-    const daoMetadata = "ipfs://dao-metadata-hash";
+    const daoMetadataBytes = hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://dao-metadata-hash"));
 
     const tx = await daoFactory.createDAO(
         daoOwners,
@@ -93,7 +94,7 @@ async function deployDAOFixture() {
         tokenSymbol,
         tokenDecimals,
         tokenInitialSupply,
-        daoMetadata
+        daoMetadataBytes
     );
     const receipt = await tx.wait();
 
@@ -129,7 +130,74 @@ async function deployDAOFixture() {
         recipient,
         daoAddress,
         tokenAddress,
-        requiredConfirmations
+        requiredConfirmations,
+        daoMetadataBytes
+    };
+}
+
+// Deploy fixture with 4 owners and 3 required confirmations to test edge cases
+async function deployDAOFixture4Owners3Required() {
+    // Get signers (EOA accounts for testing)
+    const [owner, otherAccount1, otherAccount2, otherAccount3, recipient] = await hre.ethers.getSigners();
+
+    // Deploy DAOFactory
+    const DAOFactory = await hre.ethers.getContractFactory("DAOFactory");
+    const daoFactory = await DAOFactory.deploy();
+
+    // Create new DAO
+    const daoOwners = [owner.address, otherAccount1.address, otherAccount2.address, otherAccount3.address];
+    const requiredConfirmations = 3; // Require 3 out of 4 owners to approve
+    const tokenName = "DAO Test Token 4-3";
+    const tokenSymbol = "DTT43";
+    const tokenDecimals = 18;
+    const tokenInitialSupply = hre.ethers.parseUnits("1000", tokenDecimals);
+    const daoMetadataBytes = hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://dao-metadata-hash-4-3"));
+
+    const tx = await daoFactory.createDAO(
+        daoOwners,
+        requiredConfirmations,
+        tokenName,
+        tokenSymbol,
+        tokenDecimals,
+        tokenInitialSupply,
+        daoMetadataBytes
+    );
+    const receipt = await tx.wait();
+
+    // Extract DAO and token addresses from event logs
+    let daoAddress = "";
+    let tokenAddress = "";
+    if (receipt?.logs) {
+        const daoFactoryInterface = DAOFactory.interface;
+        for (const log of receipt.logs) {
+            try {
+                const parsedLog = daoFactoryInterface.parseLog(log as any);
+                if (parsedLog && parsedLog.name === "Create") {
+                    daoAddress = parsedLog.args.daoAddress;
+                    tokenAddress = parsedLog.args.token;
+                    break;
+                }
+            } catch (e) { /* Ignore */ }
+        }
+    }
+
+    // Get contract instances
+    const multisigDAO = await hre.ethers.getContractAt("MultisigDAO", daoAddress);
+    const erc20DAO = await hre.ethers.getContractAt("ERC20Template", tokenAddress);
+
+    return {
+        daoFactory,
+        multisigDAO: multisigDAO as unknown as MultisigDAOExtended,
+        erc20DAO,
+        owner,
+        otherAccount1,
+        otherAccount2,
+        otherAccount3,
+        recipient,
+        daoAddress,
+        tokenAddress,
+        requiredConfirmations,
+        daoMetadataBytes
     };
 }
 
@@ -145,7 +213,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x", // Empty data for Distribute action
-                "ipfs://proposal-metadata-hash"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal-metadata-hash"))
             );
 
             // Check proposal status
@@ -167,7 +235,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x", // Empty data for Distribute action
-                "ipfs://proposal-metadata-hash"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal-metadata-hash"))
             );
 
             // Owner approves (submitter auto-approves in some implementations, but we do it explicitly)
@@ -200,7 +268,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x", // Empty data for Distribute action
-                "ipfs://proposal-metadata-hash"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal-metadata-hash"))
             );
 
             // Both owners approve
@@ -230,7 +298,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x", // Empty data for Distribute action
-                "ipfs://proposal-metadata-hash"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal-metadata-hash"))
             );
 
             // Two owners reject (majority)
@@ -258,7 +326,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x", // Empty data for Distribute action
-                "ipfs://proposal-metadata-hash"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal-metadata-hash"))
             );
 
             // Owner rejects
@@ -295,7 +363,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x", // Empty data for Distribute action
-                "ipfs://proposal-metadata-hash"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal-metadata-hash"))
             );
 
             // Two owners reject (majority)
@@ -318,7 +386,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x", // Empty data for Distribute action
-                "ipfs://proposal-metadata-hash"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal-metadata-hash"))
             );
 
             // First get enough approvals to pass
@@ -333,6 +401,122 @@ describe("MultisigDAO Proposal Status", function () {
             await expect(
                 multisigDAO.connect(owner).executeProposal(0n)
             ).to.be.revertedWith("MultisigDAO: Proposal has been rejected");
+        });
+
+        it("Should revert approveProposal if rejections make passing impossible", async function () {
+            const { multisigDAO, owner, otherAccount1, otherAccount2, recipient } = await loadFixture(deployDAOFixture);
+            const amount = hre.ethers.parseUnits("100", 18);
+
+            await multisigDAO.connect(owner).submitProposal(
+                recipient.address,
+                amount,
+                Action.Distribute,
+                "0x",
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://test-impossible"))
+            );
+
+            // One rejection (owner)
+            await multisigDAO.connect(owner).rejectProposal(0n);
+
+            // OK to approve now - still 2 owners left, need 2 approvals
+            await expect(multisigDAO.connect(otherAccount2).approveProposal(0n)).to.not.be.reverted;
+
+            // Reset with a new proposal
+            await multisigDAO.connect(owner).submitProposal(
+                recipient.address,
+                amount,
+                Action.Distribute,
+                "0x",
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://test-impossible-2"))
+            );
+
+            // Two rejections makes it impossible to reach required=2 with only 1 owner left
+            await multisigDAO.connect(owner).rejectProposal(1n);
+            await multisigDAO.connect(otherAccount1).rejectProposal(1n);
+
+            // Try to approve - should fail due to impossibility
+            await expect(
+                multisigDAO.connect(otherAccount2).approveProposal(1n)
+            ).to.be.revertedWith("MultisigDAO: Proposal has been rejected");
+        });
+
+        it("Should return Rejected status if rejections make passing impossible", async function () {
+            const { multisigDAO, owner, otherAccount1, otherAccount2, recipient } = await loadFixture(deployDAOFixture);
+            const amount = hre.ethers.parseUnits("100", 18);
+
+            await multisigDAO.connect(owner).submitProposal(
+                recipient.address,
+                amount,
+                Action.Distribute,
+                "0x",
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://test-status"))
+            );
+
+            // One rejection (owner). Remaining = 2. Required = 2. Still possible.
+            await multisigDAO.connect(owner).rejectProposal(0n);
+            let details = await multisigDAO.getProposalDetails(0n);
+            expect(details.status).to.equal(ProposalStatus.OnVoting); // Still OnVoting
+            expect(details.proposal.isRejected).to.be.false;
+
+            // Second rejection (otherAccount1). Remaining = 1. Required = 2. IMPOSSIBLE & MAJORITY REJECTED
+            await multisigDAO.connect(otherAccount1).rejectProposal(0n);
+            details = await multisigDAO.getProposalDetails(0n);
+            expect(details.status).to.equal(ProposalStatus.Rejected); // Now Rejected
+            expect(details.proposal.isRejected).to.be.true;
+        });
+
+        it("Should handle edge case where impossible is different from majority rejected - 4 owners, 3 required", async function () {
+            const { multisigDAO, owner, otherAccount1, otherAccount2, otherAccount3, recipient } = await loadFixture(deployDAOFixture4Owners3Required);
+            const amount = hre.ethers.parseUnits("100", 18);
+
+            await multisigDAO.connect(owner).submitProposal(
+                recipient.address,
+                amount,
+                Action.Distribute,
+                "0x",
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://test-edge-case"))
+            );
+
+            // Rejection 1 (owner)
+            await multisigDAO.connect(owner).rejectProposal(0n);
+            let status = await multisigDAO.getProposalStatus(0n);
+            expect(status).to.equal(ProposalStatus.OnVoting);
+
+            // Check if we can still approve (should work with just 1 rejection)
+            await expect(multisigDAO.connect(otherAccount2).approveProposal(0n)).to.not.be.reverted;
+
+            // Reset with a new proposal for testing rejection path
+            await multisigDAO.connect(owner).submitProposal(
+                recipient.address,
+                amount,
+                Action.Distribute,
+                "0x",
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://test-edge-case-2"))
+            );
+
+            // Rejection 1 (owner)
+            await multisigDAO.connect(owner).rejectProposal(1n);
+
+            // Rejection 2 (otherAccount1). Remaining = 2. Required = 3. IMPOSSIBLE to reach required.
+            await multisigDAO.connect(otherAccount1).rejectProposal(1n);
+            status = await multisigDAO.getProposalStatus(1n);
+            expect(status).to.equal(ProposalStatus.Rejected); // Should be rejected due to impossibility
+
+            let details = await multisigDAO.getProposalDetails(1n);
+            expect(details.proposal.isRejected).to.be.false; // But isRejected flag is still false (need 3 for majority)
+            expect(details.status).to.equal(ProposalStatus.Rejected);
+
+            // Try to approve - should fail due to impossibility
+            await expect(
+                multisigDAO.connect(otherAccount2).approveProposal(1n)
+            ).to.be.revertedWith("MultisigDAO: Proposal cannot pass due to rejections");
+
+            // Rejection 3 (otherAccount2). Now majority rejected.
+            await multisigDAO.connect(otherAccount2).rejectProposal(1n);
+            status = await multisigDAO.getProposalStatus(1n);
+            expect(status).to.equal(ProposalStatus.Rejected);
+            details = await multisigDAO.getProposalDetails(1n);
+            expect(details.proposal.isRejected).to.be.true; // Now isRejected flag is true
         });
     });
 
@@ -349,7 +533,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://proposal0"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal0"))
             );
 
             // Proposal 1: Passed (enough approvals)
@@ -358,7 +542,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://proposal1"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal1"))
             );
             await multisigDAO.connect(owner).approveProposal(1n);
             await multisigDAO.connect(otherAccount1).approveProposal(1n);
@@ -369,7 +553,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://proposal2"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal2"))
             );
             await multisigDAO.connect(owner).approveProposal(2n);
             await multisigDAO.connect(otherAccount1).approveProposal(2n);
@@ -381,7 +565,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://proposal3"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal3"))
             );
             await multisigDAO.connect(owner).rejectProposal(3n);
             await multisigDAO.connect(otherAccount1).rejectProposal(3n);
@@ -416,7 +600,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://onvoting1"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://onvoting1"))
             );
 
             // Proposals 1, 5: Passed 
@@ -425,7 +609,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://passed1"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://passed1"))
             );
             await multisigDAO.connect(owner).approveProposal(1n);
             await multisigDAO.connect(otherAccount1).approveProposal(1n);
@@ -436,7 +620,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://executed1"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://executed1"))
             );
             await multisigDAO.connect(owner).approveProposal(2n);
             await multisigDAO.connect(otherAccount1).approveProposal(2n);
@@ -448,7 +632,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://rejected1"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://rejected1"))
             );
             await multisigDAO.connect(owner).rejectProposal(3n);
             await multisigDAO.connect(otherAccount1).rejectProposal(3n);
@@ -459,7 +643,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://onvoting2"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://onvoting2"))
             );
 
             await multisigDAO.connect(owner).submitProposal(
@@ -467,7 +651,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://passed2"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://passed2"))
             );
             await multisigDAO.connect(owner).approveProposal(5n);
             await multisigDAO.connect(otherAccount1).approveProposal(5n);
@@ -477,7 +661,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://executed2"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://executed2"))
             );
             await multisigDAO.connect(owner).approveProposal(6n);
             await multisigDAO.connect(otherAccount1).approveProposal(6n);
@@ -488,7 +672,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://rejected2"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://rejected2"))
             );
             await multisigDAO.connect(owner).rejectProposal(7n);
             await multisigDAO.connect(otherAccount1).rejectProposal(7n);
@@ -498,26 +682,26 @@ describe("MultisigDAO Proposal Status", function () {
             // OnVoting proposals
             let result = await multisigDAO.getProposalsByProposalStatus(ProposalStatus.OnVoting);
             expect(result.filteredProposals.length).to.equal(2);
-            expect(result.filteredProposals[0].metadataURI).to.equal("ipfs://onvoting1");
-            expect(result.filteredProposals[1].metadataURI).to.equal("ipfs://onvoting2");
+            expect(result.filteredProposals[0].metadataURI).to.equal(hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://onvoting1")));
+            expect(result.filteredProposals[1].metadataURI).to.equal(hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://onvoting2")));
 
             // Passed proposals
             result = await multisigDAO.getProposalsByProposalStatus(ProposalStatus.Passed);
             expect(result.filteredProposals.length).to.equal(2);
-            expect(result.filteredProposals[0].metadataURI).to.equal("ipfs://passed1");
-            expect(result.filteredProposals[1].metadataURI).to.equal("ipfs://passed2");
+            expect(result.filteredProposals[0].metadataURI).to.equal(hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://passed1")));
+            expect(result.filteredProposals[1].metadataURI).to.equal(hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://passed2")));
 
             // Executed proposals
             result = await multisigDAO.getProposalsByProposalStatus(ProposalStatus.Executed);
             expect(result.filteredProposals.length).to.equal(2);
-            expect(result.filteredProposals[0].metadataURI).to.equal("ipfs://executed1");
-            expect(result.filteredProposals[1].metadataURI).to.equal("ipfs://executed2");
+            expect(result.filteredProposals[0].metadataURI).to.equal(hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://executed1")));
+            expect(result.filteredProposals[1].metadataURI).to.equal(hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://executed2")));
 
             // Rejected proposals
             result = await multisigDAO.getProposalsByProposalStatus(ProposalStatus.Rejected);
             expect(result.filteredProposals.length).to.equal(2);
-            expect(result.filteredProposals[0].metadataURI).to.equal("ipfs://rejected1");
-            expect(result.filteredProposals[1].metadataURI).to.equal("ipfs://rejected2");
+            expect(result.filteredProposals[0].metadataURI).to.equal(hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://rejected1")));
+            expect(result.filteredProposals[1].metadataURI).to.equal(hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://rejected2")));
         });
 
         it("Should return empty arrays when filtering with no matching proposals", async function () {
@@ -539,7 +723,7 @@ describe("MultisigDAO Proposal Status", function () {
                 amount,
                 Action.Distribute,
                 "0x",
-                "ipfs://mixed-status-test"
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://mixed-status-test"))
             );
 
             // Check initial status
@@ -565,5 +749,43 @@ describe("MultisigDAO Proposal Status", function () {
                 multisigDAO.connect(owner).executeProposal(0n)
             ).to.be.revertedWith("MultisigDAO: Proposal has been rejected");
         });
+    });
+});
+
+// Add a test for DAOFactory and MultisigDAO with bytes metadata
+describe("MultisigDAO with bytes metadata", function () {
+    it("Should correctly store and retrieve bytes metadata", async function () {
+        const { multisigDAO, daoMetadataBytes } = await loadFixture(deployDAOFixture);
+
+        // Check that the metadata was stored correctly
+        const storedMetadata = await (multisigDAO as any).getMetadata();
+        expect(storedMetadata).to.equal(daoMetadataBytes);
+    });
+
+    it("Should update metadata using bytes in UpdateMetadata proposal", async function () {
+        const { multisigDAO, owner, otherAccount1, daoMetadataBytes } = await loadFixture(deployDAOFixture);
+        const newMetadataBytes = hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://new-metadata-hash"));
+
+        // Encode the metadata for the proposal
+        const proposalData = hre.ethers.AbiCoder.defaultAbiCoder().encode(["bytes"], [newMetadataBytes]);
+
+        // Submit UpdateMetadata proposal
+        await multisigDAO.connect(owner).submitProposal(
+            hre.ethers.ZeroAddress,
+            0n,
+            Action.UpdateMetadata,
+            proposalData,
+            hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal-metadata"))
+        );
+
+        // Approve and execute
+        await multisigDAO.connect(owner).approveProposal(0n);
+        await multisigDAO.connect(otherAccount1).approveProposal(0n);
+        await multisigDAO.connect(owner).executeProposal(0n);
+
+        // Verify metadata was updated
+        const updatedMetadata = await (multisigDAO as any).getMetadata();
+        expect(updatedMetadata).to.equal(newMetadataBytes);
+        expect(updatedMetadata).to.not.equal(daoMetadataBytes);
     });
 }); 

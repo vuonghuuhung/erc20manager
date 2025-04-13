@@ -52,6 +52,7 @@ describe("DAOFactory Flow", function () {
         const tokenDecimals = 18;
         const tokenInitialSupply = hre.ethers.parseUnits("1000", tokenDecimals);
         const daoMetadata = "ipfs://test-metadata-hash";
+        const daoMetadataBytes = hre.ethers.hexlify(hre.ethers.toUtf8Bytes(daoMetadata));
 
         const tx = await daoFactory.createDAO(
             daoOwners,
@@ -60,12 +61,12 @@ describe("DAOFactory Flow", function () {
             tokenSymbol,
             tokenDecimals,
             tokenInitialSupply,
-            daoMetadata
+            daoMetadataBytes
         );
         const receipt = await tx.wait();
 
-        let daoAddress = "";
-        let tokenAddress = "";
+        let daoAddress = hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"));
+        let tokenAddress = hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"));
         if (receipt?.logs) {
             const daoFactoryInterface = await hre.ethers.getContractFactory("DAOFactory").then(f => f.interface);
             for (const log of receipt.logs) {
@@ -108,7 +109,7 @@ describe("DAOFactory Flow", function () {
             const tokenSymbol = "TDT";
             const tokenDecimals = 18; // Standard ERC20 decimals
             const tokenInitialSupply = hre.ethers.parseUnits("1000", tokenDecimals);
-            const daoMetadata = "ipfs://test-metadata-hash";
+            const daoMetadata = hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://test-metadata-hash"));
 
             // Call the createDAO function
             const tx = await daoFactory.createDAO(
@@ -123,8 +124,8 @@ describe("DAOFactory Flow", function () {
             const receipt = await tx.wait();
 
             // --- Verification --- Find the created DAO and Token addresses from event logs
-            let daoAddress = "";
-            let tokenAddress = "";
+            let daoAddress = hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"));
+            let tokenAddress = hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"));
             let amountEmitted = 0n; // Use BigInt for uint256
 
             if (receipt?.logs) {
@@ -188,14 +189,14 @@ describe("DAOFactory Flow", function () {
             const tokenInitialSupply = hre.ethers.parseUnits("1000", 18);
 
             // Required > number of owners
-            await expect(daoFactory.createDAO(daoOwners, 3, "T", "T", 18, tokenInitialSupply, "")).to.be.revertedWithCustomError(
+            await expect(daoFactory.createDAO(daoOwners, 3, "T", "T", 18, tokenInitialSupply, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")))).to.be.revertedWithCustomError(
                 // Need to attach MultisigDAO contract to get the error signature
                 await hre.ethers.getContractFactory("MultisigDAO"),
                 "MultisigDAO_InvalidRequired"
             ).withArgs(3, 2);
 
             // Required == 0
-            await expect(daoFactory.createDAO(daoOwners, 0, "T", "T", 18, tokenInitialSupply, "")).to.be.revertedWithCustomError(
+            await expect(daoFactory.createDAO(daoOwners, 0, "T", "T", 18, tokenInitialSupply, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")))).to.be.revertedWithCustomError(
                 await hre.ethers.getContractFactory("MultisigDAO"),
                 "MultisigDAO_InvalidRequired"
             ).withArgs(0, 2);
@@ -204,7 +205,7 @@ describe("DAOFactory Flow", function () {
         it("Should revert if owner list is empty", async function () {
             const { daoFactory } = await loadFixture(deployDAOFactoryFixture);
             const tokenInitialSupply = hre.ethers.parseUnits("1000", 18);
-            await expect(daoFactory.createDAO([], 1, "T", "T", 18, tokenInitialSupply, "")).to.be.revertedWithCustomError(
+            await expect(daoFactory.createDAO([], 1, "T", "T", 18, tokenInitialSupply, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")))).to.be.revertedWithCustomError(
                 await hre.ethers.getContractFactory("MultisigDAO"),
                 "MultisigDAO_NeedOwners"
             );
@@ -214,7 +215,7 @@ describe("DAOFactory Flow", function () {
             const { daoFactory, owner } = await loadFixture(deployDAOFactoryFixture);
             const daoOwners = [owner.address, hre.ethers.ZeroAddress];
             const tokenInitialSupply = hre.ethers.parseUnits("1000", 18);
-            await expect(daoFactory.createDAO(daoOwners, 1, "T", "T", 18, tokenInitialSupply, "")).to.be.revertedWithCustomError(
+            await expect(daoFactory.createDAO(daoOwners, 1, "T", "T", 18, tokenInitialSupply, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")))).to.be.revertedWithCustomError(
                 await hre.ethers.getContractFactory("MultisigDAO"),
                 "MultisigDAO_InvalidOwner"
             );
@@ -224,7 +225,7 @@ describe("DAOFactory Flow", function () {
             const { daoFactory, owner } = await loadFixture(deployDAOFactoryFixture);
             const daoOwners = [owner.address, owner.address];
             const tokenInitialSupply = hre.ethers.parseUnits("1000", 18);
-            await expect(daoFactory.createDAO(daoOwners, 1, "T", "T", 18, tokenInitialSupply, "")).to.be.revertedWithCustomError(
+            await expect(daoFactory.createDAO(daoOwners, 1, "T", "T", 18, tokenInitialSupply, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")))).to.be.revertedWithCustomError(
                 await hre.ethers.getContractFactory("MultisigDAO"),
                 "MultisigDAO_AlreadyOwner"
             ).withArgs(owner.address);
@@ -255,7 +256,7 @@ describe("DAOFactory Flow", function () {
                     amount,
                     Action.Distribute,
                     encodedData,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 const proposal = await multisigDAO.s_proposals(0);
@@ -280,7 +281,7 @@ describe("DAOFactory Flow", function () {
                     amount,
                     Action.Distribute,
                     encodedData,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 )).to.be.revertedWithCustomError(multisigDAO, "MultisigDAO_InvalidOwner");
             });
 
@@ -298,7 +299,7 @@ describe("DAOFactory Flow", function () {
                     amount,
                     Action.Distribute,
                     encodedData,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 )).to.be.revertedWith("MultisigDAO: Invalid recipient for Distribute");
             });
 
@@ -315,7 +316,7 @@ describe("DAOFactory Flow", function () {
                     0,
                     Action.Distribute,
                     encodedData,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 )).to.be.revertedWith("MultisigDAO: Value must be greater than zero for Distribute");
             });
 
@@ -329,7 +330,7 @@ describe("DAOFactory Flow", function () {
                     amount,
                     Action.Distribute,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
             });
 
@@ -344,7 +345,7 @@ describe("DAOFactory Flow", function () {
                     description: "Initial distribution"
                 });
                 const distributeData = hre.ethers.AbiCoder.defaultAbiCoder().encode(["string"], [distributeMetadata]);
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(recipient, hre.ethers.parseUnits("1", 18), Action.Distribute, distributeData, "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(recipient, hre.ethers.parseUnits("1", 18), Action.Distribute, distributeData, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
 
                 // Create Burn proposal
                 const burnMetadata = JSON.stringify({
@@ -358,7 +359,7 @@ describe("DAOFactory Flow", function () {
                     amount,
                     Action.Burn,
                     burnData,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 const proposal = await multisigDAO.s_proposals(1);
@@ -379,7 +380,7 @@ describe("DAOFactory Flow", function () {
                     amount,
                     Action.Burn,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
             });
 
@@ -397,7 +398,7 @@ describe("DAOFactory Flow", function () {
                     amount,
                     Action.Burn,
                     burnData,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 )).to.be.revertedWith("MultisigDAO: 'to' should be zero address for Burn");
             });
 
@@ -419,11 +420,11 @@ describe("DAOFactory Flow", function () {
                 const recipient = hre.ethers.Wallet.createRandom().address;
                 const distributeMetadata = JSON.stringify({ title: "Distribute 1", description: "Test" });
                 const distributeData = hre.ethers.AbiCoder.defaultAbiCoder().encode(["string"], [distributeMetadata]);
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(recipient, hre.ethers.parseUnits("1", 18), Action.Distribute, distributeData, "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(recipient, hre.ethers.parseUnits("1", 18), Action.Distribute, distributeData, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
 
                 const burnMetadata = JSON.stringify({ title: "Burn 1", description: "Test" });
                 const burnData = hre.ethers.AbiCoder.defaultAbiCoder().encode(["string"], [burnMetadata]);
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(hre.ethers.ZeroAddress, hre.ethers.parseUnits("1", 18), Action.Burn, burnData, "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(hre.ethers.ZeroAddress, hre.ethers.parseUnits("1", 18), Action.Burn, burnData, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
 
                 // Create Approve proposal
                 const approveMetadata = JSON.stringify({
@@ -437,7 +438,7 @@ describe("DAOFactory Flow", function () {
                     amount,
                     Action.Approve,
                     approveData,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 const proposal = await multisigDAO.s_proposals(2);
@@ -459,7 +460,7 @@ describe("DAOFactory Flow", function () {
                     amount,
                     Action.Approve,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
             });
 
@@ -477,7 +478,7 @@ describe("DAOFactory Flow", function () {
                     amount,
                     Action.Approve,
                     approveData,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 )).to.be.revertedWith("MultisigDAO: Invalid spender for Approve");
             });
 
@@ -496,7 +497,7 @@ describe("DAOFactory Flow", function () {
                     0,
                     Action.Approve,
                     approveData,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 )).to.emit(multisigDAO, "Submit"); // No revert
             });
 
@@ -530,13 +531,13 @@ describe("DAOFactory Flow", function () {
                 const spender = hre.ethers.Wallet.createRandom().address;
 
                 const distributeData = hre.ethers.AbiCoder.defaultAbiCoder().encode(["string"], [JSON.stringify({ title: "Distribute", description: "Test" })]);
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(recipient, hre.ethers.parseUnits("1", 18), Action.Distribute, distributeData, "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(recipient, hre.ethers.parseUnits("1", 18), Action.Distribute, distributeData, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
 
                 const burnData = hre.ethers.AbiCoder.defaultAbiCoder().encode(["string"], [JSON.stringify({ title: "Burn", description: "Test" })]);
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(hre.ethers.ZeroAddress, hre.ethers.parseUnits("1", 18), Action.Burn, burnData, "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(hre.ethers.ZeroAddress, hre.ethers.parseUnits("1", 18), Action.Burn, burnData, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
 
                 const approveData = hre.ethers.AbiCoder.defaultAbiCoder().encode(["string"], [JSON.stringify({ title: "Approve", description: "Test" })]);
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(spender, hre.ethers.parseUnits("1", 18), Action.Approve, approveData, "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(spender, hre.ethers.parseUnits("1", 18), Action.Approve, approveData, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
 
                 // Submit UpdateMetadata proposal
                 await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(
@@ -544,7 +545,7 @@ describe("DAOFactory Flow", function () {
                     0n,
                     Action.UpdateMetadata,
                     encodedMetadata,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 const proposal = await multisigDAO.s_proposals(3);
@@ -562,7 +563,7 @@ describe("DAOFactory Flow", function () {
                     0,
                     Action.UpdateMetadata,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 )).to.be.revertedWith("MultisigDAO: Data required for UpdateMetadata");
             });
 
@@ -584,7 +585,7 @@ describe("DAOFactory Flow", function () {
                     0,
                     Action.UpdateMetadata,
                     encodedMetadata,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 )).to.be.revertedWith("MultisigDAO: 'to' should be zero address for UpdateMetadata");
             });
 
@@ -606,7 +607,7 @@ describe("DAOFactory Flow", function () {
                     1,
                     Action.UpdateMetadata,
                     encodedMetadata,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 )).to.be.revertedWith("MultisigDAO: 'value' should be zero for UpdateMetadata");
             });
         });
@@ -622,7 +623,7 @@ describe("DAOFactory Flow", function () {
                 const encodedData = hre.ethers.AbiCoder.defaultAbiCoder().encode(["string"], [proposalMetadata]);
 
                 // Owner submits
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(recipient.address, amount, Action.Distribute, encodedData, "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(recipient.address, amount, Action.Distribute, encodedData, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
                 const proposalId = 0;
 
                 // Owner approves
@@ -640,7 +641,7 @@ describe("DAOFactory Flow", function () {
 
             it("Should revert if non-owner tries to approve", async function () {
                 const { multisigDAO, owner, otherAccount3, recipient } = await loadFixture(deployDAOFactoryFixture);
-                await multisigDAO.connect(owner).submitProposal(recipient.address, hre.ethers.parseUnits("1", 18), Action.Distribute, "0x", "");
+                await multisigDAO.connect(owner).submitProposal(recipient.address, hre.ethers.parseUnits("1", 18), Action.Distribute, "0x", hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
                 await expect(multisigDAO.connect(otherAccount3).approveProposal(BigInt(0)))
                     .to.be.revertedWithCustomError(multisigDAO, "MultisigDAO_InvalidOwner");
             });
@@ -654,7 +655,7 @@ describe("DAOFactory Flow", function () {
 
             it("Should revert if owner tries to approve the same proposal twice", async function () {
                 const { multisigDAO, owner, recipient } = await loadFixture(deployDAOFactoryFixture);
-                await multisigDAO.connect(owner).submitProposal(recipient.address, hre.ethers.parseUnits("1", 18), Action.Distribute, "0x", "");
+                await multisigDAO.connect(owner).submitProposal(recipient.address, hre.ethers.parseUnits("1", 18), Action.Distribute, "0x", hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
                 await multisigDAO.connect(owner).approveProposal(BigInt(0));
                 await expect(multisigDAO.connect(owner).approveProposal(BigInt(0)))
                     .to.be.revertedWithCustomError(multisigDAO, "MultisigDAO_AlreadyApproved");
@@ -671,7 +672,7 @@ describe("DAOFactory Flow", function () {
                 const { multisigDAO, owner, otherAccount1, recipient } = await loadFixture(deployDAOFactoryFixture);
                 const amount = hre.ethers.parseUnits("100", 18);
                 const proposalId = 0;
-                await multisigDAO.connect(owner).submitProposal(recipient.address, amount, Action.Distribute, "0x", "");
+                await multisigDAO.connect(owner).submitProposal(recipient.address, amount, Action.Distribute, "0x", hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
                 await multisigDAO.connect(owner).approveProposal(BigInt(proposalId));
                 await multisigDAO.connect(otherAccount1).approveProposal(BigInt(proposalId));
                 await multisigDAO.connect(owner).executeProposal(BigInt(proposalId));
@@ -695,7 +696,7 @@ describe("DAOFactory Flow", function () {
                 const encodedData = hre.ethers.AbiCoder.defaultAbiCoder().encode(["string"], [proposalMetadata]);
 
                 // Submit
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(recipient.address, amountToDistribute, Action.Distribute, encodedData, "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(recipient.address, amountToDistribute, Action.Distribute, encodedData, hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
 
                 // Approve (enough)
                 await multisigDAO.connect(owner).approveProposal(BigInt(proposalId));
@@ -725,7 +726,7 @@ describe("DAOFactory Flow", function () {
                 const { multisigDAO, owner, recipient, requiredConfirmations } = await loadFixture(deployDAOFactoryFixture);
                 const amount = hre.ethers.parseUnits("100", 18);
                 const proposalId = 0;
-                await multisigDAO.connect(owner).submitProposal(recipient.address, amount, Action.Distribute, "0x", "");
+                await multisigDAO.connect(owner).submitProposal(recipient.address, amount, Action.Distribute, "0x", hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
                 await multisigDAO.connect(owner).approveProposal(BigInt(proposalId)); // Only 1 approval
 
                 await expect(multisigDAO.connect(owner).executeProposal(BigInt(proposalId)))
@@ -744,7 +745,7 @@ describe("DAOFactory Flow", function () {
                 const { multisigDAO, owner, otherAccount1, recipient } = await loadFixture(deployDAOFactoryFixture);
                 const amount = hre.ethers.parseUnits("100", 18);
                 const proposalId = 0;
-                await multisigDAO.connect(owner).submitProposal(recipient.address, amount, Action.Distribute, "0x", "");
+                await multisigDAO.connect(owner).submitProposal(recipient.address, amount, Action.Distribute, "0x", hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
                 await multisigDAO.connect(owner).approveProposal(BigInt(proposalId));
                 await multisigDAO.connect(otherAccount1).approveProposal(BigInt(proposalId));
                 await multisigDAO.connect(owner).executeProposal(BigInt(proposalId));
@@ -758,7 +759,7 @@ describe("DAOFactory Flow", function () {
                 const { multisigDAO, owner, otherAccount1, otherAccount3, recipient } = await loadFixture(deployDAOFactoryFixture);
                 const amount = hre.ethers.parseUnits("100", 18);
                 const proposalId = 0;
-                await multisigDAO.connect(owner).submitProposal(recipient.address, amount, Action.Distribute, "0x", "");
+                await multisigDAO.connect(owner).submitProposal(recipient.address, amount, Action.Distribute, "0x", hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
                 await multisigDAO.connect(owner).approveProposal(BigInt(proposalId));
                 await multisigDAO.connect(otherAccount1).approveProposal(BigInt(proposalId));
 
@@ -775,7 +776,7 @@ describe("DAOFactory Flow", function () {
                 const proposalId = 0;
 
                 // Submit Burn proposal
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(hre.ethers.ZeroAddress, amountToBurn, Action.Burn, "0x", "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(hre.ethers.ZeroAddress, amountToBurn, Action.Burn, "0x", hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
 
                 // Approve
                 await multisigDAO.connect(owner).approveProposal(BigInt(proposalId));
@@ -815,7 +816,7 @@ describe("DAOFactory Flow", function () {
                 const proposalId = 0;
 
                 // Submit Approve proposal
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(spender, amountToApprove, Action.Approve, "0x", "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(spender, amountToApprove, Action.Approve, "0x", hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
 
                 // Approve
                 await multisigDAO.connect(owner).approveProposal(BigInt(proposalId));
@@ -848,14 +849,14 @@ describe("DAOFactory Flow", function () {
                 const daoAddress = await multisigDAO.getAddress();
 
                 // 1. Submit & execute approval for initialAmount
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(spender, initialAmount, Action.Approve, "0x", "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(spender, initialAmount, Action.Approve, "0x", hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
                 await multisigDAO.connect(owner).approveProposal(BigInt(proposalId0));
                 await multisigDAO.connect(otherAccount1).approveProposal(BigInt(proposalId0));
                 await multisigDAO.connect(owner).executeProposal(BigInt(proposalId0));
                 expect(await erc20DAO.allowance(daoAddress, spender)).to.equal(initialAmount);
 
                 // 2. Submit & execute approval for zeroAmount
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(spender, zeroAmount, Action.Approve, "0x", "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(spender, zeroAmount, Action.Approve, "0x", hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata")));
                 await multisigDAO.connect(owner).approveProposal(BigInt(proposalId1));
                 await multisigDAO.connect(otherAccount1).approveProposal(BigInt(proposalId1));
 
@@ -875,15 +876,21 @@ describe("DAOFactory Flow", function () {
             it("Should execute an UpdateMetadata proposal after required approvals", async function () {
                 const { multisigDAO, owner, otherAccount1 } = await loadFixture(deployDAOFactoryFixture);
                 const oldMetadata = await multisigDAO.s_metadata();
-                const newMetadata = "ipfs://new-metadata-hash-executed";
+                const newMetadata = hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://new-metadata-hash"));
 
-                // Encode just the new metadata string, not with the proposal metadata
-                const encodedMetadata = hre.ethers.AbiCoder.defaultAbiCoder().encode(["string"], [newMetadata]);
+                // Encode the new metadata bytes directly
+                const encodedMetadata = hre.ethers.AbiCoder.defaultAbiCoder().encode(["bytes"], [newMetadata]);
 
                 const proposalId = 0;
 
                 // Submit UpdateMetadata proposal
-                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(hre.ethers.ZeroAddress, 0n, Action.UpdateMetadata, encodedMetadata, "");
+                await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(
+                    hre.ethers.ZeroAddress, 
+                    0n, 
+                    Action.UpdateMetadata, 
+                    encodedMetadata, 
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal-metadata"))
+                );
 
                 // Approve
                 await multisigDAO.connect(owner).approveProposal(BigInt(proposalId));
@@ -933,7 +940,7 @@ describe("DAOFactory Flow", function () {
                     hre.ethers.parseUnits("100", 18),
                     Action.Distribute,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 // Burn proposal
@@ -942,7 +949,7 @@ describe("DAOFactory Flow", function () {
                     hre.ethers.parseUnits("50", 18),
                     Action.Burn,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 // Approve proposal
@@ -951,7 +958,7 @@ describe("DAOFactory Flow", function () {
                     hre.ethers.parseUnits("75", 18),
                     Action.Approve,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 // UpdateMetadata proposal
@@ -962,7 +969,7 @@ describe("DAOFactory Flow", function () {
                     0n,
                     Action.UpdateMetadata,
                     encodedMetadata,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 // Check that we can retrieve all proposals
@@ -1020,7 +1027,7 @@ describe("DAOFactory Flow", function () {
                     hre.ethers.parseUnits("10", 18),
                     Action.Distribute,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 await (multisigDAO.connect(owner) as unknown as MultisigDAOExtended).submitProposal(
@@ -1028,7 +1035,7 @@ describe("DAOFactory Flow", function () {
                     hre.ethers.parseUnits("20", 18),
                     Action.Distribute,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 // Approve and execute only the first proposal
@@ -1054,7 +1061,7 @@ describe("DAOFactory Flow", function () {
                         hre.ethers.parseUnits((10 * (i + 1)).toString(), 18),
                         Action.Distribute,
                         "0x",
-                        ""
+                        hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                     );
                 }
 
@@ -1104,7 +1111,7 @@ describe("DAOFactory Flow", function () {
                     hre.ethers.parseUnits("50", 18),
                     Action.Distribute,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
                 const proposalId = 0;
 
@@ -1157,7 +1164,7 @@ describe("DAOFactory Flow", function () {
                     hre.ethers.parseUnits("100", 18),
                     Action.Distribute,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 // Burn proposal
@@ -1166,7 +1173,7 @@ describe("DAOFactory Flow", function () {
                     hre.ethers.parseUnits("50", 18),
                     Action.Burn,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 // Approve proposal
@@ -1175,7 +1182,7 @@ describe("DAOFactory Flow", function () {
                     hre.ethers.parseUnits("75", 18),
                     Action.Approve,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 // UpdateMetadata proposal
@@ -1186,7 +1193,7 @@ describe("DAOFactory Flow", function () {
                     0n,
                     Action.UpdateMetadata,
                     encodedMetadata,
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 // Execute the first proposal
@@ -1246,7 +1253,7 @@ describe("DAOFactory Flow", function () {
                         hre.ethers.parseUnits((10 * (i + 1)).toString(), 18),
                         Action.Distribute,
                         "0x",
-                        ""
+                        hre.ethers.hexlify(hre.ethers.toUtf8Bytes("test-metadata"))
                     );
                 }
 
@@ -1295,7 +1302,7 @@ describe("DAOFactory Flow", function () {
                     hre.ethers.parseUnits("50", 18),
                     Action.Distribute,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("test-metadata"))
                 );
                 const proposalId = 0;
 
@@ -1356,12 +1363,12 @@ describe("DAOFactory Flow", function () {
                     tokenSymbol,
                     18,
                     hre.ethers.parseUnits("1000", 18),
-                    "test-metadata"
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("test-metadata"))
                 );
                 const receipt = await tx.wait();
 
                 // Extract DAO address
-                let daoAddress = "";
+                let daoAddress = hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"));
                 if (receipt?.logs) {
                     const daoFactoryInterface = await hre.ethers.getContractFactory("DAOFactory").then(f => f.interface);
                     for (const log of receipt.logs) {
@@ -1401,7 +1408,7 @@ describe("DAOFactory Flow", function () {
                         hre.ethers.parseUnits("10", 18),
                         Action.Distribute,
                         "0x",
-                        ""
+                        hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                     )
                 ).to.be.revertedWithCustomError(multisigDAO, "MultisigDAO_InvalidOwner");
 
@@ -1411,7 +1418,7 @@ describe("DAOFactory Flow", function () {
                     hre.ethers.parseUnits("10", 18),
                     Action.Distribute,
                     "0x",
-                    ""
+                    hre.ethers.hexlify(hre.ethers.toUtf8Bytes("metadata"))
                 );
 
                 // Try approve with non-owner
