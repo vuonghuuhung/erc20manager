@@ -19,10 +19,10 @@ import { useContractWrite } from "@/hooks/useContracts";
 import ConnectButtonCustom from "@/components/ConnectButtonCustom/ConnectButtonCustom";
 import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
 import { pinata } from "@/utils/http";
-import { DECIMALS } from "@/constants/token";
+import { DECIMALS, initialDAOCreate } from "@/constants/token";
 import { ethers } from "ethers";
 import { DAOFactory__factory } from "@repo/contracts";
-import { contractAddress } from "@/config/config";
+import { contractAddress, pinataIdGroup } from "@/config/config";
 
 export type DAOTokenInfoSchemaType = Pick<
   CreateDAOContractSchemaType,
@@ -35,7 +35,7 @@ const DAOTokenInfoSchema = createDAOContractSchema.pick({
 });
 const DAOTokenInfo: FC<{
   dataSubmit: CreateDAOContractSchemaType;
-  handleUpdateStep: (step: number, data: DAOTokenInfoSchemaType) => void;
+  handleUpdateStep: (step: number, data: DAOTokenInfoSchemaType | undefined) => void;
 }> = ({ dataSubmit, handleUpdateStep }) => {
   const form = useForm<DAOTokenInfoSchemaType>({
     resolver: zodResolver(DAOTokenInfoSchema),
@@ -63,15 +63,19 @@ const DAOTokenInfo: FC<{
       setErrorWrite("");
       const upload = await pinata.upload.public
         .file(dataSend.avatarFile)
-        .group("87de2c19-9d65-4cff-9fd1-08a426a68411");
+        .group(pinataIdGroup.DAOImageIdGroup);
+        console.log("upload", upload);
+        
       const gatewayUrlImg = await pinata.gateways.public.convert(upload.cid);
+      console.log("gatewayUrlImg", gatewayUrlImg);
       const uploadDataJson = await pinata.upload.public
         .json({
           name: dataSend.nameDAO,
           description: dataSend.descriptionDao,
           image: gatewayUrlImg,
         })
-        .group("eda38d13-ccf0-4bf8-bddd-43245a3851c1");
+        .group(pinataIdGroup.DAOInfoIdGroup);
+
       const encodedData = ethers.AbiCoder.defaultAbiCoder().encode(
         ["string"],
         [uploadDataJson.cid]
@@ -94,6 +98,7 @@ const DAOTokenInfo: FC<{
     } catch (error) {
       console.log("error", { error });
       if (!errorWrite) {
+        setStepModal(MODAL_STEP.FAILED);
         setErrorWrite("Something went wrong, please try again later");
       }
     }
@@ -118,61 +123,67 @@ const DAOTokenInfo: FC<{
   }, [dataSubmit, form]);
 
   return (
-    <div>
+    <div className="max-w-xl mx-auto">
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-white mb-1">
+          Token Configuration
+        </h2>
+        <p className="text-sm text-gray-400">
+          Set up the governance token for your DAO
+        </p>
+      </div>
+
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit, (errors) =>
-            console.log(errors)
-          )}
-          className="space-y-8"
-        >
-          <div>
-            <div className="text-[20px] font-medium text-[#223354b3]">
-              DAO Token information
-            </div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="nameToken"
               render={({ field }) => (
-                <FormItem className="!mt-4">
+                <FormItem>
                   <FormControl>
-                    <Input
-                      placeholder="Token name"
-                      {...field}
-                      className="block w-full p-3 h-[45px] text-white rounded-[8px] bg-[#161b26] text-[14px] font-medium border border-[#d0d5dd] outline-none"
-                    />
+                    <div className="relative">
+                      <Input
+                        placeholder="Token name"
+                        {...field}
+                        className="block w-full pl-4 pr-12 py-3 h-12 text-white rounded-xl bg-gray-800/50 text-base font-medium border border-gray-700/50 outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="symbol"
               render={({ field }) => (
-                <FormItem className="!mt-4">
+                <FormItem>
                   <FormControl>
-                    <Input
-                      placeholder="Symbol"
-                      {...field}
-                      className="block w-full p-3 h-[45px] text-white rounded-[8px] bg-[#161b26] text-[14px] font-medium border border-[#d0d5dd] outline-none"
-                    />
+                    <div className="relative">
+                      <Input
+                        placeholder="Token symbol"
+                        {...field}
+                        className="block w-full pl-4 pr-12 py-3 h-12 text-white rounded-xl bg-gray-800/50 text-base font-medium border border-gray-700/50 outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="amount"
               render={({ field }) => (
-                <FormItem className="!mt-4">
+                <FormItem>
                   <FormControl>
                     <InputNumber
-                      min={4}
-                      max={5}
-                      placeholder="Amount"
+                      placeholder="Token amount"
                       {...field}
+                      classNameInput="block w-full pl-4 pr-12 py-3 h-12 text-white rounded-xl bg-gray-800/50 text-base font-medium border border-gray-700/50 outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
                     />
                   </FormControl>
                   <FormMessage />
@@ -180,17 +191,23 @@ const DAOTokenInfo: FC<{
               )}
             />
           </div>
-          <div className="mt-8 mx-auto">
+
+          <div className="pt-4">
             {isConnected ? (
-              <div className="flex justify-between items-center mt-4">
+              <div className="flex items-center justify-between gap-4">
                 <Button
-                  onClick={handleGoBack}
                   type="button"
-                  className="w-[120px]"
+                  onClick={handleGoBack}
+                  className="flex-1 bg-gray-800/50 text-white rounded-xl py-3 font-semibold hover:bg-gray-700/50 transition-colors border border-gray-700/50"
                 >
                   Back
                 </Button>
-                <Button className="w-[120px]">Continue</Button>
+                <Button
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl py-3 font-semibold hover:opacity-90 transition-opacity"
+                >
+                  Create DAO
+                </Button>
               </div>
             ) : (
               <ConnectButtonCustom />
@@ -198,11 +215,14 @@ const DAOTokenInfo: FC<{
           </div>
         </form>
       </Form>
+
       <ModalStep
         open={stepModal !== MODAL_STEP.READY}
         setOpen={setStepModal}
         contentStep={errorWrite}
         statusStep={stepModal}
+      
+      handleClose={() => handleUpdateStep(1, initialDAOCreate)}
       />
     </div>
   );

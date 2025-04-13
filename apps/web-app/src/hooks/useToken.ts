@@ -76,7 +76,7 @@ export function useTokenWrite({
   const write = async (args: any = []) => {
     if (!isConnected) {
       setErrorWrite("You need to connect wallet");
-      return
+      return;
     }
     setIsLoading(true);
     setErrorWrite("");
@@ -103,15 +103,28 @@ export function useTokenWrite({
       const { request } = await simulateContract(config, setUpMethod);
       await writeContractAsync(request);
     } catch (error: any) {
+      console.log("error", { error });
       if (
         error?.shortMessage.includes(
           "Arithmetic operation resulted in underflow or overflow"
         )
       ) {
         setErrorWrite("You don't have enough balance");
-      } else {
-        setErrorWrite(error?.shortMessage);
+        return;
       }
+      if (error?.cause?.data?.errorName === "ERC20InvalidReceiver") {
+        setErrorWrite(
+          "The receiver address is invalid. Please check the address."
+        );
+        return;
+      }
+      if (error?.cause?.data?.errorName === "ERC20InsufficientBalance") {
+        setErrorWrite(
+          "You don't have enough balance"
+        );
+        return;
+      }
+      setErrorWrite(error?.shortMessage);
     } finally {
       setIsLoading(false);
     }

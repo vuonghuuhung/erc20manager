@@ -1,3 +1,5 @@
+import { CircleArrowRight } from "lucide-react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import {
@@ -21,6 +23,8 @@ import { MultisigDAO__factory } from "@repo/contracts";
 import { useParams } from "react-router-dom";
 import { pinata } from "@/utils/http";
 import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
+import BoxContent from "@/components/BoxContent";
+import { pinataIdGroup } from "@/config/config";
 
 const DistributeProposal = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,7 +49,7 @@ const DistributeProposal = () => {
   async function onSubmit(values: CreateProposalType) {
     try {
       setStepModal(MODAL_STEP.PROCESSING);
-      setErrorWrite("")
+      setErrorWrite("");
       const { amount, addressReceive, description } = values;
       const amountValue = ethers.parseUnits(amount, DECIMALS);
 
@@ -53,7 +57,7 @@ const DistributeProposal = () => {
         .json({
           description: description,
         })
-        .group("8b567053-d8f8-4d4d-be0e-502f4c121028");
+        .group(pinataIdGroup.ProposalDesIdGroup);
       console.log("uploadDataJson", uploadDataJson);
       const encodedData = ethers.AbiCoder.defaultAbiCoder().encode(
         ["string"],
@@ -68,20 +72,27 @@ const DistributeProposal = () => {
           addressReceive,
           amountValue,
           ProposalAction.Distribute,
-          encodedData,
           "",
+          encodedData,
         ],
       });
     } catch (error) {
       console.log("error", { error });
       if (!errorWrite) {
+        setStepModal(MODAL_STEP.FAILED);
         setErrorWrite("Something went wrong, please try again later");
       }
     }
   }
 
   return (
-    <div>
+    <BoxContent extendClassName="p-8">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-3 bg-blue-100 rounded-xl">
+          <CircleArrowRight className="w-6 h-6 text-blue-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-[#223354]">Distribute Tokens</h2>
+      </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
@@ -147,7 +158,7 @@ const DistributeProposal = () => {
         contentStep={errorWrite}
         statusStep={stepModal}
       />
-    </div>
+    </BoxContent>
   );
 };
 

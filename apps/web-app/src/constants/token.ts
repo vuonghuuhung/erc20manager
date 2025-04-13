@@ -1,3 +1,5 @@
+import { CreateDAOContractSchemaType } from "@/utils/Rules";
+
 export const DECIMALS = 18;
 export const ProposalAction = {
   Distribute: 0,
@@ -12,3 +14,15 @@ export enum ProposalStatus {
   Executed = 2,
   Rejected = 3,
 }
+
+export const initialDAOCreate: CreateDAOContractSchemaType = {
+  nameDAO: "",
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  avatarFile: undefined as any,
+  descriptionDao: "",
+  listAddress: [],
+  nameToken: "",
+  requireVote: "",
+  amount: "",
+  symbol: "",
+};

@@ -7,6 +7,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import InputNumber from "@/components/InputNumber";
@@ -19,6 +20,7 @@ import { useContractWrite } from "@/hooks/useContracts";
 import { DECIMALS } from "@/constants/token";
 import { ERC20Factory__factory } from "@repo/contracts";
 import { contractAddress } from "@/config/config";
+import { Coins, Component, CircleDollarSign } from "lucide-react";
 
 const CreateToken = () => {
   const { write, stepModal, errorWrite, setStepModal, isConnected } =
@@ -41,7 +43,7 @@ const CreateToken = () => {
         args: [name, symbol, amountValue],
         functionName: "mintERC20",
         abi: ERC20Factory__factory.abi,
-        contractAddress: contractAddress.ERC20FactoryAddress
+        contractAddress: contractAddress.ERC20FactoryAddress,
       });
     } catch (error) {
       console.log("error", { error });
@@ -49,25 +51,32 @@ const CreateToken = () => {
   }
 
   return (
-    <div>
-      <BoxContent extendClassName="p-4 w-full max-w-[462px] mx-auto">
-        <h3 className="text-[25px] text-[#223354] font-bold mb-6">
-          Create Your Token
-        </h3>
+    <div className="pt-8 flex items-center justify-center">
+      <BoxContent extendClassName="p-6 w-full max-w-[462px] mx-auto">
+        <div className="flex items-center gap-2 mb-6">
+          <Coins className="w-8 h-8 text-primary" />
+          <h3 className="text-2xl font-bold text-primary">Create Your Token</h3>
+        </div>
         <div>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      Token Name
+                    </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Token"
-                        {...field}
-                        className="block w-full p-3 h-[45px] text-white rounded-[8px] bg-[#161b26] text-[14px] font-medium border border-[#d0d5dd] outline-none"
-                      />
+                      <div className="relative">
+                        <Input
+                          placeholder="Enter token name"
+                          {...field}
+                          className="pl-10 h-11 bg-background border border-input hover:border-primary transition-colors"
+                        />
+                        <Component className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -77,13 +86,19 @@ const CreateToken = () => {
                 control={form.control}
                 name="symbol"
                 render={({ field }) => (
-                  <FormItem className="!mt-4">
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      Token Symbol
+                    </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Symbol"
-                        {...field}
-                        className="block w-full p-3 h-[45px] text-white rounded-[8px] bg-[#161b26] text-[14px] font-medium border border-[#d0d5dd] outline-none"
-                      />
+                      <div className="relative">
+                        <Input
+                          placeholder="Enter token symbol"
+                          {...field}
+                          className="pl-10 h-11 bg-background border border-input hover:border-primary transition-colors"
+                        />
+                        <Coins className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -93,22 +108,32 @@ const CreateToken = () => {
                 control={form.control}
                 name="amount"
                 render={({ field }) => (
-                  <FormItem className="!mt-4">
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      Initial Supply
+                    </FormLabel>
                     <FormControl>
-                      <InputNumber
-                        min={4}
-                        max={5}
-                        placeholder="Amount"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <InputNumber
+                          min={4}
+                          max={5}
+                          placeholder="Enter initial supply"
+                          {...field}
+                          className="pl-10"
+                        />
+                        <CircleDollarSign className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               {isConnected ? (
-                <Button type="submit" className="block w-full">
-                  Submit
+                <Button
+                  type="submit"
+                  className="w-full h-11 text-base font-medium"
+                >
+                  Create Token
                 </Button>
               ) : (
                 <ConnectButtonCustom />
@@ -122,6 +147,7 @@ const CreateToken = () => {
         setOpen={setStepModal}
         contentStep={errorWrite}
         statusStep={stepModal}
+        handleClose={() => form.reset()}
       />
     </div>
   );

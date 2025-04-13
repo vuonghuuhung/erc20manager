@@ -30,7 +30,7 @@ export function DataTable<TData, TValue>({
   data,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const table = useReactTable({
     data,
     columns,
@@ -77,7 +77,7 @@ export function DataTable<TData, TValue>({
                 onClick={() => {
                   const idVault = (row.original as TokenDetails).address;
                   navigate(`/token/detail/${idVault}`);
-                 }}
+                }}
                 data-state={row.getIsSelected() && "selected"}
                 className="transition-all duration-250 hover:[#22335405] md:flex grid grid-cols-3 cursor-pointer"
               >
@@ -86,7 +86,9 @@ export function DataTable<TData, TValue>({
                     key={cell.id}
                     className="md:text-center px-2 last:pt-0 md:last:py-4 col-span-1 md:flex-1 last:col-span-3 group text-left"
                   >
-                    <div className="group-last:block md:group-last:hidden hidden mb-1 text-[14px] font-medium text-[#71717a]">{cell.column.columnDef.header as React.ReactNode}</div>
+                    <div className="group-last:block md:group-last:hidden hidden mb-1 text-[14px] font-medium text-[#71717a]">
+                      {cell.column.columnDef.header as React.ReactNode}
+                    </div>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
@@ -95,7 +97,10 @@ export function DataTable<TData, TValue>({
           ) : (
             <TableRow className="flex w-full items-center justify-center">
               <TableCell colSpan={columns.length}>
-                <Nodata />
+                <Nodata
+                  title="No Records Found"
+                  description="There are no records to display in this table"
+                />
               </TableCell>
             </TableRow>
           )}

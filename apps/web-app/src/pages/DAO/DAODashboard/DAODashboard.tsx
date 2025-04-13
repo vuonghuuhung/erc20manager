@@ -44,37 +44,37 @@ const DAODashboard = () => {
   }, [isErrorListDaoAddress, isErrorTokenDetail, isErrorMetaDataDao]);
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <div className="text-[24px] flex items-center font-semibold">
-          <ClipboardList className="mr-2" />
-          List DAO
-        </div>
-        <div>
-          <div className="flex items-center justify-center">
-            <div className="relative group">
-              <Link
-                to={path.DAOCreate}
-                className="relative inline-block p-px font-semibold leading-6 text-white bg-gray-800 shadow-2xl cursor-pointer rounded-xl transition-transform duration-300 ease-in-out hover:scale-105 active:scale-95"
-              >
-                <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-teal-400 via-blue-500 to-purple-500 p-[2px] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                <span className="relative z-10 block px-4 py-2 rounded-xl bg-gray-950">
-                  <div className="relative z-10 flex items-center md:space-x-2">
-                    <span className="hidden md:block transition-all duration-500 group-hover:translate-x-1">
-                      Create DAO
-                    </span>
-                    <span className="transition-all duration-500 md:group-hover:translate-x-1">
-                      <CirclePlus />
-                    </span>
-                  </div>
-                </span>
-              </Link>
+    <div className="max-w-7xl mx-auto">
+      <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-gray-700/50 mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 bg-blue-500/10 rounded-xl">
+              <ClipboardList className="w-6 h-6 text-blue-400" />
             </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+              Decentralized Autonomous Organizations
+            </h1>
           </div>
+
+          <Link
+            to={path.DAOCreate}
+            className="group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 p-0.5 transition-all hover:scale-105"
+          >
+            <span className="relative flex items-center gap-2 rounded-xl bg-gray-950 px-4 py-2 text-sm font-semibold text-white transition-all duration-300 group-hover:bg-opacity-90">
+              <span>Create DAO</span>
+              <CirclePlus className="w-5 h-5 transition-transform group-hover:rotate-90" />
+            </span>
+          </Link>
         </div>
       </div>
-      <BoxContent extendClassName="py-4">
-        {listDaoInfo && listDaoInfo.length === 0 && <Nodata />}
+
+      <BoxContent extendClassName="p-6 bg-gray-800/50 backdrop-blur-xl border border-gray-700/50">
+        {listDaoInfo && listDaoInfo.length === 0 && (
+          <Nodata
+            title="No DAOs Found"
+            description="Create your first DAO to get started with decentralized governance"
+          />
+        )}
         {listDaoInfo && listDaoInfo.length > 0 && (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
             {listDaoInfo.map((item, index) => (

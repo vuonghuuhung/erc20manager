@@ -27,6 +27,9 @@ const useGetMetaData = (daoAddresses: `0x${string}`[] = []) => {
     },
   });
 
+  console.log("data metadat", data);
+  
+
 
   useEffect(() => {
     const handleGetAllMetaData = async () => {

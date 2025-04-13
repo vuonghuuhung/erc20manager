@@ -6,18 +6,25 @@ import ProposalItem from "../components/ProposalItem/ProposalItem";
 import Nodata from "@/components/Nodata";
 import { Link, useParams } from "react-router-dom";
 import useDAODetail from "@/hooks/useDAODetail";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Loading from "@/components/Loading/Loading";
 import useGetMetaData from "@/hooks/useGetMetaData";
 import { toast } from "sonner";
-import useGetStatusProposal from "@/hooks/useGetStatusProposal";
+import useGetStatusProposal, {
+  MetaDataProposalType,
+} from "@/hooks/useGetStatusProposal";
 const DAODetail = () => {
   const { id } = useParams<{ id: `0x${string}` }>();
+  const [listProposal, setListProposal] = useState<MetaDataProposalType[]>([]);
+
   const {
     data: infoToken,
     isLoading: isLoadingInfo,
     isErrorContractAddress,
   } = useDAODetail([id] as `0x${string}`[]);
+
+  console.log("infoToken", infoToken);
+  
 
   const {
     data: metaDataDao,
@@ -32,19 +39,21 @@ const DAODetail = () => {
     refetch,
   } = useGetStatusProposal(id, infoToken[0]?.listProposal || []);
 
-  console.log("statusProposal", statusProposal);
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toLowerCase();
+    const filteredProposals = statusProposal.filter(
+      (proposal) =>
+        proposal?.description?.toLowerCase().includes(value) ||
+        proposal?.index?.toString() === value
+    );
+    setListProposal(filteredProposals);
+  };
 
-  // const { data } = useReadContract({
-  //   address: id,
-  //   abi: MultisigDAO__factory.abi,
-  //   functionName: "s_isRejected",
-  //   query: {
-  //     enabled: address !== undefined,
-  //   },
-  //   args: [0n, address as `0x${string}`],
-  // });
-
-  // console.log("data proposal approve", data);
+  useEffect(() => {
+    if (statusProposal) {
+      setListProposal(statusProposal);
+    }
+  }, [statusProposal]);
 
   useEffect(() => {
     if (isErrorContractAddress || isErrorMetaDataDao || isErrorStatusProposal) {
@@ -53,48 +62,62 @@ const DAODetail = () => {
   }, [isErrorContractAddress, isErrorMetaDataDao, isErrorStatusProposal]);
 
   return (
-    <BoxContent extendClassName="py-4 bg-[#151617]">
-      <div className="flex items-center gap-4 mb-12">
-        <div className="w-[108px] h-[108px]">
+    <BoxContent extendClassName="py-6 bg-[#0C0D0E]">
+      {/* DAO Header */}
+      <div className="flex items-start gap-6 mb-12 p-6 bg-[#121314] rounded-xl">
+        <div className="w-[120px] h-[120px] rounded-xl overflow-hidden">
           <AvatarDAO src={metaDataDao[0]?.image} />
         </div>
-        <div>
-          <div className="text-4xl font-bold text-white">
+        <div className="flex-1">
+          <h1 className="text-4xl font-bold text-white mb-3">
             {metaDataDao[0]?.name}
-          </div>
-          <div className="text-[14px] text-[#D1D5DB] mt-1">
+          </h1>
+          <p className="text-[15px] leading-relaxed text-[#9CA3AF]">
             {metaDataDao[0]?.description}
-          </div>
+          </p>
         </div>
       </div>
-      <div className="flex items-center justify-between min-h-[3.5rem] border-b border-t border-[#2D2E30]">
-        <div className="text-[#f3f6f8f2]">Create a proposal</div>
+
+      {/* Action Bar */}
+      <div className="flex items-center justify-between min-h-[4rem] border-b border-t border-[#1F2023] px-4">
+        <div className="text-[#f3f6f8f2] text-lg font-medium">
+          Create a proposal
+        </div>
         <Link
           to={`/dao/proposal/create/${id}`}
-          className="bg-[#fffffff2] text-[12px] text-[#151617] font-semibold flex items-center gap-2 px-4 py-2 rounded-lg"
+          className="bg-gradient-to-r from-[#27272A] to-[#18181B] hover:from-[#3F3F46] hover:to-[#27272A] shadow-lg shadow-zinc-900/40 hover:shadow-zinc-800/50 transition-all duration-200 text-[14px] text-white font-semibold flex items-center gap-2.5 px-6 py-3 rounded-lg border border-zinc-800/50"
         >
-          <Plus />
+          <Plus className="w-5 h-5 animate-pulse" />
           <span>New proposal</span>
         </Link>
       </div>
-      <div className="py-6">
-        <div className="font-semibold text-[#f3f6f8f2] mb-4">Proposals</div>
-        <div className="flex group flex-row items-center text-[#f3f6f880] gap-1 rounded-md ring-1 ring-[#f3f6f81a] transition focus-within:ring-2 focus-within:ring-border-interactive-focus p-2 mb-8">
-          <div>
-            <Search className="w-4 h-4 text-current group-focus-within:text-white transition duration-300" />
-          </div>
-          <div className="flex-1">
+
+      {/* Proposal Section */}
+      <div className="py-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-semibold text-xl text-[#f3f6f8f2]">Proposals</h2>
+
+          {/* Search Bar */}
+          <div className="relative w-[320px]">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2">
+              <Search className="w-5 h-5 text-[#6B7280]" />
+            </div>
             <Input
-              className="text-[8px] py-0 h-auto border-none grow bg-transparent leading-4 text-text-tertiary transition placeholder:text-text-tertiary focus:text-text-body focus:outline-none"
+              className="w-full pl-10 pr-4 py-2.5 text-[14px] bg-[#121314] border-[#1F2023] rounded-lg text-white placeholder:text-[#6B7280] focus:ring-2 focus:ring-[#1E40AF] transition-all"
               placeholder="Search proposals..."
+              onChange={handleSearch}
             />
           </div>
         </div>
-        <div className="text-white">
-          {!statusProposal || (statusProposal.length === 0 && <Nodata />)}
-          {statusProposal &&
-            statusProposal.length > 0 &&
-            statusProposal.map((item, index) => (
+
+        <div className="text-white space-y-4">
+          {!listProposal || listProposal.length === 0 ? (
+            <Nodata
+              title="No Proposals Yet"
+              description="Create your first proposal to start making decisions together"
+            />
+          ) : (
+            listProposal.map((item, index) => (
               <ProposalItem
                 key={index}
                 refetch={refetch}
@@ -105,9 +128,11 @@ const DAODetail = () => {
                 isApproved={item.isApproved}
                 isRejected={item.isRejected}
               />
-            ))}
+            ))
+          )}
         </div>
       </div>
+
       <Loading
         isLoading={
           isLoadingInfo || isLoadingMetaDataDao || isLoadingStatusProposal

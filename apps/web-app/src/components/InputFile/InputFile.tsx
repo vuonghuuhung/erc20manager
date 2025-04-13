@@ -40,7 +40,7 @@ const InputFile = ({ onChange }: Props) => {
         onClick={handleUpload}
         className="flex items-center h-full justify-center w-full rounded-sm border px-6 text-sm  shadow-sm"
       >
-        <Plus />
+        <Plus className="text-white"/>
       </button>
     </>
   );

@@ -8,6 +8,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import {
@@ -16,6 +17,7 @@ import {
 } from "@/utils/Rules";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export type CreateDAOInfoSchemaType = Pick<
   CreateDAOContractSchemaType,
@@ -40,46 +42,22 @@ const DAOInfoStep: FC<{
       avatarFile: undefined,
     },
   });
+
   const previewImage = useMemo(() => {
     return file ? URL.createObjectURL(file) : "";
   }, [file]);
 
   const handleChangeFile = (file?: File) => {
     setFile(file);
-    form.setValue("avatarFile", file);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    form.setValue("avatarFile", file as any);
+    if (file) {
+      form.clearErrors("avatarFile");
+    }
   };
 
   async function onSubmit(values: CreateDAOInfoSchemaType) {
     handleUpdateStep(2, values);
-    // try {
-    //   setIsLoading(true);
-    //   if (file) {
-    //     const upload = await pinata.upload.public
-    //       .file(file)
-    //       .group("87de2c19-9d65-4cff-9fd1-08a426a68411");
-    //     console.log(upload);
-    //     const gatewayUrlImg = await pinata.gateways.public.convert(upload.cid);
-    //     const uploadDataJson = await pinata.upload.public
-    //       .json({
-    //         name: values.nameDAO,
-    //         description: values.descriptionDao,
-    //         image: gatewayUrlImg,
-    //       })
-    //       .group("eda38d13-ccf0-4bf8-bddd-43245a3851c1");
-    //     setIsLoading(false);
-    //     if (uploadDataJson) {
-    //       handleUpdateStep(2, {
-    //         ...values,
-    //         avatarFile: file,
-    //         avatarUpload: uploadDataJson.cid,
-    //       });
-    //     }
-    //   }
-    // } catch (error) {
-    //   console.log(error);
-    //   setIsLoading(false);
-    //   toast.error("Something went wrong");
-    // }
   }
 
   useEffect(() => {
@@ -87,76 +65,116 @@ const DAOInfoStep: FC<{
     form.setValue("descriptionDao", dataSubmit.descriptionDao);
     if (dataSubmit.avatarFile) {
       setFile(dataSubmit.avatarFile);
+      form.setValue("avatarFile", dataSubmit.avatarFile);
     }
   }, [dataSubmit, form]);
 
   return (
-    <div>
+    <div className="max-w-xl mx-auto">
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-white mb-1">
+          Basic Information
+        </h2>
+        <p className="text-sm text-gray-400">
+          Start by providing some basic information about your DAO
+        </p>
+      </div>
+
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="text-[20px] mb-4 font-medium text-[#223354b3]">
-            DAO information
-          </div>
-          <div className="h-[192px] relative">
-            {file && (
-              <button
-                onClick={() => setFile(undefined)}
-                className="absolute top-4 right-5"
-              >
-                <CircleX />
-              </button>
-            )}
-            {file ? (
-              <img
-                src={previewImage}
-                alt="img"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="h-full">
-                <InputFile onChange={handleChangeFile} />
-                <div className="text-sm font-medium text-destructive mt-2">
-                  {form.formState.errors.avatarFile?.message}
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div>
+            <div className="flex items-center justify-center">
+              <div className="relative">
+                <div className="w-32 h-32 rounded-full border-2 border-solid border-gray-600 flex items-center justify-center overflow-hidden bg-gray-800/50">
+                  {previewImage ? (
+                    <img
+                      src={previewImage}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center p-4">
+                      <div className="text-gray-400 text-sm">Upload Logo</div>
+                      <div className="text-gray-500 text-xs mt-1">
+                        Recommended: 400x400px
+                      </div>
+                    </div>
+                  )}
                 </div>
+                {previewImage && (
+                  <button
+                    type="button"
+                    onClick={() => handleChangeFile(undefined)}
+                    className="absolute -top-1 -right-1 bg-red-500/10 text-red-500 rounded-full p-1 hover:bg-red-500/20 transition-colors"
+                  >
+                    <CircleX className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="mt-4 flex justify-center">
+              <InputFile onChange={handleChangeFile} />
+            </div>
+            {form.formState.errors.avatarFile && (
+              <div className="mt-2 text-sm font-medium text-destructive">
+                {form.formState.errors.avatarFile?.message}
               </div>
             )}
           </div>
-          <div className="mt-[40px]">
+
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="nameDAO"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel className="text-sm font-semibold text-white">
+                    DAO Name
+                  </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Give your DAO a name"
-                      {...field}
-                      className="block w-full p-3 h-[45px] text-white rounded-[8px] bg-[#161b26] text-[14px] font-medium border border-[#d0d5dd] outline-none"
-                    />
+                    <div className="relative">
+                      <Input
+                        placeholder="Give your DAO a name"
+                        {...field}
+                        className="block w-full pl-4 pr-12 py-3 h-12 text-white rounded-xl bg-gray-800/50 text-base font-medium border border-gray-700/50 outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="descriptionDao"
               render={({ field }) => (
-                <FormItem className="!mt-4">
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold text-white mb-1">
+                    DAO Description
+                  </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Give your DAO a description"
-                      {...field}
-                      className="block w-full p-3 h-[45px] text-white rounded-[8px] bg-[#161b26] text-[14px] font-medium border border-[#d0d5dd] outline-none"
-                    />
+                    <div className="relative">
+                      <Textarea
+                        placeholder="Give your DAO a description"
+                        {...field}
+                        className="block w-full resize-none pl-4 pr-12 py-3 h-12 text-white rounded-xl bg-gray-800/50 text-base font-medium border border-gray-700/50 outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-          <div className="flex justify-end items-center mt-4">
-            <Button className="w-[120px]">Continue</Button>
+
+          <div className="pt-3">
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl py-3 font-semibold hover:opacity-90 transition-opacity"
+            >
+              Continue
+            </Button>
           </div>
         </form>
       </Form>

@@ -43,9 +43,14 @@ export const createDAOContractSchema = z.object({
     .string()
     .nonempty("This field is required")
     .max(160, "Length max 160 characters"),
-  avatarFile: z.instanceof(File).refine((file) => file instanceof File, {
-    message: "This field is required",
-  }),
+  avatarFile: z
+    .instanceof(File, {
+      message: "This field is required",
+    })
+    .optional()
+    .refine((file) => file instanceof File, {
+      message: "This field is required",
+    }),
   nameToken: z
     .string()
     .nonempty("This field is required")
@@ -55,6 +60,10 @@ export const createDAOContractSchema = z.object({
     .nonempty("This field is required")
     .max(160, "Length max 160 characters"),
   amount: z
+    .string()
+    .nonempty("This field is required")
+    .max(160, "Length max 160 characters"),
+  descriptionProposal: z
     .string()
     .nonempty("This field is required")
     .max(160, "Length max 160 characters"),
@@ -73,7 +82,6 @@ export const createProposalSchema = z.object({
     .string()
     .nonempty("This field is required")
     .max(160, "Length max 160 characters"),
-  
 });
 
 export type ReadContractType = z.infer<typeof contractSchema>;

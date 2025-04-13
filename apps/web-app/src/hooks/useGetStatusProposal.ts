@@ -40,7 +40,6 @@ const useGetStatusProposal = (
       abi: MultisigDAO__factory.abi,
       functionName: "s_isOwner",
       args: [address],
-      
     },
     {
       address: contractAddress,
@@ -73,8 +72,6 @@ const useGetStatusProposal = (
       },
     });
 
-  console.log("data test", data);
-
   const {
     data: dataStatus,
     isLoading: isLoadingStatus,
@@ -88,7 +85,6 @@ const useGetStatusProposal = (
       enabled: contractAddress !== undefined,
     },
   });
-  console.log("data proposal approve", dataStatus);
 
   const handleRefetch = () => {
     refetch();
@@ -101,16 +97,20 @@ const useGetStatusProposal = (
         setIsGetMetaData(true);
         const metadataPromises = listProposal?.map(async (item) => {
           try {
-            const decodedData = ethers.AbiCoder.defaultAbiCoder().decode(
-              ["string"],
-              item?.data as string
-            );
-            const res = await pinata.gateways.public
-              .get(decodedData[0])
-              .then((res) => {
-                return res.data;
-              });
-            return res;
+            console.log("item", item);
+            if (item?.metadataURI) {
+              const decodedData = ethers.AbiCoder.defaultAbiCoder().decode(
+                ["string"],
+                item.metadataURI
+              );
+              const res = await pinata.gateways.public
+                .get(decodedData[0])
+                .then((res) => {
+                  return res.data;
+                });
+              return res;
+            }
+            return null;
           } catch (error) {
             console.log("hello cac ban", error);
             setIsErrorContractAddress(true);
