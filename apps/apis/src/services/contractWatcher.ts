@@ -1,7 +1,7 @@
 // contractWatcher.ts (Cleaned)
 import type { PublicClient, Log, WatchContractEventReturnType } from "viem";
-import type { ContractEventConfig } from "../config/eventConfig";
-import { processLog } from "./eventProcessor";
+import type { ContractEventConfig } from "../config/eventConfig.js";
+import { processLog } from "./eventProcessor.js";
 
 export function contractWatcher<TArgs>(
   client: PublicClient,

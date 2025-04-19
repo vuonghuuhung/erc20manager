@@ -16,11 +16,8 @@
     "better-sqlite3": "^11.9.1",
     "bn.js": "^5.2.1",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.38.4",
+    "drizzle-orm": "^0.42.0",
     "express": "^4.21.2",
-    "mongoose": "^8.13.2",
-    "pg": "^8.13.1",
-    "postgres": "^3.4.5",
     "viem": "2.x",
     "wagmi": "^2.14.11"
   },

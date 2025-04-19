@@ -1,9 +1,8 @@
-import type { ContractEventConfig } from "../config/eventConfig";
-import type { EventMetadata } from "../types/events";
-import { publicClient } from "../constants/publicClient";
+import type { ContractEventConfig } from "../config/eventConfig.js";
+import type { EventMetadata } from "../types/events.js";
 
 export async function processLog<TArgs>(
-  log,
+  log: any,
   config: ContractEventConfig<TArgs>
 ): Promise<void> {
   const logId = `tx=${log.transactionHash} index=${log.logIndex}`;
@@ -29,12 +28,12 @@ export async function processLog<TArgs>(
   }
 
   try {
-    const block = await publicClient.getBlock({ blockHash: log.blockHash });
+    // const block = await publicClient.getBlock({ blockHash: log.blockHash });
 
     const metadata: EventMetadata = {
       contractAddress: log.address,
       blockNumber: log.blockNumber,
-      blockTimestamp: Number(block.timestamp),
+      blockTimestamp: 1, // FIXME!
       transactionHash: log.transactionHash,
       logIndex: log.logIndex,
     };

@@ -1,13 +1,13 @@
 // eventConfig.ts
 
-import { ERC20Factory__factory, DAOFactory__factory } from "@repo/contracts";
-import { insertERC20FactoryEvent, insertDaoFactoryEvent } from "../db/index";
-import type {
-  EventMetadata,
-  ERC20FactoryEventArgs,
-  DaoFactoryEventArgs,
-} from "../types/events";
+import { DAOFactory__factory, ERC20Factory__factory } from "@repo/contracts";
 import type { Abi } from "viem";
+import { insertDaoFactoryEvent, insertERC20FactoryEvent } from "../db/index.js";
+import type {
+  DaoFactoryEventArgs,
+  ERC20FactoryEventArgs,
+  EventMetadata,
+} from "../types/events.js";
 
 export interface ContractEventConfig<TArgs> {
   factoryName: string;

@@ -1,10 +1,15 @@
 import express, { Request, Response } from "express";
 import type { WatchContractEventReturnType } from "viem";
-import { startBlockWatcher } from "./services/blockWatcher";
-import { publicClient } from "./constants/publicClient";
-import { getDb, closeDbConnection } from "./db/index";
-import { contractWatcher } from "./services/contractWatcher";
-import { erc20FactoryConfig, daoFactoryConfig } from "./config/eventConfig";
+import { getPublicClient } from "wagmi/actions";
+import { holesky } from "wagmi/chains";
+import { daoFactoryConfig, erc20FactoryConfig } from "./config/eventConfig.js";
+import { wagmiConfig } from "./config/wagmiConfig.js";
+import { closeDbConnection, getDb } from "./db/index.js";
+import { contractWatcher } from "./services/contractWatcher.js";
+
+const publicClient = getPublicClient(wagmiConfig, {
+  chainId: holesky.id,
+});
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -15,8 +20,6 @@ const unwatchFunctions: WatchContractEventReturnType[] = [];
 
 unwatchFunctions.push(contractWatcher(publicClient, erc20FactoryConfig));
 unwatchFunctions.push(contractWatcher(publicClient, daoFactoryConfig));
-
-startBlockWatcher();
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Event Listener API is running!");
