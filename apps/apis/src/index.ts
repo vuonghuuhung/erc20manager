@@ -5,43 +5,36 @@ import { holesky } from "wagmi/chains";
 import { daoFactoryConfig, erc20FactoryConfig } from "./config/eventConfig.js";
 import { wagmiConfig } from "./config/wagmiConfig.js";
 import { closeDbConnection, getDb } from "./db/index.js";
-import { contractWatcher } from "./services/contractWatcher.js";
+import { appListener } from "./app-listener.js";
 
-const publicClient = getPublicClient(wagmiConfig, {
-  chainId: holesky.id,
-});
+// connect to db
+getDb();
 
+const blockchainApp = appListener();
+
+blockchainApp.get(erc20FactoryConfig);
+blockchainApp.get(daoFactoryConfig);
+
+// express app
 const app = express();
 const port = process.env.PORT || 3000;
 
-getDb();
-
-const unwatchFunctions: WatchContractEventReturnType[] = [];
-
-unwatchFunctions.push(contractWatcher(publicClient, erc20FactoryConfig));
-unwatchFunctions.push(contractWatcher(publicClient, daoFactoryConfig));
-
+// routes
 app.get("/", (req: Request, res: Response) => {
   res.send("Event Listener API is running!");
 });
 
+// start server
 const server = app.listen(port, () => {
   console.log(`✅ API Server listening on port ${port}`);
   console.log("🚀 Application started, watching for events...");
 });
 
+// shutdown
 const shutdown = () => {
   console.log("\n🔌 Gracefully shutting down...");
 
-  console.log(`Stopping ${unwatchFunctions.length} event watchers...`);
-  unwatchFunctions.forEach((unwatch) => {
-    try {
-      unwatch();
-    } catch (err) {
-      console.error("Error during unwatch:", err);
-    }
-  });
-  console.log("Event watchers stopped.");
+  blockchainApp.shutdown();
 
   server.close((err) => {
     if (err) {
