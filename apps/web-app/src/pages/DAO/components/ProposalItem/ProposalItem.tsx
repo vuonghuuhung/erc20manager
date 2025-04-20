@@ -9,6 +9,7 @@ import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
 import { MultisigDAO__factory } from "@repo/contracts";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import path from "@/constants/path";
 interface ProposalItemProps {
   idProposal: number;
   description?: string;
@@ -16,7 +17,6 @@ interface ProposalItemProps {
   isOwner?: boolean;
   isApproved?: boolean;
   isRejected?: boolean;
-  refetch: () => void;
 }
 
 const ProposalItem = ({
@@ -26,11 +26,10 @@ const ProposalItem = ({
   isOwner,
   isApproved,
   isRejected,
-  refetch,
 }: ProposalItemProps) => {
   const { id } = useParams<{ id: `0x${string}` }>();
   const { write, stepModal, errorWrite, setStepModal,isWriteSuccess, setErrorWrite,isConnected } =
-    useContractWrite();
+    useContractWrite("", path.DAODetail);
   const [messageSuccess, setMessageSuccess] = useState<string>("");
 
   const handleApprove = async () => {
@@ -42,6 +41,7 @@ const ProposalItem = ({
         functionName: "approveProposal",
         args: [idProposal],
         messageInitial: "Approving proposal...",
+        methodName: "Approve proposal"
       });
     } catch (error) {
       console.log("error", { error });
@@ -57,6 +57,7 @@ const ProposalItem = ({
         functionName: "rejectProposal",
         args: [idProposal],
         messageInitial: "Rejecting proposal...",
+        methodName: "Reject proposal"
       });
     } catch (error) {
       console.log("error", { error });
@@ -72,6 +73,7 @@ const ProposalItem = ({
         functionName: "executeProposal",
         args: [idProposal],
         messageInitial: "Executing proposal...",
+        methodName: "Execute proposal"
       });
     } catch (error) {
       console.log("error", { error });
@@ -99,8 +101,8 @@ const ProposalItem = ({
           </div>
         )}
         {status === ProposalStatus.Passed && (
-          <div className="link-text flex flex-row items-center gap-1.5">
-            <UserCheck className="w-5 h-5" />
+          <div className="link-text flex flex-row items-center gap-1.5 text-yellow-400">
+            <UserCheck className="w-5 h-5 text-current" />
             <p className="shrink-0 truncate text-current text-[13px]">Passed</p>
           </div>
         )}
@@ -130,26 +132,27 @@ const ProposalItem = ({
         <div className="caption-text shrink-0 break-words text-right font-mono text-[12px]">
           {status === ProposalStatus.OnVoting && (
             <div>
-              <Button
-                disabled={isRejected || isApproved || !isConnected}
+              {!isRejected && <Button
+                disabled={isApproved || !isConnected || isWriteSuccess}
                 onClick={handleApprove}
                 className={`hover:bg-[#39a699f2] transition-all duration-300 ${isApproved && "bg-[#39a699f2]"}`}
               >
                 Approve
-              </Button>
-              <Button
-                disabled={isApproved || isRejected || !isConnected}
+              </Button>}
+              {!isApproved && <Button
+                disabled={isRejected || !isConnected || isWriteSuccess}
                 onClick={handleReject}
                 className={`ml-2 hover:bg-[#c73e59f2] transition-all duration-300 ${isRejected && "bg-[#c73e59f2]"}`}
               >
                 Reject
-              </Button>
+              </Button>}
             </div>
           )}
           {status === ProposalStatus.Passed && (
             <Button
+            disabled={isWriteSuccess}
               onClick={handleExecute}
-              className={`hover:bg-[#39a699f2] transition-all duration-300 ${isApproved && "bg-[#39a699f2]"}`}
+              className={`hover:bg-[#39a699f2] transition-all duration-300`}
             >
               Execute
             </Button>
@@ -161,7 +164,6 @@ const ProposalItem = ({
         setOpen={setStepModal}
         contentStep={errorWrite}
         statusStep={stepModal}
-        handleClose={refetch}
       />
     </div>
   );

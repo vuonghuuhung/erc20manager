@@ -5,7 +5,6 @@ import {
   useBalance,
   usePublicClient,
   useReadContract,
-  useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
 import type { Config, UseReadContractParameters } from "wagmi";
@@ -14,6 +13,7 @@ import { config } from "@/main";
 import { useEffect, useState } from "react";
 import { simulateContract } from "@wagmi/core";
 import { toBigInt } from "ethers";
+import useListTransactionStore from "@/store/listTransactionState";
 
 type UseTokenReadParameters = Omit<
   UseReadContractParameters,
@@ -59,19 +59,16 @@ export function useTokenWrite({
   const publicClient = usePublicClient({
     config,
   });
-  const { writeContractAsync, data, ...rest } = useWriteContract();
-
-  const { isFetching, isSuccess } = useWaitForTransactionReceipt({
-    hash: data,
-  });
-
+  const { writeContractAsync, data, isSuccess, ...rest } = useWriteContract();
+  const {setListTransaction} = useListTransactionStore();
   useEffect(() => {
-    if (isFetching) {
-      setIsLoading(true);
-    } else {
-      setIsLoading(false);
-    }
-  }, [isFetching]);
+    if (data) {
+      setListTransaction({
+        hash: data,
+        functionName
+      });
+    } 
+  }, [data, setListTransaction, functionName]);
 
   const write = async (args: any = []) => {
     if (!isConnected) {
@@ -119,9 +116,7 @@ export function useTokenWrite({
         return;
       }
       if (error?.cause?.data?.errorName === "ERC20InsufficientBalance") {
-        setErrorWrite(
-          "You don't have enough balance"
-        );
+        setErrorWrite("You don't have enough balance");
         return;
       }
       setErrorWrite(error?.shortMessage);

@@ -1,3 +1,4 @@
+import TransactionIndicator from "./components/TransactionIndicator/TransactionIndicator";
 import useRouterElements from "./useRouterElements";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -7,6 +8,7 @@ function App() {
     <div>
       {routeElements}
       <Toaster />
+      <TransactionIndicator />
     </div>
   );
 }

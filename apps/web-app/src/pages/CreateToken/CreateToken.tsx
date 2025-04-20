@@ -21,10 +21,11 @@ import { DECIMALS } from "@/constants/token";
 import { ERC20Factory__factory } from "@repo/contracts";
 import { contractAddress } from "@/config/config";
 import { Coins, Component, CircleDollarSign } from "lucide-react";
+import path from "@/constants/path";
 
 const CreateToken = () => {
   const { write, stepModal, errorWrite, setStepModal, isConnected } =
-    useContractWrite();
+    useContractWrite("Create ERC20 Token", path.dashBoard);
   const form = useForm<CreateTokenType>({
     resolver: zodResolver(createTokenSchema),
     defaultValues: {

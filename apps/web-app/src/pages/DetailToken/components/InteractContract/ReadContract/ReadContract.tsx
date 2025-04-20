@@ -21,13 +21,13 @@ const ReadContract = ({
         <span className="ml-1">Read Contract Information</span>
       </div>
       <Collapsible className="border-[#e9ecef] border rounded-xl overflow-hidden mb-2">
-        <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3">
+        <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3 border-b border-b-[#e9ecef]">
           name
         </CollapsibleTrigger>
         <CollapsibleContent className="py-2 px-3">{name}</CollapsibleContent>
       </Collapsible>
       <Collapsible className="border-[#e9ecef] border rounded-xl overflow-hidden mb-2">
-        <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3">
+        <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3 border-b border-b-[#e9ecef]">
           decimals
         </CollapsibleTrigger>
         <CollapsibleContent className="py-2 px-3">
@@ -35,13 +35,13 @@ const ReadContract = ({
         </CollapsibleContent>
       </Collapsible>
       <Collapsible className="border-[#e9ecef] border rounded-xl overflow-hidden mb-2">
-        <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3">
+        <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3 border-b border-b-[#e9ecef]">
           symbol
         </CollapsibleTrigger>
         <CollapsibleContent className="py-2 px-3">{symbol}</CollapsibleContent>
       </Collapsible>
       <Collapsible className="border-[#e9ecef] border rounded-xl overflow-hidden mb-2">
-        <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3">
+        <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3 border-b border-b-[#e9ecef]">
           totalSupply
         </CollapsibleTrigger>
         <CollapsibleContent className="py-2 px-3">

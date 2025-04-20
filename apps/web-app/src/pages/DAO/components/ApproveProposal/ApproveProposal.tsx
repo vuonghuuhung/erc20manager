@@ -18,12 +18,13 @@ import InputNumber from "@/components/InputNumber";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MultisigDAO__factory } from "@repo/contracts";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { pinata } from "@/utils/http";
 import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
 import BoxContent from "@/components/BoxContent";
 import * as z from "zod";
 import { pinataIdGroup } from "@/config/config";
+import path from "@/constants/path";
 
 const approveProposalSchema = z.object({
   spenderAddress: z
@@ -44,6 +45,7 @@ type ApproveProposalType = z.infer<typeof approveProposalSchema>;
 
 const ApproveProposal = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const form = useForm<ApproveProposalType>({
     resolver: zodResolver(approveProposalSchema),
     defaultValues: {
@@ -60,7 +62,7 @@ const ApproveProposal = () => {
     setStepModal,
     setErrorWrite,
     isConnected,
-  } = useContractWrite();
+  } = useContractWrite("Approve Token", path.DAODetail);
 
   async function onSubmit(values: ApproveProposalType) {
     try {
@@ -175,6 +177,7 @@ const ApproveProposal = () => {
         setOpen={setStepModal}
         contentStep={errorWrite}
         statusStep={stepModal}
+        handleClose={() => navigate(path.DAODashboard)}
       />
     </BoxContent>
   );

@@ -5,7 +5,6 @@ import { FC } from "react";
 const AvatarDAO: FC<{
   src?: string;
 }> = ({ src }) => {
-  console.log("src", src);
   
   return (
     <div className="rounded-full p-1 border mx-auto w-full h-full">

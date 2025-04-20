@@ -27,10 +27,6 @@ const useGetMetaData = (daoAddresses: `0x${string}`[] = []) => {
     },
   });
 
-  console.log("data metadat", data);
-  
-
-
   useEffect(() => {
     const handleGetAllMetaData = async () => {
       try {
@@ -46,16 +42,12 @@ const useGetMetaData = (daoAddresses: `0x${string}`[] = []) => {
               ["string"],
               item?.result as string
             );
-            const res = await pinata.gateways.public
-              .get(decodedData[0])
-              .then((res) => {
-                return res.data;
-              });
-            return res;
+            await pinata.gateways.public.get(decodedData[0]).then((res) => {
+              return res.data;
+            });
           } catch (error) {
-            console.log("hello cac ban", error);
+            console.log("getMetaData", error);
             setIsErrorContractAddress(true);
-            setIsGetMetaData(false);
             return null;
           }
         });
@@ -64,6 +56,7 @@ const useGetMetaData = (daoAddresses: `0x${string}`[] = []) => {
       } catch (err) {
         console.error("co loi day", { err });
         setIsErrorContractAddress(true);
+        setIsGetMetaData(false);
       } finally {
         setIsGetMetaData(false);
       }
