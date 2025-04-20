@@ -2,11 +2,6 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import type {
-  DaoFactoryEventArgs,
-  ERC20FactoryEventArgs,
-  EventMetadata,
-} from "../types/events.js";
 
 const __filename = fileURLToPath(import.meta.url);
 
@@ -100,103 +95,5 @@ export function closeDbConnection(): void {
     dbInstance.close();
     dbInstance = null;
     console.log("SQLite database connection closed.");
-  }
-}
-let insertERC20Stmt: Database.Statement | null = null;
-let insertDaoStmt: Database.Statement | null = null;
-
-function prepareStatements() {
-  const db = getDb();
-  if (!insertERC20Stmt) {
-    const sql = `
-      INSERT OR IGNORE INTO ERC20FactoryEvents
-        (contractAddress, blockNumber, blockTimestamp, transactionHash, logIndex, ownerAddress, tokenAddress, amount)
-      VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    insertERC20Stmt = db.prepare(sql);
-  }
-  if (!insertDaoStmt) {
-    const sql = `
-      INSERT OR IGNORE INTO DAOFactoryEvents
-        (contractAddress, blockNumber, blockTimestamp, transactionHash, logIndex, daoAddress, tokenAddress, amount)
-      VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    insertDaoStmt = db.prepare(sql);
-  }
-}
-
-export function insertERC20FactoryEvent(
-  metadata: EventMetadata,
-  args: ERC20FactoryEventArgs
-) {
-  prepareStatements();
-  if (!insertERC20Stmt) {
-    console.error("ERC20Factory insert statement not prepared!");
-    return;
-  }
-  try {
-    const info = insertERC20Stmt.run(
-      metadata.contractAddress.toLowerCase(),
-      metadata.blockNumber,
-      metadata.blockTimestamp,
-      metadata.transactionHash,
-      metadata.logIndex,
-      args.ownerAddress.toLowerCase(),
-      args.tokenAddress.toLowerCase(),
-      args.amount.toString()
-    );
-    if (info.changes > 0) {
-      console.log(
-        `Inserted ERC20FactoryEvent from tx ${metadata.transactionHash}, log ${metadata.logIndex}`
-      );
-    } else {
-      console.log(
-        `Skipped duplicate ERC20FactoryEvent from tx ${metadata.transactionHash}, log ${metadata.logIndex}`
-      );
-    }
-  } catch (error) {
-    console.error(
-      `Failed to insert ERC20FactoryEvent (tx: ${metadata.transactionHash}):`,
-      error
-    );
-  }
-}
-
-export function insertDaoFactoryEvent(
-  metadata: EventMetadata,
-  args: DaoFactoryEventArgs
-) {
-  prepareStatements();
-  if (!insertDaoStmt) {
-    console.error("DAOFactory insert statement not prepared!");
-    return;
-  }
-  try {
-    const info = insertDaoStmt.run(
-      metadata.contractAddress.toLowerCase(),
-      metadata.blockNumber,
-      metadata.blockTimestamp,
-      metadata.transactionHash,
-      metadata.logIndex,
-      args.daoAddress.toLowerCase(),
-      args.tokenAddress.toLowerCase(),
-      args.amount.toString()
-    );
-    if (info.changes > 0) {
-      console.log(
-        `Inserted DAOFactoryEvent from tx ${metadata.transactionHash}, log ${metadata.logIndex}`
-      );
-    } else {
-      console.log(
-        `Skipped duplicate DAOFactoryEvent from tx ${metadata.transactionHash}, log ${metadata.logIndex}`
-      );
-    }
-  } catch (error) {
-    console.error(
-      `Failed to insert DAOFactoryEvent (tx: ${metadata.transactionHash}):`,
-      error
-    );
   }
 }

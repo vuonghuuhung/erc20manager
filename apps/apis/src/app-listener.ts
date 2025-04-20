@@ -1,9 +1,9 @@
 import type { PublicClient, WatchContractEventReturnType } from "viem";
 import { holesky } from "viem/chains";
 import { getPublicClient } from "wagmi/actions";
-import { ContractEventConfig } from "./config/eventConfig.js";
 import { wagmiConfig } from "./config/wagmiConfig.js";
-import { contractWatcher } from "./services/contractWatcher.js";
+import { contractWatcher } from "./utils/contract-event.js";
+import { ContractEventConfig } from "./controllers/erc20-factory.js";
 
 class AppListener {
     private client: PublicClient;
@@ -16,7 +16,7 @@ class AppListener {
         });
     }
 
-    get<TArgs>(config: ContractEventConfig<TArgs>) {
+    get(config: ContractEventConfig) {
         this.unwatchFunctions.push(contractWatcher(this.client, config));
     }
 

@@ -6,13 +6,13 @@ export interface EventMetadata {
   logIndex: number;
 }
 
-export interface ERC20FactoryEventArgs {
+export interface ERC20FactoryCreateEventArgs {
   ownerAddress: string;
   tokenAddress: string;
   amount: bigint;
 }
 
-export interface DaoFactoryEventArgs {
+export interface DaoFactoryCreateEventArgs {
   daoAddress: string;
   tokenAddress: string;
   amount: bigint;

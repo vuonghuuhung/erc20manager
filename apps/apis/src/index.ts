@@ -1,19 +1,16 @@
 import express, { Request, Response } from "express";
-import type { WatchContractEventReturnType } from "viem";
-import { getPublicClient } from "wagmi/actions";
-import { holesky } from "wagmi/chains";
-import { daoFactoryConfig, erc20FactoryConfig } from "./config/eventConfig.js";
-import { wagmiConfig } from "./config/wagmiConfig.js";
-import { closeDbConnection, getDb } from "./db/index.js";
 import { appListener } from "./app-listener.js";
+import { erc20FactoryHandler } from "./controllers/erc20-factory.js";
+import { closeDbConnection, getDb } from "./db/index.js";
+import { daoFactoryHandler } from "./controllers/dao-factory.js";
 
 // connect to db
 getDb();
 
 const blockchainApp = appListener();
 
-blockchainApp.get(erc20FactoryConfig);
-blockchainApp.get(daoFactoryConfig);
+blockchainApp.get(erc20FactoryHandler());
+blockchainApp.get(daoFactoryHandler());
 
 // express app
 const app = express();
