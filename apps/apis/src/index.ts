@@ -1,41 +1,56 @@
-import { ERC20Factory__factory } from "@repo/contracts";
-import { getDefaultProvider } from "ethers";
 import express, { Request, Response } from "express";
+import { appListener } from "./app-listener.js";
+import { erc20FactoryHandler } from "./controllers/erc20-factory.js";
+import { closeDbConnection, getDb } from "./db/index.js";
+import { daoFactoryHandler } from "./controllers/dao-factory.js";
 
+// connect to db
+getDb();
+
+const blockchainApp = appListener();
+
+blockchainApp.get(erc20FactoryHandler());
+blockchainApp.get(daoFactoryHandler());
+
+// express app
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-const provider = getDefaultProvider("http://127.0.0.1:8545/");
-const erc20Factory = ERC20Factory__factory.connect(
-  "0x5fbdb2315678afecb367f032d93f642f64180aa3",
-  provider
-);
-
-const filterTest =
-  erc20Factory.filters["Create(address,address,uint256)"];
-erc20Factory.on(filterTest, (owner, token, amount) => {
-  console.log("receive events", {
-    owner,
-    token,
-    amount,
-  });
-});
-
+// routes
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hello World!");
+  res.send("Event Listener API is running!");
 });
 
-app.get("/list", async (req: Request, res: Response) => {
-  const list = await erc20Factory.getListOfERC20Created();
-  res.status(200).json(list);
+// start server
+const server = app.listen(port, () => {
+  console.log(`✅ API Server listening on port ${port}`);
+  console.log("🚀 Application started, watching for events...");
 });
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+// shutdown
+const shutdown = () => {
+  console.log("\n🔌 Gracefully shutting down...");
 
-process.on("SIGINT", function () {
-  console.log("\nGracefully shutting down from SIGINT (Ctrl-C)");
-  // some other closing procedures go here
-  process.exit(0);
-});
+  blockchainApp.shutdown();
+
+  server.close((err) => {
+    if (err) {
+      console.error("Error closing HTTP server:", err);
+    } else {
+      console.log("HTTP server closed.");
+    }
+
+    closeDbConnection();
+
+    console.log("Exiting process.");
+    process.exit(err ? 1 : 0);
+  });
+
+  setTimeout(() => {
+    console.error("Graceful shutdown timed out, forcing exit.");
+    closeDbConnection();
+    process.exit(1);
+  }, 15000);
+};
+
+process.on("SIGINT", shutdown);

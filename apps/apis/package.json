@@ -1,36 +1,41 @@
 {
   "name": "apis",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "dev:app": "ts-node src/index.ts",
+    "dev:app": "tsx src/index.ts",
     "lint": "eslint ."
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@wagmi/core": "^2.16.4",
+    "better-sqlite3": "^11.9.1",
     "bn.js": "^5.2.1",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.38.4",
+    "drizzle-orm": "^0.42.0",
     "express": "^4.21.2",
-    "pg": "^8.13.1",
-    "postgres": "^3.4.5"
+    "viem": "2.x",
+    "wagmi": "^2.14.11"
   },
   "devDependencies": {
     "@repo/contracts": "workspace:*",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.0",
     "@types/pg": "^8.11.10",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
-    "ethers": "^6.13.5",
     "drizzle-kit": "^0.30.2",
     "eslint": "^9.16.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
-    "prettier": "^3.4.2"
+    "ethers": "^6.13.5",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.3"
   }
 }
