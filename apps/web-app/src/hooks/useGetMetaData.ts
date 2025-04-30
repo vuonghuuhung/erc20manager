@@ -27,10 +27,6 @@ const useGetMetaData = (daoAddresses: `0x${string}`[] = []) => {
     },
   });
 
-  console.log("data metadat", data);
-  
-
-
   useEffect(() => {
     const handleGetAllMetaData = async () => {
       try {
@@ -53,9 +49,8 @@ const useGetMetaData = (daoAddresses: `0x${string}`[] = []) => {
               });
             return res;
           } catch (error) {
-            console.log("hello cac ban", error);
+            console.log("getMetaData", error);
             setIsErrorContractAddress(true);
-            setIsGetMetaData(false);
             return null;
           }
         });
@@ -64,6 +59,7 @@ const useGetMetaData = (daoAddresses: `0x${string}`[] = []) => {
       } catch (err) {
         console.error("co loi day", { err });
         setIsErrorContractAddress(true);
+        setIsGetMetaData(false);
       } finally {
         setIsGetMetaData(false);
       }

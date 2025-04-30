@@ -1,27 +1,20 @@
 import Loading from "@/components/Loading/Loading";
 import useTokenDetails from "@/hooks/useTokenDetails";
-import { ERC20Factory__factory } from "@repo/contracts";
 import { useEffect } from "react";
-import { useReadContract } from "wagmi";
 import { toast } from "sonner";
 import { DataTable } from "@/components/DataTable/DataTable";
 import { columns } from "@/components/ColumnTable/ColumnTable";
 import { ClipboardList, CirclePlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import path from "@/constants/path";
-import { contractAddress } from "@/config/config";
+import { useGetListOfERC20 } from "@/hooks/useReadContracts";
 
 const DashBoardPage = () => {
   const {
     data: listTokenAddress,
     isLoading: isLoadingGetListToken,
     isError: isErrorListToken,
-  } = useReadContract({
-    address: contractAddress.ERC20FactoryAddress,
-    abi: ERC20Factory__factory.abi,
-    functionName: "getListOfERC20Created",
-    args: [],
-  });
+  } = useGetListOfERC20();
 
   const {
     data,

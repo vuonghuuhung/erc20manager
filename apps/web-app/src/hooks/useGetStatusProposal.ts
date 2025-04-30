@@ -1,6 +1,9 @@
 import { ProposalStatus } from "@/constants/token";
+import { config } from "@/main";
 import { pinata } from "@/utils/http";
 import { MultisigDAO__factory } from "@repo/contracts";
+import { useQuery } from "@tanstack/react-query";
+import { readContracts } from "wagmi/actions";
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
 import { useAccount, useReadContracts } from "wagmi";
@@ -25,7 +28,7 @@ export interface MetaDataProposalType {
 }
 
 const useGetStatusProposal = (
-  contractAddress: `0x${string}` | undefined,
+  contractAddress: `0x${string}`,
   listProposal: Proposal[]
 ) => {
   const [isErrorContractAddress, setIsErrorContractAddress] =
@@ -79,11 +82,13 @@ const useGetStatusProposal = (
     isError: isErrorStatus,
     refetch: refetchStatus,
     ...restStatus
-  } = useReadContracts({
-    contracts: callsStatus,
-    query: {
-      enabled: contractAddress !== undefined,
-    },
+  } = useQuery({
+    queryKey: ["getStatusProposal", contractAddress, listProposal.length],
+    queryFn: async () =>
+      await readContracts(config, {
+        contracts: callsStatus,
+      }),
+    enabled: contractAddress !== undefined,
   });
 
   const handleRefetch = () => {
@@ -97,7 +102,6 @@ const useGetStatusProposal = (
         setIsGetMetaData(true);
         const metadataPromises = listProposal?.map(async (item) => {
           try {
-            console.log("item", item);
             if (item?.metadataURI) {
               const decodedData = ethers.AbiCoder.defaultAbiCoder().decode(
                 ["string"],
@@ -112,7 +116,7 @@ const useGetStatusProposal = (
             }
             return null;
           } catch (error) {
-            console.log("hello cac ban", error);
+            console.log("get Metadata in Status proposal", error);
             setIsErrorContractAddress(true);
             setIsGetMetaData(false);
             return null;

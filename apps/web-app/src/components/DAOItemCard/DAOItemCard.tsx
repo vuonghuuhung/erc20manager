@@ -20,7 +20,7 @@ const DAOItemCard: FC<{
   avatarDao,
 }) => {
   return (
-    <div className="group  min-h-[280px] relative overflow-hidden rounded-xl border border-gray-700/50 bg-gradient-to-b from-gray-900/90 to-gray-800/90 p-5 transition-all duration-300 hover:border-gray-600/50 hover:shadow-lg hover:shadow-blue-500/10">
+    <div className="group min-h-[300px] relative overflow-hidden rounded-xl border border-gray-700/50 bg-gradient-to-b from-gray-900/90 to-gray-800/90 p-5 transition-all duration-300 hover:border-gray-600/50 hover:shadow-lg hover:shadow-blue-500/10">
       <div className="relative z-10">
         <div className="w-20 h-20 mx-auto mb-4 transform transition-transform duration-300 group-hover:scale-105">
           <AvatarDAO src={avatarDao || ""} />

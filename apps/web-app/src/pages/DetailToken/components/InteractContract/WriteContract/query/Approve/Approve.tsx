@@ -53,7 +53,7 @@ const Approve: FC<{ decimals?: number }> = ({ decimals }) => {
   }
   return (
     <Collapsible className="border-[#e9ecef] border rounded-xl overflow-hidden mb-2">
-      <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3">
+      <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3  border-b border-b-[#e9ecef]">
         approve
       </CollapsibleTrigger>
       <CollapsibleContent className="py-2 px-3">
@@ -94,12 +94,12 @@ const Approve: FC<{ decimals?: number }> = ({ decimals }) => {
                   </FormItem>
                 )}
               />
-              <Button className="!mt-4">Approve</Button>
+              <Button className="!mt-4" disabled={isLoading}>Approve</Button>
             </form>
           </Form>
           {isLoading && <LoadingQuery />}
           {isWriteSuccess && !isLoading && (
-            <div className="mt-2">Response: Approve successful</div>
+            <div className="mt-2">Response: The approve has been sent.</div>
           )}
         </div>
         {errorWrite && (

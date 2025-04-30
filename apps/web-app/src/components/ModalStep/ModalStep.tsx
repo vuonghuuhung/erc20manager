@@ -3,9 +3,7 @@ import {
   AlertDialogContent,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { X } from "lucide-react";
-import FailedIcon from "@/assets/icons/FailedIcon";
-import SuccessfulIcon from "@/assets/icons/SuccessfulIcon";
+import { X, XCircle, CheckCircle} from "lucide-react";
 
 export enum MODAL_STEP {
   PROCESSING = "PROCESSING",
@@ -42,7 +40,7 @@ const SuccessContent = ({ content, setOpen, handleClose }: PropsContent) => {
       </button>
       <div className="text-[#39a699f2] text-center text-[18px] font-semibold">
         <div className="flex items-center justify-center mb-4">
-          <SuccessfulIcon />
+          <CheckCircle className="text-green-500 w-20 h-20" />
         </div>
         {content || "Transaction successfully!"}
       </div>
@@ -64,7 +62,7 @@ const FailedContent = ({ content, setOpen, handleClose }: PropsContent) => {
       </button>
       <div className="text-[#c73e59f2] text-center text-[18px] font-semibold">
         <div className="flex items-center justify-center mb-4">
-          <FailedIcon />
+          <XCircle className="text-red-400 w-20 h-20" />
         </div>
         {content || "Transaction failed!"}
       </div>

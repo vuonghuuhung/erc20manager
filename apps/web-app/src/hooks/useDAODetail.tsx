@@ -2,8 +2,10 @@
 import { contractAddress } from "@/config/config";
 import { DAOFactory__factory, MultisigDAO__factory } from "@repo/contracts";
 import { useEffect, useState } from "react";
-import { useReadContracts } from "wagmi";
 import { Proposal } from "./useGetStatusProposal";
+import { useQuery } from "@tanstack/react-query";
+import { readContracts } from "wagmi/actions";
+import { config } from "@/main";
 
 export interface MetaDataDaoType {
   name: string;
@@ -39,8 +41,13 @@ const useDAODetail = (daoAddresses: `0x${string}`[] = []) => {
     },
   ]);
 
-  const { data, isLoading, isFetching, isError, ...rest } = useReadContracts({
-    contracts: calls,
+  const { data, isLoading, isFetching, isError, ...rest } = useQuery({
+    queryKey: ["getDaoDetail", contractAddress],
+    queryFn: async () =>
+      await readContracts(config, {
+        contracts: calls,
+      }),
+    enabled: daoAddresses.length > 0,
   });
 
   useEffect(() => {

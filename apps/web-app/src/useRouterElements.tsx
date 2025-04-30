@@ -8,6 +8,7 @@ import DAOCreate from './pages/DAO/DAOCreate/DAOCreate';
 import DAODashboard from './pages/DAO/DAODashboard/DAODashboard';
 import DAODetail from './pages/DAO/DAODetail/DAODetail';
 import CreateProposal from './pages/DAO/CreateProposal/CreateProposal';
+import ProposalDetail from './pages/DAO/ProposalDetail/ProposalDetail';
 
 const useRouterElements = () => {
     const routeElements = useRoutes([
@@ -42,6 +43,10 @@ const useRouterElements = () => {
                 {
                     path: path.DAOCreateProposal,
                     element: <CreateProposal />,
+                },
+                {
+                    path: path.DAODetailProposal,
+                    element: <ProposalDetail />,
                 },
             ],
         },
