@@ -16,7 +16,7 @@ import useGetStatusProposal, {
 import useWatchEventDAO from "@/hooks/useWatchEventDAO";
 
 const DAODetail = () => {
-  const { id } = useParams<{ id: `0x${string}` }>();
+  const { idDao } = useParams<{ idDao: `0x${string}` }>();
   const [listProposal, setListProposal] = useState<MetaDataProposalType[]>([]);
 
   const {
@@ -24,14 +24,13 @@ const DAODetail = () => {
     isLoading: isLoadingInfo,
     isErrorContractAddress,
     refetch: refetchInfoToken,
-  } = useDAODetail([id] as `0x${string}`[]);
-  console.log("infoToken", infoToken);
-  
+  } = useDAODetail([idDao] as `0x${string}`[]);
+
   const {
     data: metaDataDao,
     isError: isErrorMetaDataDao,
     isLoading: isLoadingMetaDataDao,
-  } = useGetMetaData([id] as `0x${string}`[]);
+  } = useGetMetaData([idDao] as `0x${string}`[]);
 
   const {
     data: statusProposal,
@@ -39,10 +38,9 @@ const DAODetail = () => {
     isLoading: isLoadingStatusProposal,
     refetch: refetchStatusProposal,
   } = useGetStatusProposal(
-    id as `0x${string}`,
+    idDao as `0x${string}`,
     infoToken[0]?.listProposal || []
   );
-
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
@@ -67,10 +65,17 @@ const DAODetail = () => {
   }, [isErrorContractAddress, isErrorMetaDataDao, isErrorStatusProposal]);
 
   useWatchEventDAO({
-    id: id as `0x${string}`,
+    id: idDao as `0x${string}`,
+    isOwner: !!listProposal[0]?.isOwner,
     refetchStatusProposal: refetchStatusProposal,
     refetchProposalCreated: refetchInfoToken,
-  })
+  });
+
+  useEffect(() => {
+    return () => {
+      setListProposal([]);
+    };
+  }, []);
 
   return (
     <BoxContent extendClassName="py-6 bg-[#0C0D0E]">
@@ -95,7 +100,7 @@ const DAODetail = () => {
           Create a proposal
         </div>
         <Link
-          to={`/dao/proposal/create/${id}`}
+          to={`/dao/proposal/create/${idDao}`}
           className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-900/30 hover:shadow-blue-800/40 transition-all duration-200 text-[14px] text-white font-semibold flex items-center gap-2.5 px-6 py-3 rounded-lg border border-blue-500/30"
         >
           <Plus className="w-5 h-5 animate-pulse" />

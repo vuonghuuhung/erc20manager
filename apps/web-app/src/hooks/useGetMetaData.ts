@@ -42,9 +42,12 @@ const useGetMetaData = (daoAddresses: `0x${string}`[] = []) => {
               ["string"],
               item?.result as string
             );
-            await pinata.gateways.public.get(decodedData[0]).then((res) => {
-              return res.data;
-            });
+            const res = await pinata.gateways.public
+              .get(decodedData[0])
+              .then((res) => {
+                return res.data;
+              });
+            return res;
           } catch (error) {
             console.log("getMetaData", error);
             setIsErrorContractAddress(true);

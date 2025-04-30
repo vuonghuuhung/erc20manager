@@ -51,7 +51,7 @@ export function useContractWrite(functionNameTx: string, urlReCall?: string) {
     config,
   });
   const { writeContractAsync, data, isSuccess, ...rest } = useWriteContract();
-  const { setListTransaction } = useListTransactionStore();
+  const { setListTransaction, reset } = useListTransactionStore();
 
   useEffect(() => {
     if (data) {
@@ -62,6 +62,11 @@ export function useContractWrite(functionNameTx: string, urlReCall?: string) {
       });
     }
   }, [data, setListTransaction, methodName, urlReCall]);
+
+  useEffect(() => {
+    setMethodName("");
+    // reset()
+  }, [address, reset]);
 
   const write = async ({
     abi,
@@ -84,7 +89,6 @@ export function useContractWrite(functionNameTx: string, urlReCall?: string) {
     }
     setStepModal(MODAL_STEP.PROCESSING);
     setErrorWrite(messageInitial || "");
-    setMethodName(methodName || functionNameTx);
     try {
       const gasPrice = (await publicClient?.getGasPrice()) as bigint;
       const setUpMethod: any = {
@@ -107,6 +111,7 @@ export function useContractWrite(functionNameTx: string, urlReCall?: string) {
       }
       const { request } = await simulateContract(config, setUpMethod);
       await writeContractAsync(request);
+      setMethodName(methodName || functionNameTx);
       setStepModal(MODAL_STEP.SUCCESS);
     } catch (error: any) {
       console.log("error", { error });
@@ -163,6 +168,7 @@ export function useContractWrite(functionNameTx: string, urlReCall?: string) {
     stepModal,
     setStepModal,
     setErrorWrite,
+    methodName,
     isConnected,
     errorWrite,
     isWriteSuccess: isSuccess,

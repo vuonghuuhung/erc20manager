@@ -1,6 +1,10 @@
 import { contractAddress } from "@/config/config";
 import { config } from "@/main";
-import { DAOFactory__factory, ERC20Factory__factory } from "@repo/contracts";
+import {
+  DAOFactory__factory,
+  ERC20Factory__factory,
+  MultisigDAO__factory,
+} from "@repo/contracts";
 import { useQuery } from "@tanstack/react-query";
 import { readContract } from "wagmi/actions";
 
@@ -26,6 +30,22 @@ export const useGetListDAO = () => {
         abi: DAOFactory__factory.abi,
         functionName: "getListOfDAO",
         args: [],
+      }),
+  });
+};
+
+export const useGetProposalDetail = (
+  id: bigint,
+  contractAddress: `0x${string}`
+) => {
+  return useQuery({
+    queryKey: ["getProposalDetail"],
+    queryFn: async () =>
+      await readContract(config, {
+        address: contractAddress,
+        abi: MultisigDAO__factory.abi,
+        functionName: "getProposalDetails",
+        args: [id],
       }),
   });
 };

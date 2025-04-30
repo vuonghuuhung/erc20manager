@@ -1,6 +1,6 @@
 import { IRoute, routesPathDAO, routesPathToken } from "@/constants/path";
 import { useEffect, useState } from "react";
-import { Link, matchRoutes, useLocation } from "react-router-dom";
+import { Link, matchRoutes, useLocation, useParams } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +10,8 @@ import {
 import { ChevronDown } from "lucide-react";
 const DynamicBreadcrumb = () => {
   const location = useLocation();
+  const params = useParams();
+
   const [crumbs, setCrumbs] = useState<IRoute[]>([]);
 
   const getPaths = () => {
@@ -62,7 +64,12 @@ const DynamicBreadcrumb = () => {
             ) : (
               <li key={key} className="flex items-center">
                 <Link
-                  to={x.path}
+                  to={
+                    x.path.includes(":idDao")
+                      ? `/dao/detail/${params.idDao}`
+                      : x.path
+                  }
+                  // to={x.path}
                   className="text-gray-400 hover:text-blue-400 transition-colors duration-200 text-lg"
                 >
                   {x.name}

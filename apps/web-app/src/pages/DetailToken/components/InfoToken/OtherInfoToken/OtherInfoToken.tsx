@@ -1,19 +1,9 @@
 import { FC } from "react";
-import { FilesIcon } from "lucide-react";
+import CopyComponent from "@/components/CopyComponent/CopyComponent";
 const OtherInfoToken: FC<{ decimals?: number; tokenAddress?: string }> = ({
   decimals,
   tokenAddress,
 }) => {
-  const handleCopyAddress = () => {
-    navigator.clipboard
-      .writeText(tokenAddress || '')
-      .then(() => {
-        console.error("copy successful");
-      })
-      .catch((err) => {
-        console.error("error", err);
-      });
-  };
   return (
     <div className="flex flex-col gap-4">
       <h4 className="text-[16px] font-medium text-[#212529]">Other Info</h4>
@@ -23,9 +13,7 @@ const OtherInfoToken: FC<{ decimals?: number; tokenAddress?: string }> = ({
           <div className="text-[14px] font-normal mt-1 text-[#212529]">
             {tokenAddress}
           </div>
-          <button onClick={handleCopyAddress}>
-            <FilesIcon className="w-4 h-4" />
-          </button>
+          <CopyComponent tokenAddress={tokenAddress} className="ml-1"/>
         </div>
       </div>
     </div>

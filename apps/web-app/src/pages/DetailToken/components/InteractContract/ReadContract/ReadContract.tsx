@@ -45,7 +45,7 @@ const ReadContract = ({
           totalSupply
         </CollapsibleTrigger>
         <CollapsibleContent className="py-2 px-3">
-          {totalSupply}
+          {totalSupply} {symbol}
         </CollapsibleContent>
       </Collapsible>
       <BalanceOf />

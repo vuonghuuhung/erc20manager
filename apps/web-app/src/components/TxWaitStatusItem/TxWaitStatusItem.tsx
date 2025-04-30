@@ -4,14 +4,14 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { transactionInfo } from "@/store/listTransactionState";
-import { useLocation, matchPath, useMatch } from "react-router-dom";
+import { useMatch } from "react-router-dom";
 
 const TxWaitStatusItem = ({
   hash,
   functionName,
   urlReCall,
 }: transactionInfo) => {
-  const isMatchUrlPage = useMatch(urlReCall || "")
+  const isMatchUrlPage = useMatch(urlReCall || "");
 
   const queryClient = useQueryClient();
   const prevStatus = useRef<"pending" | "success" | "error" | null>(null);
@@ -52,132 +52,6 @@ const TxWaitStatusItem = ({
         className: "text-green-400",
       });
     }
-
-    // if (
-    //   isSuccess &&
-    //   functionName === "Approve proposal" &&
-    //   prevStatus.current === "pending" &&
-    //   status === "success"
-    // ) {
-    //   if (isMatchUrlPage) {
-    //     queryClient.invalidateQueries({
-    //       queryKey: ["getStatusProposal"],
-    //       exact: false,
-    //     });
-    //   }
-    //   toast.success("Approve proposal successfully", {
-    //     position: "top-right",
-    //     className: "text-green-400",
-    //   });
-    // }
-
-    // if (
-    //   isSuccess &&
-    //   functionName === "Reject proposal" &&
-    //   prevStatus.current === "pending" &&
-    //   status === "success"
-    // ) {
-    //   if (isMatchUrlPage) {
-    //     queryClient.invalidateQueries({
-    //       queryKey: ["getStatusProposal"],
-    //       exact: false,
-    //     });
-    //   }
-    //   toast.success("Reject proposal successfully", {
-    //     position: "top-right",
-    //     className: "text-green-400",
-    //   });
-    // }
-
-    // if (
-    //   isSuccess &&
-    //   functionName === "Execute proposal" &&
-    //   prevStatus.current === "pending" &&
-    //   status === "success"
-    // ) {
-    //   if (isMatchUrlPage) {
-    //     queryClient.invalidateQueries({
-    //       queryKey: ["getStatusProposal"],
-    //       exact: false,
-    //     });
-    //   }
-    //   toast.success("Executing proposal successfully", {
-    //     position: "top-right",
-    //     className: "text-green-400",
-    //   });
-    // }
-
-    // if (
-    //   isSuccess &&
-    //   functionName === "Approve Token" &&
-    //   prevStatus.current === "pending" &&
-    //   status === "success"
-    // ) {
-    //   if (isMatchUrlPage) {
-    //     queryClient.invalidateQueries({
-    //       queryKey: ["getDaoDetail"],
-    //       exact: false,
-    //     });
-    //   }
-    //   toast.success("Approve Token successfully", {
-    //     position: "top-right",
-    //     className: "text-green-400",
-    //   });
-    // }
-
-    // if (
-    //   isSuccess &&
-    //   functionName === "Burn Token" &&
-    //   prevStatus.current === "pending" &&
-    //   status === "success"
-    // ) {
-    //   if (isMatchUrlPage) {
-    //     queryClient.invalidateQueries({
-    //       queryKey: ["getDaoDetail"],
-    //       exact: false,
-    //     });
-    //   }
-    //   toast.success("Burn Token successfully", {
-    //     position: "top-right",
-    //     className: "text-green-400",
-    //   });
-    // }
-
-    // if (
-    //   isSuccess &&
-    //   functionName === "Distribute Token" &&
-    //   prevStatus.current === "pending" &&
-    //   status === "success"
-    // ) {
-    //   if (isMatchUrlPage) {
-    //     queryClient.invalidateQueries({
-    //       queryKey: ["getDaoDetail"],
-    //       exact: false,
-    //     });
-    //   }
-    //   toast.success("Distribute Token successfully", {
-    //     position: "top-right",
-    //     className: "text-green-400",
-    //   });
-    // }
-
-    // if (
-    //   isSuccess &&
-    //   functionName === "Update Metadata DAO" &&
-    //   prevStatus.current === "pending" &&
-    //   status === "success"
-    // ) {
-    //   if (isMatchUrlPage) {
-    //     queryClient.invalidateQueries({
-    //       queryKey: ["getDaoDetail"],
-    //       exact: false,
-    //     });
-    //   }
-    //   toast.success("Update Metadata DAO successfully", {
-    //     position: "top-right",
-    //     className: "text-green-400",
-    //   });
-    // }
 
     prevStatus.current = status;
   }, [status, isSuccess, functionName, queryClient, isMatchUrlPage]);
