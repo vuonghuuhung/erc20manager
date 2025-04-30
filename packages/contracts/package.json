@@ -2,7 +2,6 @@
   "name": "@repo/contracts",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
   "files": [
     "dist/"
   ],
