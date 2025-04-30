@@ -2,7 +2,7 @@ import type { PublicClient, WatchContractEventReturnType } from "viem";
 import { holesky } from "viem/chains";
 import { getPublicClient } from "wagmi/actions";
 import { wagmiConfig } from "./config/wagmiConfig.js";
-import { ContractEventConfig } from "./controllers/erc20-factory.js";
+import { ContractEventConfig } from "./types/contract-events.js";
 import { contractWatcher } from "./utils/contract-event.js";
 
 class AppListener {

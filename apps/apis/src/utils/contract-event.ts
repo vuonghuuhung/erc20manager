@@ -1,5 +1,5 @@
-import type { AbiEvent, Log, PublicClient, WatchContractEventReturnType } from "viem";
-import { ContractEventConfig } from "../controllers/erc20-factory.js";
+import type { AbiEvent, Log, PublicClient, Transaction, WatchContractEventReturnType } from "viem";
+import { ContractEventConfig } from "../types/contract-events.js";
 
 export function contractWatcher(
   client: PublicClient,
@@ -12,11 +12,17 @@ export function contractWatcher(
   const unwatch = client.watchContractEvent({
     address: config.contractAddress,
     abi: config.abi,
-    fromBlock: 3758932n,
     onLogs: async (logs: Log[]) => {
       for (const log of logs) {
-        console.log('log full', log);
-        await processLog(log as Log<bigint, number, false, AbiEvent, true, AbiEvent[]>, config);
+        const transaction = await client.getTransaction({
+          hash: log.transactionHash as `0x${string}`,
+        });
+
+        const block = await client.getBlock({
+          blockHash: transaction.blockHash as `0x${string}`,
+        });
+
+        await processLog(log as Log<bigint, number, false, AbiEvent, true, AbiEvent[]>, config, transaction, Number(block.timestamp));
       }
     },
     onError: (error: Error) => {
@@ -34,12 +40,14 @@ export function contractWatcher(
 
 export async function processLog(
   log: Log<bigint, number, false, AbiEvent, true, AbiEvent[]>,
-  config: ContractEventConfig
+  config: ContractEventConfig,
+  transaction: Transaction,
+  timestamp: number
 ): Promise<void> {
   const logId = `tx=${log.transactionHash} index=${log.logIndex}`;
 
   try {
-    config.handleEvent(log);
+    config.handleEvent(log, transaction, timestamp);
   } catch (error: any) {
     console.error(
       `!!!!!! [${config.factoryName}] CRITICAL ERROR processing log (${logId}):`,

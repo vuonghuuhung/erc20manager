@@ -1,28 +1,26 @@
 import { ERC20Factory__factory } from "@repo/contracts";
-import { Abi, AbiEvent, Log } from "viem";
+import { AbiEvent, Log, Transaction } from "viem";
 import { handleCreateERC20 } from "../services/erc20-factory.js";
+import { ContractEventConfig } from "../types/contract-events.js";
 import { EventMapHandler } from "./event-map.js";
 
-export interface ContractEventConfig {
-    factoryName: string;
-    contractAddress: `0x${string}`;
-    abi: Abi;
-    handleEvent: (log: Log<bigint, number, false, AbiEvent, true, AbiEvent[]>) => void;
-}
-
 const eventMapHandler: EventMapHandler = {
-    "Create": (log: Log<bigint, number, false, AbiEvent, true, AbiEvent[]>) => {
-        console.log("New ERC20 created", log);
-        handleCreateERC20(log);
+    "Create": (
+        log: Log<bigint, number, false, AbiEvent, true, AbiEvent[]>,
+        transaction: Transaction,
+        timestamp: number
+    ) => {
+        // console.log("New ERC20 created", log);
+        handleCreateERC20(log, transaction, timestamp);
     },
 }
 
 export const erc20FactoryHandler = (): ContractEventConfig => {
-    const handleEvent = (log: Log<bigint, number, false, AbiEvent, true, AbiEvent[]>) => {
+    const handleEvent = (log: Log<bigint, number, false, AbiEvent, true, AbiEvent[]>, transaction: Transaction, timestamp: number) => {
         const { eventName } = log;
 
         if (eventName && eventMapHandler[eventName]) {
-            eventMapHandler[eventName](log);
+            eventMapHandler[eventName](log, transaction, timestamp);
         } else {
             console.log(`Unhandled event: ${eventName}`);
         }

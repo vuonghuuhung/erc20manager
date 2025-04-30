@@ -1,28 +1,25 @@
 import { DAOFactory__factory } from "@repo/contracts";
-import { Abi, Log } from "viem";
-import { EventMapHandler } from "./event-map.js";
+import { AbiEvent, Log, Transaction } from "viem";
 import { handleCreateDao } from "../services/dao-factory.js";
-
-export interface ContractEventConfig {
-    factoryName: string;
-    contractAddress: `0x${string}`;
-    abi: Abi;
-    handleEvent: (log: Log) => void;
-}
+import { ContractEventConfig } from "../types/contract-events.js";
+import { EventMapHandler } from "./event-map.js";
 
 const eventMapHandler: EventMapHandler = {
-    "Create": (log: Log<bigint, number, false, any, true, typeof DAOFactory__factory.abi>) => {
-        console.log("New DAO created", log);
-        handleCreateDao(log);
+    "Create": (
+        log: Log<bigint, number, false, AbiEvent, true, AbiEvent[]>,
+        transaction: Transaction,
+        timestamp: number
+    ) => {
+        handleCreateDao(log, transaction, timestamp);
     },
 }
 
 export const daoFactoryHandler = (): ContractEventConfig => {
-    const handleEvent = (log: Log<bigint, number, false, any, true, typeof DAOFactory__factory.abi>) => {
+    const handleEvent = (log: Log<bigint, number, false, AbiEvent, true, AbiEvent[]>, transaction: Transaction, timestamp: number) => {
         const { eventName } = log;
 
         if (eventName && eventMapHandler[eventName]) {
-            eventMapHandler[eventName](log);
+            eventMapHandler[eventName](log, transaction, timestamp);
         } else {
             console.log(`Unhandled event: ${eventName}`);
         }

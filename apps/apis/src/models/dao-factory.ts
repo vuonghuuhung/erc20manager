@@ -5,7 +5,7 @@ export const insertNewDao = async (
     args: DaoFactoryCreateEventArgs
 ) => {
     try {
-        console.log('inserting dao', metadata, args);
+        // console.log('inserting dao', metadata, args);
     } catch (error) {
         console.error(
             `Failed to insert DAOFactoryEvent (tx: ${metadata.transactionHash}):`,
