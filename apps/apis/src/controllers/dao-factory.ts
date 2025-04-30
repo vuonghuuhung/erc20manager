@@ -30,7 +30,7 @@ export const daoFactoryHandler = (): ContractEventConfig => {
 
     return {
         factoryName: "DAOFactory",
-        contractAddress: "0xdF281f9dC67747FB5Fe67bE15e889579ff01947F",
+        contractAddress: "0x6F88a87B44f479BbEb9D609AC42F35c834e7d398",
         abi: DAOFactory__factory.abi,
         handleEvent,
     }

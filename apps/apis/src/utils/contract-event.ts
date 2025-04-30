@@ -12,9 +12,10 @@ export function contractWatcher(
   const unwatch = client.watchContractEvent({
     address: config.contractAddress,
     abi: config.abi,
-    // fromBlock: 3703228n,
+    fromBlock: 3758932n,
     onLogs: async (logs: Log[]) => {
       for (const log of logs) {
+        console.log('log full', log);
         await processLog(log as Log<bigint, number, false, AbiEvent, true, AbiEvent[]>, config);
       }
     },

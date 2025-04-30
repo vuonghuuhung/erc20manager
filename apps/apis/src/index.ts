@@ -1,11 +1,7 @@
 import express, { Request, Response } from "express";
 import { appListener } from "./app-listener.js";
 import { erc20FactoryHandler } from "./controllers/erc20-factory.js";
-import { closeDbConnection, getDb } from "./db/index.js";
 import { daoFactoryHandler } from "./controllers/dao-factory.js";
-
-// connect to db
-getDb();
 
 const blockchainApp = appListener();
 
@@ -40,15 +36,12 @@ const shutdown = () => {
       console.log("HTTP server closed.");
     }
 
-    closeDbConnection();
-
     console.log("Exiting process.");
     process.exit(err ? 1 : 0);
   });
 
   setTimeout(() => {
     console.error("Graceful shutdown timed out, forcing exit.");
-    closeDbConnection();
     process.exit(1);
   }, 15000);
 };
