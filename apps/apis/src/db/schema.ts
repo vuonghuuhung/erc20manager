@@ -1,82 +1,82 @@
+import { relations } from 'drizzle-orm';
 import {
-    blob,
     integer,
     sqliteTable,
     text
 } from 'drizzle-orm/sqlite-core';
 
-const transactionTypes = ['erc20_transfer', 'erc20_approval', 'erc20_ownership_transfer', 'dao_create', 'dao_proposal_submit', 'dao_proposal_approve', 'dao_proposal_execute', 'dao_proposal_metadata_update', 'dao_proposal_revoke'];
-
-export const accounts = sqliteTable('accounts', {
-    id: text('id').primaryKey(),
-    address: text('address').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp' }).defaultNow(),
-});
-
 // DAO table
 export const daos = sqliteTable('daos', {
-    id: text('id').primaryKey(),
-    address: text('address').notNull(),
-    tokenAddress: text('token_address').references(() => erc20.contractAddress),
-    createdAt: integer('created_at', { mode: 'timestamp' }).defaultNow(),
+    address: text('address').notNull().primaryKey(),
+    tokenAddress: text('token_address').notNull(), // ref
+    blockNumber: integer('block_number').notNull(),
+    transactionId: text('transaction_id').notNull(), // ref
+    timestamp: integer('timestamp', { mode: 'timestamp' }).notNull(),
 });
 
-// export const daoProposals = sqliteTable('dao_proposals', {
-//     id: uuid('id').primaryKey().defaultRandom(),
-//     daoId: uuid('dao_id').references(() => daos.id),
-//     proposalId: integer('proposal_id').notNull(),
-//     createdAt: timestamp('created_at').defaultNow(),
-// });
-
-// export const daoMembers = sqliteTable('dao_members', {
-//     id: uuid('id').primaryKey().defaultRandom(),
-//     daoId: uuid('dao_id').references(() => daos.id),
-//     address: text('address').notNull().references(() => accounts.address),
-//     createdAt: timestamp('created_at').defaultNow(),
-// });
+export const daosRelations = relations(daos, ({ many, one }) => ({
+    transactions: many(transactions),
+    token: one(erc20, {
+        fields: [daos.tokenAddress],
+        references: [erc20.contractAddress]
+    }),
+    createdTransaction: one(transactions, {
+        fields: [daos.transactionId],
+        references: [transactions.hash]
+    })
+}))
 
 // ERC20 Token table done
 export const erc20 = sqliteTable('erc20', {
-    id: text('id').primaryKey(),
-    contractAddress: text('contract_address').notNull(),
+    contractAddress: text('contract_address').notNull().primaryKey(),
     name: text('name'),
     symbol: text('symbol'),
     decimals: integer('decimals'),
     totalSupply: text('total_supply'),
-    owner: text('owner'),
-    createdAt: integer('created_at', { mode: 'timestamp' }).defaultNow(),
+    owner: text('owner').notNull(),
+    transactionId: text('transaction_id').notNull(), // ref
 });
 
-// ERC20 Holder
-// export const erc20Holders = sqliteTable('erc20_holders', {
-//     id: uuid('id').primaryKey().defaultRandom(),
-//     address: text('address').notNull().references(() => accounts.address),
-//     balance: text('balance'),
-//     tokenId: uuid('token_id').references(() => erc20.id),
-// });
+export const erc20Relations = relations(erc20, ({ many, one }) => ({
+    transactions: many(transactions),
+    createdTransaction: one(transactions, {
+        fields: [erc20.transactionId],
+        references: [transactions.hash]
+    }),
+}))
 
 // Transaction Table
 export const transactions = sqliteTable('transactions', {
-    id: text('id').primaryKey(),
-    hash: text('hash').notNull(),
-    method: text('method'),
-    block: integer('block'),
+    hash: text('hash').notNull().primaryKey(),
+    method: text('method').notNull(),
+    block: integer('block').notNull(),
     timestamp: integer('timestamp', { mode: 'timestamp' }).notNull(),
-    from: text('from').references(() => accounts.address),
-    to: text('to').references(() => accounts.address),
-    amount: text('amount'),
-    txnFee: text('txn_fee'),
-    gas: text('gas'),
-    gasPrice: text('gas_price'),
-    maxFeePerGas: text('max_fee_per_gas'),
-    maxPriorityFeePerGas: text('max_priority_fee_per_gas'),
-    nonce: integer('nonce'),
-    input: text('input'),
-    transactionIndex: integer('transaction_index'),
-    transactionType: text('transaction_type'),
-    parsedType: text('parsed_type'), // transactionTypes
-    logEvents: blob('log_events', { mode: 'json' }),
-    status: text('status'),
-    daoId: text('dao_id').references(() => daos.id),
-    erc20Id: text('erc20_id').references(() => erc20.id),
+    from: text('from').notNull(), // ref
+    to: text('to').notNull(), // ref
+    amount: text('amount').notNull(),
+    txnFee: text('txn_fee').notNull(),
+    gas: text('gas').notNull(),
+    gasPrice: text('gas_price').notNull(),
+    maxFeePerGas: text('max_fee_per_gas').notNull(),
+    maxPriorityFeePerGas: text('max_priority_fee_per_gas').notNull(),
+    nonce: integer('nonce').notNull(),
+    input: text('input').notNull(),
+    transactionIndex: integer('transaction_index').notNull(),
+    transactionType: text('transaction_type').notNull(),
+    parsedType: text('parsed_type').notNull(), // transactionTypes
+    logEvents: text('log_events', { mode: 'json' }).notNull(),
+    status: text('status').notNull(),
+    daoAddress: text('dao_address'),
+    erc20Address: text('erc20_address'),
 });
+
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+    dao: one(daos, {
+        fields: [transactions.daoAddress],
+        references: [daos.address]
+    }),
+    erc20: one(erc20, {
+        fields: [transactions.erc20Address],
+        references: [erc20.contractAddress]
+    }),
+}))

@@ -1,10 +1,11 @@
 import express, { Request, Response } from "express";
 import { appListener } from "./app-listener.js";
-import { erc20FactoryHandler } from "./controllers/erc20-factory.js";
 import { daoFactoryHandler } from "./controllers/dao-factory.js";
+import { erc20FactoryHandler } from "./controllers/erc20-factory.js";
 
 const blockchainApp = appListener();
 
+// Watch factory events
 blockchainApp.get(erc20FactoryHandler());
 blockchainApp.get(daoFactoryHandler());
 
@@ -20,7 +21,11 @@ app.get("/", (req: Request, res: Response) => {
 // start server
 const server = app.listen(port, () => {
   console.log(`✅ API Server listening on port ${port}`);
-  console.log("🚀 Application started, watching for events...");
+
+  // Initialize all token and DAO watchers after server starts
+  blockchainApp.initWatchers().then(() => {
+    console.log("🚀 Application started, watching for events...");
+  });
 });
 
 // shutdown
