@@ -1,11 +1,11 @@
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
 import { buildSchema } from 'drizzle-graphql';
 import express, { Request, Response } from "express";
 import { appListener } from "./app-listener.js";
 import { daoFactoryHandler } from "./controllers/dao-factory.js";
 import { erc20FactoryHandler } from "./controllers/erc20-factory.js";
 import db from "./db/db.js";
-import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone';
 
 const blockchainApp = appListener();
 
@@ -23,7 +23,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // start server
-const server = app.listen(port, () => {
+const server = app.listen(Number(port), "0.0.0.0", () => {
   console.log(`✅ API Server listening on port ${port}`);
 
   // Initialize all token and DAO watchers after server starts
@@ -34,7 +34,9 @@ const server = app.listen(port, () => {
 
 const { schema } = buildSchema(db);
 const graphqlServer = new ApolloServer({ schema });
-const { url } = await startStandaloneServer(graphqlServer);
+const { url } = await startStandaloneServer(graphqlServer, {
+  listen: { port: 4000, host: "0.0.0.0" },
+});
 
 console.log(`🚀 GraphQL server ready at ${url}`);
 
