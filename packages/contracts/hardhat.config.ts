@@ -26,7 +26,7 @@ const config: HardhatUserConfig = {
     },
     holesky: {
       url: "https://eth-holesky.g.alchemy.com/v2/cOQtLz0U1KR-mxS_zXyuFMZaI1-FPMvh",
-      accounts: [process.env.PRIVATE_KEY || "", ...privateKeys],
+      accounts: [process.env.PRIVATE_KEY || privateKeys[0], ...privateKeys],
     },
   },
 };
