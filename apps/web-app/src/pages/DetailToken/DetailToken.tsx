@@ -10,6 +10,7 @@ import InteractContract from "./components/InteractContract/InteractContract";
 import { useEffect } from "react";
 import useTokenDetailStore from "@/store/tokenDetailState";
 import Transfers from "./components/Transfers/Transfers";
+import Holder from "./components/Holder/Holder";
 
 const DetailToken = () => {
   const { id } = useParams<{ id: string }>();
@@ -62,12 +63,31 @@ const DetailToken = () => {
           <div className="mt-4">
             <Tabs defaultValue="Transfers" className="mt-0">
               <TabsList className="gap-2 mb-1 bg-transparent">
-                <TabsTrigger value="Transfers" className="text-white border border-white">Transfers</TabsTrigger>
-                <TabsTrigger value="Contract" className="text-white border border-white">Contract</TabsTrigger>
+                <TabsTrigger
+                  value="Transfers"
+                  className="text-white border border-white"
+                >
+                  Transfers
+                </TabsTrigger>
+                <TabsTrigger
+                  value="Holder"
+                  className="text-white border border-white"
+                >
+                  Holder
+                </TabsTrigger>
+                <TabsTrigger
+                  value="Contract"
+                  className="text-white border border-white"
+                >
+                  Contract
+                </TabsTrigger>
               </TabsList>
-              <BoxContent extendClassName="min-h-[200px] p-4">
+              <BoxContent extendClassName="min-h-[200px] p-4 mt-2">
                 <TabsContent value="Transfers">
                   <Transfers />
+                </TabsContent>
+                <TabsContent value="Holder">
+                  <Holder />
                 </TabsContent>
                 <TabsContent value="Contract">
                   <InteractContract tokenDetails={infoToken[0]} />

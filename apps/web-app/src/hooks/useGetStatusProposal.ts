@@ -89,6 +89,8 @@ const useGetStatusProposal = (
         contracts: callsStatus,
       }),
     enabled: contractAddress !== undefined,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const handleRefetch = () => {
@@ -123,7 +125,13 @@ const useGetStatusProposal = (
           }
         });
         const allMetaData = await Promise.all(metadataPromises as []);
-        if (dataStatus && allMetaData?.length > 0) {
+
+        if (
+          dataStatus &&
+          dataStatus?.length > 0 &&
+          !dataStatus.some((item) => item?.error) &&
+          allMetaData?.length > 0
+        ) {
           const merged = allMetaData.map(
             (item: { description: string }, index) => {
               const baseIndex = index * 3;
@@ -154,14 +162,19 @@ const useGetStatusProposal = (
 
   useEffect(() => {
     if (data && data?.length > 0) {
-      data.forEach((item) => {
-        if (item?.error) {
-          setIsErrorContractAddress(true);
-          return;
-        }
-      });
+      if (data.some((item) => item?.error)) {
+        setIsErrorContractAddress(true);
+      }
     }
   }, [data]);
+
+  useEffect(() => {
+    if (dataStatus && dataStatus?.length > 0) {
+      if (dataStatus.some((item) => item?.error)) {
+        setIsErrorContractAddress(true);
+      }
+    }
+  }, [dataStatus]);
 
   return {
     data: dataReturn,

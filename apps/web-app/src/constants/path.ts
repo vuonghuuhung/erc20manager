@@ -1,4 +1,3 @@
-
 export interface IRoute {
   name: string;
   path: string;
@@ -8,6 +7,7 @@ const path = {
   dashBoard: "/",
   createToken: "/token/create",
   detailToken: "/token/detail/:id",
+  txDetail: "/token/detail/:id/tx/:txHash",
   DAOCreate: "/dao/create",
   DAODashboard: "/dao",
   DAODetail: "/dao/detail/:idDao",
@@ -27,6 +27,10 @@ export const routesPathToken: IRoute[] = [
   {
     path: path.detailToken,
     name: "Detail Token",
+  },
+  {
+    path: path.txDetail,
+    name: "Tx Detail",
   },
 ];
 

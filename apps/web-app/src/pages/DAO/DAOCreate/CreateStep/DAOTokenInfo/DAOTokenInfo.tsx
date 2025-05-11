@@ -227,7 +227,11 @@ const DAOTokenInfo: FC<{
         setOpen={setStepModal}
         contentStep={errorWrite}
         statusStep={stepModal}
-        handleClose={() => navigate(path.DAODashboard)}
+        handleClose={() => {
+          if (!errorWrite) {
+            navigate(path.DAODashboard);
+          }
+        }}
       />
     </div>
   );
