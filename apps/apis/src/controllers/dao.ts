@@ -1,7 +1,7 @@
 import { MultisigDAO__factory } from "@repo/contracts";
 import { AbiEvent, Log, Transaction } from "viem";
-import db from "../db/db";
-import * as schema from "../db/schema";
+import db from "../db/db.js";
+import * as schema from "../db/schema.js";
 import { handleDaoApprove, handleDaoExecute, handleDaoRevoke, handleDaoSubmit, handleMetadataUpdated } from "../services/dao.js";
 import { ContractEventConfig } from "../types/contract-events.js";
 import { EventMapHandler } from "./event-map.js";

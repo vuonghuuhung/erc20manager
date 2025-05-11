@@ -39,7 +39,10 @@ contract ERC20Factory {
     event Create(
         address indexed owner,
         address indexed token,
-        uint256 indexed amount
+        uint256 indexed supply,
+        string name,
+        string symbol,
+        uint8 decimals
     );
 
     /*//////////////////////////////////////////////////////////////
@@ -48,18 +51,18 @@ contract ERC20Factory {
     function mintERC20(
         string memory _name,
         string memory _symbol,
-        uint256 _amount
+        uint256 _supply
     ) public {
         ERC20Template erc20 = new ERC20Template(
             _name,
             _symbol,
-            _amount,
+            _supply,
             msg.sender
         );
         s_erc20.push(address(erc20));
         s_addressToListOfERC20[msg.sender].push(address(erc20));
         s_ERC20ToOwner[address(erc20)] = msg.sender;
-        emit Create(msg.sender, address(erc20), erc20.totalSupply());
+        emit Create(msg.sender, address(erc20), erc20.totalSupply(), _name, _symbol, 18);
     }
 
     /*//////////////////////////////////////////////////////////////

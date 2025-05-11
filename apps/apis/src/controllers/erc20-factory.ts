@@ -28,7 +28,7 @@ export const erc20FactoryHandler = (): ContractEventConfig => {
 
     return {
         factoryName: "ERC20Factory",
-        contractAddress: "0xFb7Cd7488214fDfD10e1F15046E2D30a5390c219",
+        contractAddress: "0x0ca0EdB15e8c9cDe6FE8d7eb58C7ee14B0ecFa60",
         abi: ERC20Factory__factory.abi,
         handleEvent,
     }

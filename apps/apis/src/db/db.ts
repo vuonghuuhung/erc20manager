@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import path from 'path';
-import * as schema from './schema';
+import * as schema from './schema.js';
 
 const DATABASE_URL = path.resolve('data', 'sqlite.db');
 

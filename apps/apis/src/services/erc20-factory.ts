@@ -1,8 +1,8 @@
 import { AbiEvent, Log, Transaction } from "viem";
 import { AppListener } from "../app-listener.js";
-import { Method } from "../config/methods";
-import db from "../db/db";
-import * as schema from "../db/schema";
+import { Method } from "../config/methods.js";
+import db from "../db/db.js";
+import * as schema from "../db/schema.js";
 
 export const handleCreateERC20 = async (
     log: Log<bigint, number, false, AbiEvent, true, AbiEvent[]>,
@@ -10,12 +10,12 @@ export const handleCreateERC20 = async (
     timestamp: number
 ) => {
     try {
-        const events = log.args as Record<string, string>;
+        const events = log.args as Record<string, any>;
         const tokenAddress = events["token"];
-        const name = "UNKNOWN";
-        const symbol = "UNKNOWN";
-        const decimals = 18;
-        const totalSupply = events["amount"];
+        const name = events["name"];
+        const symbol = events["symbol"];
+        const decimals = events["decimals"];
+        const totalSupply = events["supply"];
         const owner = events["owner"];
         const blockNumber = log.blockNumber;
         const transactionHash = transaction.hash;

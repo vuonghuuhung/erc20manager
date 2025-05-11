@@ -1,8 +1,8 @@
 import { AbiEvent, Log, Transaction } from "viem";
 import { AppListener } from "../app-listener.js";
-import { Method } from "../config/methods";
-import db from "../db/db";
-import * as schema from "../db/schema";
+import { Method } from "../config/methods.js";
+import db from "../db/db.js";
+import * as schema from "../db/schema.js";
 
 export const handleCreateDao = async (
     log: Log<bigint, number, false, AbiEvent, true, AbiEvent[]>,
@@ -10,10 +10,16 @@ export const handleCreateDao = async (
     timestamp: number
 ) => {
     try {
-        const events = log.args as Record<string, string>;
+        const events = log.args as Record<string, any>;
         const daoAddress = events["daoAddress"];
-        const tokenAddress = events["token"];
-        const amount = events["amount"];
+        const tokenAddress = events["tokenAddress"];
+        const name = events["name"];
+        const owners = events["owners"] as string[];
+        const threshold = events["threshold"];
+        const symbol = events["symbol"];
+        const decimals = events["decimals"];
+        const supply = events["supply"];
+        const metadata = events["metadata"];
         const blockNumber = log.blockNumber;
         const transactionHash = transaction.hash;
 
@@ -39,7 +45,13 @@ export const handleCreateDao = async (
             logEvents: {
                 daoAddress: String(daoAddress),
                 tokenAddress: String(tokenAddress),
-                amount: amount?.toString(),
+                name: String(name),
+                owners: owners.map(owner => String(owner)),
+                threshold: String(threshold),
+                symbol: String(symbol),
+                decimals: String(decimals),
+                supply: String(supply),
+                metadata: String(metadata),
             },
             status: "Success",
             daoAddress: String(daoAddress),
@@ -57,7 +69,13 @@ export const handleCreateDao = async (
         console.log("Successfully inserted DAOFactoryEvent", {
             daoAddress,
             tokenAddress,
-            amount,
+            name,
+            owners,
+            threshold,
+            symbol,
+            decimals,
+            supply,
+            metadata,
             blockNumber,
             transactionHash
         });

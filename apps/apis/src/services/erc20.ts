@@ -1,7 +1,7 @@
 import { AbiEvent, Log, Transaction } from "viem";
-import { Method } from "../config/methods";
-import db from "../db/db";
-import * as schema from "../db/schema";
+import { Method } from "../config/methods.js";
+import db from "../db/db.js";
+import * as schema from "../db/schema.js";
 
 // Handle ERC20 token transfer event
 export const handleERC20Transfer = async (

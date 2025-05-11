@@ -74,12 +74,14 @@ describe("DAOFactory Flow", function () {
                     const parsedLog = daoFactoryInterface.parseLog(log as any);
                     if (parsedLog && parsedLog.name === "Create") {
                         daoAddress = parsedLog.args.daoAddress;
-                        tokenAddress = parsedLog.args.token;
+                        tokenAddress = parsedLog.args.tokenAddress;
                         break;
                     }
                 } catch (e) { /* Ignore */ }
             }
         }
+
+
 
         const multisigDAO = await hre.ethers.getContractAt("MultisigDAO", daoAddress);
         const erc20DAO = await hre.ethers.getContractAt("ERC20Template", tokenAddress);
@@ -135,8 +137,8 @@ describe("DAOFactory Flow", function () {
                         const parsedLog = daoFactoryInterface.parseLog(log as any);
                         if (parsedLog && parsedLog.name === "Create") {
                             daoAddress = parsedLog.args.daoAddress;
-                            tokenAddress = parsedLog.args.token;
-                            amountEmitted = parsedLog.args.amount; // Assign as BigInt
+                            tokenAddress = parsedLog.args.tokenAddress;
+                            amountEmitted = parsedLog.args.supply; // Assign as BigInt
                             break;
                         }
                     } catch (e) {
@@ -710,7 +712,7 @@ describe("DAOFactory Flow", function () {
 
                 // Execute
                 await expect(multisigDAO.connect(owner).executeProposal(BigInt(proposalId)))
-                    .to.emit(multisigDAO, "Execute").withArgs(BigInt(proposalId))
+                    .to.emit(multisigDAO, "Execute").withArgs(await owner.getAddress(), BigInt(proposalId))
                     .to.emit(erc20DAO, "Transfer").withArgs(await multisigDAO.getAddress(), recipient.address, amountToDistribute);
 
                 // Check state and balances after execution
@@ -791,7 +793,7 @@ describe("DAOFactory Flow", function () {
                 // Execute
                 const daoAddress = await multisigDAO.getAddress();
                 await expect(multisigDAO.connect(owner).executeProposal(BigInt(proposalId)))
-                    .to.emit(multisigDAO, "Execute").withArgs(BigInt(proposalId))
+                    .to.emit(multisigDAO, "Execute").withArgs(await owner.getAddress(), BigInt(proposalId))
                     // ERC20 Burn event: Transfer(from, to, value) where 'to' is address(0)
                     .to.emit(erc20DAO, "Transfer").withArgs(daoAddress, hre.ethers.ZeroAddress, amountToBurn);
 
@@ -829,7 +831,7 @@ describe("DAOFactory Flow", function () {
 
                 // Execute
                 await expect(multisigDAO.connect(owner).executeProposal(BigInt(proposalId)))
-                    .to.emit(multisigDAO, "Execute").withArgs(BigInt(proposalId))
+                    .to.emit(multisigDAO, "Execute").withArgs(await owner.getAddress(), BigInt(proposalId))
                     .to.emit(erc20DAO, "Approval").withArgs(daoAddress, spender, amountToApprove);
 
                 // Check state and allowance after execution
@@ -862,7 +864,7 @@ describe("DAOFactory Flow", function () {
 
                 // Execute second proposal
                 await expect(multisigDAO.connect(owner).executeProposal(BigInt(proposalId1)))
-                    .to.emit(multisigDAO, "Execute").withArgs(BigInt(proposalId1))
+                    .to.emit(multisigDAO, "Execute").withArgs(await owner.getAddress(), BigInt(proposalId1))
                     .to.emit(erc20DAO, "Approval").withArgs(daoAddress, spender, zeroAmount);
 
                 // Check final allowance
@@ -901,7 +903,7 @@ describe("DAOFactory Flow", function () {
 
                 // Execute
                 await expect(multisigDAO.connect(owner).executeProposal(BigInt(proposalId)))
-                    .to.emit(multisigDAO, "Execute").withArgs(BigInt(proposalId))
+                    .to.emit(multisigDAO, "Execute").withArgs(await owner.getAddress(), BigInt(proposalId))
                     .to.emit(multisigDAO, "MetadataUpdated").withArgs(oldMetadata, newMetadata);
 
                 // Check state and metadata after execution

@@ -5,8 +5,8 @@ import { getPublicClient } from "wagmi/actions";
 import { wagmiConfig } from "./config/wagmiConfig.js";
 import { daoHandler } from "./controllers/dao.js";
 import { erc20Handler } from "./controllers/erc20.js";
-import db from "./db/db";
-import * as schema from "./db/schema";
+import db from "./db/db.js";
+import * as schema from "./db/schema.js";
 import { ContractEventConfig } from "./types/contract-events.js";
 import { contractWatcher } from "./utils/contract-event.js";
 

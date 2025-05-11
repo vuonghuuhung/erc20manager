@@ -108,7 +108,7 @@ async function deployDAOFixture() {
                 const parsedLog = daoFactoryInterface.parseLog(log as any);
                 if (parsedLog && parsedLog.name === "Create") {
                     daoAddress = parsedLog.args.daoAddress;
-                    tokenAddress = parsedLog.args.token;
+                    tokenAddress = parsedLog.args.tokenAddress;
                     break;
                 }
             } catch (e) { /* Ignore */ }
@@ -174,7 +174,7 @@ async function deployDAOFixture4Owners3Required() {
                 const parsedLog = daoFactoryInterface.parseLog(log as any);
                 if (parsedLog && parsedLog.name === "Create") {
                     daoAddress = parsedLog.args.daoAddress;
-                    tokenAddress = parsedLog.args.token;
+                    tokenAddress = parsedLog.args.tokenAddress;
                     break;
                 }
             } catch (e) { /* Ignore */ }
