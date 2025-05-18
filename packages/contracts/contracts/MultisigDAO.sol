@@ -20,10 +20,18 @@ contract MultisigDAO {
     error MultisigDAO_NotAuthorized();
     error MultisigDAO_InvalidActionData();
 
-    event Submit(uint256 indexed proposalId);
-    event Approve(address indexed owner, uint256 indexed proposalId);
-    event Revoke(address indexed owner, uint256 indexed proposalId);
-    event Execute(uint256 indexed proposalId);
+    event Submit(
+        uint256 indexed proposalId,
+        address indexed creator,
+        address indexed to,
+        uint256 value,
+        Action action,
+        bytes data,
+        bytes metadataURI
+    );
+    event Approve(address indexed approver, uint256 indexed proposalId);
+    event Revoke(address indexed revoker, uint256 indexed proposalId);
+    event Execute(address indexed executor, uint256 indexed proposalId);
     event MetadataUpdated(bytes oldMetadata, bytes newMetadata);
 
     enum ProposalStatus {
@@ -191,7 +199,15 @@ contract MultisigDAO {
                 isRejected: false
             })
         );
-        emit Submit(s_proposals.length - 1);
+        emit Submit(
+            s_proposals.length - 1,
+            msg.sender,
+            _to,
+            _value,
+            _action,
+            _data,
+            _metadataURI
+        );
     }
 
     /**
@@ -286,7 +302,7 @@ contract MultisigDAO {
             emit MetadataUpdated(oldMetadata, newMetadata);
         }
 
-        emit Execute(_proposalId);
+        emit Execute(msg.sender, _proposalId);
     }
 
     function getMetadata() external view returns (bytes memory) {

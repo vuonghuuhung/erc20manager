@@ -49,7 +49,7 @@ describe("ERC20Factory", function () {
                         if (parsedLog && parsedLog.name === "Create") {
                             ownerAddress = parsedLog.args.owner;
                             tokenAddress = parsedLog.args.token;
-                            amountEmitted = parsedLog.args.amount;
+                            amountEmitted = parsedLog.args.supply;
                             break;
                         }
                     } catch (e) { /* Ignore */ }

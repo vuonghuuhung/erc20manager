@@ -40,8 +40,14 @@ contract DAOFactory {
     //////////////////////////////////////////////////////////////*/
     event Create(
         address indexed daoAddress,
-        address indexed token,
-        uint256 indexed amount
+        address indexed tokenAddress,
+        string indexed name,
+        address[] owners,
+        uint256 threshold,
+        string symbol,
+        uint8 decimals,
+        uint256 supply,
+        bytes metadata
     );
 
     /*//////////////////////////////////////////////////////////////
@@ -71,7 +77,17 @@ contract DAOFactory {
         s_erc20DAO.push(token);
         s_ERC20toDAO[token] = daoAddress;
         s_daoAddressToERC20[daoAddress] = token;
-        emit Create(daoAddress, token, ERC20Template(token).totalSupply());
+        emit Create(
+            daoAddress,
+            token,
+            _name,
+            _owners,
+            _required,
+            _symbol,
+            _decimals,
+            _amount,
+            _metadata
+        );
     }
 
     /*//////////////////////////////////////////////////////////////

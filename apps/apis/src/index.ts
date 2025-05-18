@@ -1,14 +1,15 @@
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { buildSchema } from 'drizzle-graphql';
 import express, { Request, Response } from "express";
 import { appListener } from "./app-listener.js";
-import { erc20FactoryHandler } from "./controllers/erc20-factory.js";
-import { closeDbConnection, getDb } from "./db/index.js";
 import { daoFactoryHandler } from "./controllers/dao-factory.js";
-
-// connect to db
-getDb();
+import { erc20FactoryHandler } from "./controllers/erc20-factory.js";
+import db from "./db/db.js";
 
 const blockchainApp = appListener();
 
+// Watch factory events
 blockchainApp.get(erc20FactoryHandler());
 blockchainApp.get(daoFactoryHandler());
 
@@ -22,10 +23,24 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // start server
-const server = app.listen(port, () => {
+const server = app.listen(Number(port), "0.0.0.0", () => {2
   console.log(`✅ API Server listening on port ${port}`);
-  console.log("🚀 Application started, watching for events...");
+
+  // Initialize all token and DAO watchers after server starts
+  blockchainApp.initWatchers().then(() => {
+    console.log("🚀 Application started, watching for events...");
+  });
 });
+
+const { schema } = buildSchema(db, {
+  mutations: false
+});
+const graphqlServer = new ApolloServer({ schema });
+const { url } = await startStandaloneServer(graphqlServer, {
+  listen: { port: 4000, host: "0.0.0.0" },
+});
+
+console.log(`🚀 GraphQL server ready at ${url}`);
 
 // shutdown
 const shutdown = () => {
@@ -40,15 +55,12 @@ const shutdown = () => {
       console.log("HTTP server closed.");
     }
 
-    closeDbConnection();
-
     console.log("Exiting process.");
     process.exit(err ? 1 : 0);
   });
 
   setTimeout(() => {
     console.error("Graceful shutdown timed out, forcing exit.");
-    closeDbConnection();
     process.exit(1);
   }, 15000);
 };

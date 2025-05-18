@@ -2,12 +2,12 @@
   "name": "@repo/contracts",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
   "files": [
     "dist/"
   ],
   "main": "dist/common/typechain-types/index.js",
   "module": "dist/es/typechain-types/index.js",
+  "type": "module",
   "exports": {
     ".": {
       "import": "./dist/es/typechain-types/index.js",
