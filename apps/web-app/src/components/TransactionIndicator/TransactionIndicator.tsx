@@ -7,7 +7,6 @@ const TransactionIndicator = () => {
   const [expanded, setExpanded] = useState(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { listTransaction } = useListTransactionStore();
-  console.log("listTransaction", listTransaction);
   useEffect(() => {
     if (listTransaction.length > 0) {
       setIsOpen(true);

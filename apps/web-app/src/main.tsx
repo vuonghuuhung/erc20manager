@@ -15,6 +15,9 @@ import App from "./App";
 import "./index.css";
 import { defineChain } from "viem";
 
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client";
+
 const holesky = defineChain({
   id: 17000,
   name: "Holesky",
@@ -64,6 +67,26 @@ const queryClient = new QueryClient({
   },
 });
 
+const client = new ApolloClient({
+  uri: "https://flyby-router-demo.herokuapp.com/", // Địa chỉ API GraphQL
+  cache: new InMemoryCache(), // Quản lý cache
+});
+
+client
+  .query({
+    query: gql`
+      query GetLocations {
+        locations {
+          id
+          name
+          description
+          photo
+        }
+      }
+    `,
+  })
+  .then((result) => console.log(result));
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
@@ -77,7 +100,9 @@ createRoot(document.getElementById("root")!).render(
               fontStack: "system",
             })}
           >
-            <App />
+            <ApolloProvider client={client}>
+              <App />
+            </ApolloProvider>
           </RainbowKitProvider>
         </QueryClientProvider>
       </WagmiProvider>

@@ -2,6 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { formatDistanceToNow } from "date-fns";
 import { MoveRight } from "lucide-react";
 import CopyComponent from "../CopyComponent/CopyComponent";
+import { Link } from "react-router-dom";
 
 const formatAddress = (address: string) => {
   if (!address) return "";
@@ -10,7 +11,7 @@ const formatAddress = (address: string) => {
 
 const formatTxHash = (address: string) => {
   if (!address) return "";
-  return `${address.slice(0, 15)}...`;
+  return `${address.slice(0, 10)}...`;
 };
 
 export type Transfer = {
@@ -23,16 +24,24 @@ export type Transfer = {
   amount: string;
 };
 
-export const columnsTransfers: ColumnDef<Transfer>[] = [
+export const columnsTransfers = (tokenId: string): ColumnDef<Transfer>[] => [
   {
     accessorKey: "txHash",
     header: () => <div className="">Transaction Hash</div>,
-    cell: ({ row }) => (
-      <div className="font-medium min-w-[195px] flex items-center text-[#0784c3] hover:text-blue-600 truncate">
-        {formatTxHash(row.getValue("txHash"))}
-        <CopyComponent tokenAddress={row.getValue("txHash")} className="ml-3" />
-      </div>
-    ),
+    cell: ({ row }) => {
+      return (
+        <Link
+          to={`/token/detail/${tokenId}/tx/${row.getValue("txHash")}`}
+          className="font-medium max-w-[195px] flex items-center text-[#0784c3] hover:text-blue-600 truncate"
+        >
+          {formatTxHash(row.getValue("txHash"))}
+          <CopyComponent
+            tokenAddress={row.getValue("txHash")}
+            className="ml-3"
+          />
+        </Link>
+      );
+    },
   },
   {
     accessorKey: "method",

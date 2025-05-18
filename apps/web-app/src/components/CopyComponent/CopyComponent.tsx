@@ -9,6 +9,12 @@ const CopyComponent = ({
   className?: string;
 }) => {
   const handleCopyAddress = () => {
+    if (!tokenAddress) {
+      toast.error("Some things went wrong", {
+        position: "top-right",
+      });
+      return;
+    }
     navigator.clipboard
       .writeText(tokenAddress || "")
       .then(() => {
@@ -22,7 +28,7 @@ const CopyComponent = ({
   };
   return (
     <button className={className} onClick={handleCopyAddress}>
-      <FilesIcon className="w-4 h-4 text-[#adb5bd]" />
+      <FilesIcon className="w-4 h-4 text-[#adb5bd] hover:text-blue-600 transition-all duration-300" />
     </button>
   );
 };

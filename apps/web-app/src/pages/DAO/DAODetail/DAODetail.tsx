@@ -14,10 +14,13 @@ import useGetStatusProposal, {
   MetaDataProposalType,
 } from "@/hooks/useGetStatusProposal";
 import useWatchEventDAO from "@/hooks/useWatchEventDAO";
+import { MultisigDAO__factory } from "@repo/contracts";
+import { useAccount, useReadContract } from "wagmi";
 
 const DAODetail = () => {
   const { idDao } = useParams<{ idDao: `0x${string}` }>();
   const [listProposal, setListProposal] = useState<MetaDataProposalType[]>([]);
+  const { address } = useAccount();
 
   const {
     data: infoToken,
@@ -42,6 +45,20 @@ const DAODetail = () => {
     infoToken[0]?.listProposal || []
   );
 
+  const {
+    data: isOwner,
+    isError: isOwnerError,
+    isLoading: isOwnerLoading,
+  } = useReadContract({
+    address: idDao as `0x${string}`,
+    abi: MultisigDAO__factory.abi,
+    functionName: "s_isOwner",
+    args: [address as `0x${string}`],
+    query: {
+      enabled: !!idDao && !!address,
+    },
+  });
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
     const filteredProposals = statusProposal.filter(
@@ -59,23 +76,27 @@ const DAODetail = () => {
   }, [statusProposal]);
 
   useEffect(() => {
-    if (isErrorContractAddress || isErrorMetaDataDao || isErrorStatusProposal) {
+    if (
+      isErrorContractAddress ||
+      isErrorMetaDataDao ||
+      isErrorStatusProposal ||
+      isOwnerError
+    ) {
       toast("Something went wrong");
     }
-  }, [isErrorContractAddress, isErrorMetaDataDao, isErrorStatusProposal]);
+  }, [
+    isErrorContractAddress,
+    isErrorMetaDataDao,
+    isErrorStatusProposal,
+    isOwnerError,
+  ]);
 
   useWatchEventDAO({
     id: idDao as `0x${string}`,
-    isOwner: !!listProposal[0]?.isOwner,
+    isOwner: !!isOwner,
     refetchStatusProposal: refetchStatusProposal,
     refetchProposalCreated: refetchInfoToken,
   });
-
-  useEffect(() => {
-    return () => {
-      setListProposal([]);
-    };
-  }, []);
 
   return (
     <BoxContent extendClassName="py-6 bg-[#0C0D0E]">
@@ -150,7 +171,10 @@ const DAODetail = () => {
 
       <Loading
         isLoading={
-          isLoadingInfo || isLoadingMetaDataDao || isLoadingStatusProposal
+          isLoadingInfo ||
+          isLoadingMetaDataDao ||
+          isLoadingStatusProposal ||
+          isOwnerLoading
         }
       />
     </BoxContent>

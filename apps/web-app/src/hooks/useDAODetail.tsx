@@ -48,6 +48,8 @@ const useDAODetail = (daoAddresses: `0x${string}`[] = []) => {
         contracts: calls,
       }),
     enabled: daoAddresses.length > 0,
+    gcTime: 0,
+    staleTime: 0,
   });
 
   useEffect(() => {
