@@ -23,7 +23,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // start server
-const server = app.listen(Number(port), "0.0.0.0", () => {
+const server = app.listen(Number(port), "0.0.0.0", () => {2
   console.log(`✅ API Server listening on port ${port}`);
 
   // Initialize all token and DAO watchers after server starts
@@ -32,7 +32,9 @@ const server = app.listen(Number(port), "0.0.0.0", () => {
   });
 });
 
-const { schema } = buildSchema(db);
+const { schema } = buildSchema(db, {
+  mutations: false
+});
 const graphqlServer = new ApolloServer({ schema });
 const { url } = await startStandaloneServer(graphqlServer, {
   listen: { port: 4000, host: "0.0.0.0" },

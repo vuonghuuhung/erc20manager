@@ -2,6 +2,7 @@ import { AbiEvent, Log, Transaction } from "viem";
 import { Method } from "../config/methods.js";
 import db from "../db/db.js";
 import * as schema from "../db/schema.js";
+import { handleTokenHolderTransfer } from "./token-holder.js";
 
 // Handle ERC20 token transfer event
 export const handleERC20Transfer = async (
@@ -54,6 +55,9 @@ export const handleERC20Transfer = async (
             status: "Success",
             erc20Address: String(tokenAddress),
         });
+
+        // Update token holder balances
+        await handleTokenHolderTransfer(log, transaction, timestamp);
 
     } catch (error) {
         console.error("Error handling ERC20 Transfer event:", error);

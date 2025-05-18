@@ -80,3 +80,20 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
         references: [erc20.contractAddress]
     }),
 }))
+
+// Token Holders table
+export const tokenHolders = sqliteTable('token_holders', {
+    id: text('id').notNull().primaryKey(), // composite key of token_address + holder_address
+    tokenAddress: text('token_address').notNull(),
+    holderAddress: text('holder_address').notNull(),
+    balance: text('balance').notNull().default('0'),
+    lastUpdatedBlock: integer('last_updated_block').notNull(),
+    lastUpdatedTimestamp: integer('last_updated_timestamp', { mode: 'timestamp' }).notNull(),
+});
+
+export const tokenHoldersRelations = relations(tokenHolders, ({ one }) => ({
+    token: one(erc20, {
+        fields: [tokenHolders.tokenAddress],
+        references: [erc20.contractAddress]
+    })
+}));

@@ -3,6 +3,7 @@ import { AppListener } from "../app-listener.js";
 import { Method } from "../config/methods.js";
 import db from "../db/db.js";
 import * as schema from "../db/schema.js";
+import { updateTokenHolderBalance } from "./token-holder.js";
 
 export const handleCreateERC20 = async (
     log: Log<bigint, number, false, AbiEvent, true, AbiEvent[]>,
@@ -20,14 +21,18 @@ export const handleCreateERC20 = async (
         const blockNumber = log.blockNumber;
         const transactionHash = transaction.hash;
 
+        // Normalize addresses to lowercase
+        const normalizedTokenAddress = String(tokenAddress).toLowerCase();
+        const normalizedOwner = String(owner).toLowerCase();
+
         // First insert the token record into the database
         await db.insert(schema.transactions).values({
             hash: String(transactionHash),
             method: String(transaction.input.slice(0, 10)),
             block: Number(blockNumber),
             timestamp: new Date(timestamp * 1000),
-            from: String(transaction.from),
-            to: String(transaction.to),
+            from: String(transaction.from).toLowerCase(),
+            to: String(transaction.to).toLowerCase(),
             amount: String(transaction.value),
             txnFee: String(transaction.gasPrice),
             gas: String(transaction.gas),
@@ -40,34 +45,44 @@ export const handleCreateERC20 = async (
             transactionType: String(transaction.type),
             parsedType: Method.CreateERC20,
             logEvents: {
-                tokenAddress: String(tokenAddress),
+                tokenAddress: normalizedTokenAddress,
                 name: String(name),
                 symbol: String(symbol),
                 decimals: String(decimals),
                 totalSupply: String(totalSupply),
-                owner: String(owner),
+                owner: normalizedOwner,
             },
             status: "Success",
-            erc20Address: String(tokenAddress),
+            erc20Address: normalizedTokenAddress,
         });
 
         await db.insert(schema.erc20).values({
-            contractAddress: String(tokenAddress),
+            contractAddress: normalizedTokenAddress,
             name: String(name),
             symbol: String(symbol),
             decimals: Number(decimals),
             totalSupply: String(totalSupply),
-            owner: String(owner),
+            owner: normalizedOwner,
             transactionId: String(transactionHash),
         });
 
+        // Initialize creator's balance with total supply
+        await updateTokenHolderBalance(
+            normalizedTokenAddress,
+            normalizedOwner,
+            BigInt(totalSupply),
+            Number(blockNumber),
+            timestamp,
+            true // add the total supply to creator's balance
+        );
+
         console.log("Successfully inserted ERC20FactoryEvent", {
-            tokenAddress,
+            tokenAddress: normalizedTokenAddress,
             name,
             symbol,
             decimals,
             totalSupply,
-            owner,
+            owner: normalizedOwner,
             blockNumber,
             transactionHash
         });
@@ -76,8 +91,8 @@ export const handleCreateERC20 = async (
         try {
             const appInstance = AppListener.getInstance();
             if (appInstance) {
-                await appInstance.registerNewERC20(String(tokenAddress));
-                console.log(`Registered new ERC20 token ${tokenAddress} for watching`);
+                await appInstance.registerNewERC20(normalizedTokenAddress);
+                console.log(`Registered new ERC20 token ${normalizedTokenAddress} for watching`);
             } else {
                 console.log("AppListener instance not available, cannot register token for watching");
             }
