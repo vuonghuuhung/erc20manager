@@ -8,7 +8,7 @@ export const createTokenSchema = z.object({
   symbol: z
     .string()
     .nonempty("This field is required")
-    .max(160, "Length max 160 characters"),
+    .max(4, "Length max 4 characters"),
   amount: z
     .string()
     .nonempty("This field is required")
@@ -58,7 +58,7 @@ export const createDAOContractSchema = z.object({
   symbol: z
     .string()
     .nonempty("This field is required")
-    .max(160, "Length max 160 characters"),
+    .max(4, "Length max 4 characters"),
   amount: z
     .string()
     .nonempty("This field is required")

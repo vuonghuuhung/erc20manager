@@ -10,12 +10,12 @@ import {
   useBalance,
   usePublicClient,
   useReadContract,
-  useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
 import type { Config, UseReadContractParameters } from "wagmi";
 import { simulateContract } from "@wagmi/core";
 import { MODAL_STEP } from "@/components/ModalStep/ModalStep";
+import useListTransactionStore from "@/store/listTransactionState";
 type UseContractReadParameters = Omit<
   UseReadContractParameters,
   "abi" | "address" | "functionName" | "args"
@@ -36,11 +36,13 @@ export function useContractRead<T = unknown>(
   });
 }
 
-export function useContractWrite() {
+export function useContractWrite(functionNameTx: string, urlReCall?: string) {
   const { address, isConnected } = useAccount();
   const { data: balance } = useBalance({
     address,
   });
+
+  const [methodName, setMethodName] = useState<string>(functionNameTx);
 
   const [stepModal, setStepModal] = useState<MODAL_STEP>(MODAL_STEP.READY);
   const [errorWrite, setErrorWrite] = useState<string>("");
@@ -48,23 +50,23 @@ export function useContractWrite() {
   const publicClient = usePublicClient({
     config,
   });
-  const { writeContractAsync, data, ...rest } = useWriteContract();
-
-  const { isFetching, isSuccess } = useWaitForTransactionReceipt({
-    hash: data,
-  });
+  const { writeContractAsync, data, isSuccess, ...rest } = useWriteContract();
+  const { setListTransaction, reset } = useListTransactionStore();
 
   useEffect(() => {
-    if (isFetching) {
-      setStepModal(MODAL_STEP.PROCESSING);
+    if (data) {
+      setListTransaction({
+        hash: data,
+        functionName: methodName,
+        urlReCall: urlReCall || "",
+      });
     }
-  }, [isFetching]);
+  }, [data, setListTransaction, methodName, urlReCall]);
 
   useEffect(() => {
-    if (isSuccess) {
-      setStepModal(MODAL_STEP.SUCCESS);
-    }
-  }, [isSuccess]);
+    setMethodName("");
+    // reset()
+  }, [address, reset]);
 
   const write = async ({
     abi,
@@ -72,12 +74,14 @@ export function useContractWrite() {
     functionName,
     contractAddress,
     messageInitial,
+    methodName,
   }: {
     args: any;
     abi: Abi;
     contractAddress: any;
     functionName: string;
     messageInitial?: string;
+    methodName?: string;
   }) => {
     if (!isConnected) {
       setErrorWrite("You need to connect wallet");
@@ -107,6 +111,8 @@ export function useContractWrite() {
       }
       const { request } = await simulateContract(config, setUpMethod);
       await writeContractAsync(request);
+      setMethodName(methodName || functionNameTx);
+      setStepModal(MODAL_STEP.SUCCESS);
     } catch (error: any) {
       console.log("error", { error });
       if (
@@ -162,6 +168,7 @@ export function useContractWrite() {
     stepModal,
     setStepModal,
     setErrorWrite,
+    methodName,
     isConnected,
     errorWrite,
     isWriteSuccess: isSuccess,

@@ -20,14 +20,16 @@ import InputNumber from "@/components/InputNumber";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MultisigDAO__factory } from "@repo/contracts";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { pinata } from "@/utils/http";
 import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
 import BoxContent from "@/components/BoxContent";
 import { pinataIdGroup } from "@/config/config";
+import path from "@/constants/path";
 
 const DistributeProposal = () => {
   const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
   const form = useForm<CreateProposalType>({
     resolver: zodResolver(createProposalSchema),
     defaultValues: {
@@ -44,7 +46,7 @@ const DistributeProposal = () => {
     setStepModal,
     setErrorWrite,
     isConnected,
-  } = useContractWrite();
+  } = useContractWrite("Distribute Token", path.DAODetail);
 
   async function onSubmit(values: CreateProposalType) {
     try {
@@ -157,6 +159,7 @@ const DistributeProposal = () => {
         setOpen={setStepModal}
         contentStep={errorWrite}
         statusStep={stepModal}
+        handleClose={() => navigate(path.DAODashboard)}
       />
     </BoxContent>
   );

@@ -57,7 +57,7 @@ const Allowance = () => {
 
   return (
     <Collapsible className="border-[#e9ecef] border rounded-xl overflow-hidden mb-2">
-      <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3">
+      <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3 border-b border-b-[#e9ecef]">
         allowance
       </CollapsibleTrigger>
       <CollapsibleContent className="py-2 px-3">
@@ -98,7 +98,7 @@ const Allowance = () => {
                   </FormItem>
                 )}
               />
-              <Button className="!mt-4">Query</Button>
+              <Button className="!mt-4" disabled={isLoading}>Query</Button>
             </form>
           </Form>
           {isLoading && <LoadingQuery />}

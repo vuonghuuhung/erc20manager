@@ -3,27 +3,20 @@ import DAOItemCard from "@/components/DAOItemCard/DAOItemCard";
 import path from "@/constants/path";
 import { CirclePlus, ClipboardList } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useReadContract } from "wagmi";
-import { contractAddress } from "@/config/config";
-import { DAOFactory__factory } from "@repo/contracts";
 import Loading from "@/components/Loading/Loading";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import useDAODetail from "@/hooks/useDAODetail";
 import Nodata from "@/components/Nodata";
 import useGetMetaData from "@/hooks/useGetMetaData";
+import { useGetListDAO } from "@/hooks/useReadContracts";
 
 const DAODashboard = () => {
   const {
     data: listDaoAddress,
     isLoading: isLoadingGetListDaoAddress,
     isError: isErrorListDaoAddress,
-  } = useReadContract({
-    address: contractAddress.DAOFactoryAddress,
-    abi: DAOFactory__factory.abi,
-    functionName: "getListOfDAO",
-    args: [],
-  });
+  } = useGetListDAO()
 
   const {
     data: listDaoInfo,

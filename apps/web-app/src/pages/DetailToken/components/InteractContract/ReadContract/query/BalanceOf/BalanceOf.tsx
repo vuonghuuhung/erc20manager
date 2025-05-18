@@ -59,7 +59,7 @@ const BalanceOf = () => {
 
   return (
     <Collapsible className="border-[#e9ecef] border rounded-xl overflow-hidden mb-2">
-      <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3">
+      <CollapsibleTrigger className="w-full text-left bg-[#f8f9fa] py-1 px-3 border-b border-b-[#e9ecef]">
         balanceOf
       </CollapsibleTrigger>
       <CollapsibleContent className="py-2 px-3">
@@ -83,7 +83,7 @@ const BalanceOf = () => {
                   </FormItem>
                 )}
               />
-              <Button className="!mt-4">Query</Button>
+              <Button className="!mt-4" disabled={isGetBalance}>Query</Button>
             </form>
           </Form>
           {isGetBalance && <LoadingQuery />}

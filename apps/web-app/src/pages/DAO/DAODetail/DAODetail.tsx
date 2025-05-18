@@ -13,31 +13,51 @@ import { toast } from "sonner";
 import useGetStatusProposal, {
   MetaDataProposalType,
 } from "@/hooks/useGetStatusProposal";
+import useWatchEventDAO from "@/hooks/useWatchEventDAO";
+import { MultisigDAO__factory } from "@repo/contracts";
+import { useAccount, useReadContract } from "wagmi";
+
 const DAODetail = () => {
-  const { id } = useParams<{ id: `0x${string}` }>();
+  const { idDao } = useParams<{ idDao: `0x${string}` }>();
   const [listProposal, setListProposal] = useState<MetaDataProposalType[]>([]);
+  const { address } = useAccount();
 
   const {
     data: infoToken,
     isLoading: isLoadingInfo,
     isErrorContractAddress,
-  } = useDAODetail([id] as `0x${string}`[]);
-
-  console.log("infoToken", infoToken);
-  
+    refetch: refetchInfoToken,
+  } = useDAODetail([idDao] as `0x${string}`[]);
 
   const {
     data: metaDataDao,
     isError: isErrorMetaDataDao,
     isLoading: isLoadingMetaDataDao,
-  } = useGetMetaData([id] as `0x${string}`[]);
+  } = useGetMetaData([idDao] as `0x${string}`[]);
 
   const {
     data: statusProposal,
     isError: isErrorStatusProposal,
     isLoading: isLoadingStatusProposal,
-    refetch,
-  } = useGetStatusProposal(id, infoToken[0]?.listProposal || []);
+    refetch: refetchStatusProposal,
+  } = useGetStatusProposal(
+    idDao as `0x${string}`,
+    infoToken[0]?.listProposal || []
+  );
+
+  const {
+    data: isOwner,
+    isError: isOwnerError,
+    isLoading: isOwnerLoading,
+  } = useReadContract({
+    address: idDao as `0x${string}`,
+    abi: MultisigDAO__factory.abi,
+    functionName: "s_isOwner",
+    args: [address as `0x${string}`],
+    query: {
+      enabled: !!idDao && !!address,
+    },
+  });
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
@@ -56,10 +76,27 @@ const DAODetail = () => {
   }, [statusProposal]);
 
   useEffect(() => {
-    if (isErrorContractAddress || isErrorMetaDataDao || isErrorStatusProposal) {
+    if (
+      isErrorContractAddress ||
+      isErrorMetaDataDao ||
+      isErrorStatusProposal ||
+      isOwnerError
+    ) {
       toast("Something went wrong");
     }
-  }, [isErrorContractAddress, isErrorMetaDataDao, isErrorStatusProposal]);
+  }, [
+    isErrorContractAddress,
+    isErrorMetaDataDao,
+    isErrorStatusProposal,
+    isOwnerError,
+  ]);
+
+  useWatchEventDAO({
+    id: idDao as `0x${string}`,
+    isOwner: !!isOwner,
+    refetchStatusProposal: refetchStatusProposal,
+    refetchProposalCreated: refetchInfoToken,
+  });
 
   return (
     <BoxContent extendClassName="py-6 bg-[#0C0D0E]">
@@ -84,8 +121,8 @@ const DAODetail = () => {
           Create a proposal
         </div>
         <Link
-          to={`/dao/proposal/create/${id}`}
-          className="bg-gradient-to-r from-[#27272A] to-[#18181B] hover:from-[#3F3F46] hover:to-[#27272A] shadow-lg shadow-zinc-900/40 hover:shadow-zinc-800/50 transition-all duration-200 text-[14px] text-white font-semibold flex items-center gap-2.5 px-6 py-3 rounded-lg border border-zinc-800/50"
+          to={`/dao/proposal/create/${idDao}`}
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-900/30 hover:shadow-blue-800/40 transition-all duration-200 text-[14px] text-white font-semibold flex items-center gap-2.5 px-6 py-3 rounded-lg border border-blue-500/30"
         >
           <Plus className="w-5 h-5 animate-pulse" />
           <span>New proposal</span>
@@ -120,7 +157,6 @@ const DAODetail = () => {
             listProposal.map((item, index) => (
               <ProposalItem
                 key={index}
-                refetch={refetch}
                 idProposal={index}
                 status={item.status}
                 description={item.description}
@@ -135,7 +171,10 @@ const DAODetail = () => {
 
       <Loading
         isLoading={
-          isLoadingInfo || isLoadingMetaDataDao || isLoadingStatusProposal
+          isLoadingInfo ||
+          isLoadingMetaDataDao ||
+          isLoadingStatusProposal ||
+          isOwnerLoading
         }
       />
     </BoxContent>

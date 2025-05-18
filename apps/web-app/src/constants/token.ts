@@ -15,7 +15,7 @@ export enum ProposalStatus {
   Rejected = 3,
 }
 
-export const initialDAOCreate: CreateDAOContractSchemaType = {
+export const initialDAOCreate: Omit<CreateDAOContractSchemaType, 'descriptionProposal'> = {
   nameDAO: "",
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   avatarFile: undefined as any,

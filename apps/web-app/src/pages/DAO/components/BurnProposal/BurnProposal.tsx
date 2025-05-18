@@ -16,13 +16,14 @@ import ConnectButtonCustom from "@/components/ConnectButtonCustom/ConnectButtonC
 import InputNumber from "@/components/InputNumber";
 import { Textarea } from "@/components/ui/textarea";
 import { MultisigDAO__factory } from "@repo/contracts";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { pinata } from "@/utils/http";
 import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
 import BoxContent from "@/components/BoxContent";
 import { Flame } from "lucide-react";
 import * as z from "zod";
 import { pinataIdGroup } from "@/config/config";
+import path from "@/constants/path";
 
 const burnProposalSchema = z.object({
   amount: z
@@ -39,6 +40,8 @@ type BurnProposalType = z.infer<typeof burnProposalSchema>;
 
 const BurnProposal = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
   const form = useForm<BurnProposalType>({
     resolver: zodResolver(burnProposalSchema),
     defaultValues: {
@@ -54,7 +57,7 @@ const BurnProposal = () => {
     setStepModal,
     setErrorWrite,
     isConnected,
-  } = useContractWrite();
+  } = useContractWrite("Burn Token", path.DAODetail);
 
   async function onSubmit(values: BurnProposalType) {
     try {
@@ -154,6 +157,7 @@ const BurnProposal = () => {
         setOpen={setStepModal}
         contentStep={errorWrite}
         statusStep={stepModal}
+        handleClose={() => navigate(path.DAODashboard)}
       />
     </BoxContent>
   );

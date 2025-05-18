@@ -19,10 +19,12 @@ import { useContractWrite } from "@/hooks/useContracts";
 import ConnectButtonCustom from "@/components/ConnectButtonCustom/ConnectButtonCustom";
 import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
 import { pinata } from "@/utils/http";
-import { DECIMALS, initialDAOCreate } from "@/constants/token";
+import { DECIMALS } from "@/constants/token";
 import { ethers } from "ethers";
 import { DAOFactory__factory } from "@repo/contracts";
 import { contractAddress, pinataIdGroup } from "@/config/config";
+import path from "@/constants/path";
+import { useNavigate } from "react-router-dom";
 
 export type DAOTokenInfoSchemaType = Pick<
   CreateDAOContractSchemaType,
@@ -35,7 +37,10 @@ const DAOTokenInfoSchema = createDAOContractSchema.pick({
 });
 const DAOTokenInfo: FC<{
   dataSubmit: CreateDAOContractSchemaType;
-  handleUpdateStep: (step: number, data: DAOTokenInfoSchemaType | undefined) => void;
+  handleUpdateStep: (
+    step: number,
+    data: DAOTokenInfoSchemaType | undefined
+  ) => void;
 }> = ({ dataSubmit, handleUpdateStep }) => {
   const form = useForm<DAOTokenInfoSchemaType>({
     resolver: zodResolver(DAOTokenInfoSchema),
@@ -53,7 +58,9 @@ const DAOTokenInfo: FC<{
     setStepModal,
     setErrorWrite,
     isConnected,
-  } = useContractWrite();
+  } = useContractWrite("Create DAO", path.DAODashboard);
+
+  const navigate = useNavigate();
 
   async function onSubmit(values: DAOTokenInfoSchemaType) {
     const dataSend = { ...dataSubmit, ...values };
@@ -64,8 +71,7 @@ const DAOTokenInfo: FC<{
       const upload = await pinata.upload.public
         .file(dataSend.avatarFile)
         .group(pinataIdGroup.DAOImageIdGroup);
-        console.log("upload", upload);
-        
+
       const gatewayUrlImg = await pinata.gateways.public.convert(upload.cid);
       console.log("gatewayUrlImg", gatewayUrlImg);
       const uploadDataJson = await pinata.upload.public
@@ -221,8 +227,11 @@ const DAOTokenInfo: FC<{
         setOpen={setStepModal}
         contentStep={errorWrite}
         statusStep={stepModal}
-      
-      handleClose={() => handleUpdateStep(1, initialDAOCreate)}
+        handleClose={() => {
+          if (!errorWrite) {
+            navigate(path.DAODashboard);
+          }
+        }}
       />
     </div>
   );

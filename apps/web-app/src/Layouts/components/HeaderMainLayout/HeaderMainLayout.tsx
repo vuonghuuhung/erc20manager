@@ -5,7 +5,7 @@ import DynamicBreadcrumb from "@/components/DynamicBreadcrumb/DynamicBreadcrumb"
 import ConnectButtonCustom from "@/components/ConnectButtonCustom/ConnectButtonCustom";
 const HeaderMainLayout = () => {
   return (
-    <div className="h-[60px] md:h-[80px] bg-[#fffffff2] px-5 shadow-headerMain backdrop-blur-[3px] flex items-center justify-between">
+    <div className="h-[60px] md:h-[80px] border-b mb-8 text-white px-5 shadow-headerMain backdrop-blur-[3px] flex items-center justify-between">
       <div>
         <DynamicBreadcrumb />
       </div>

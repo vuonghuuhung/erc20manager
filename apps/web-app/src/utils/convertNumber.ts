@@ -4,5 +4,7 @@ export const handleConvertToToken = (
   value: BigNumberish,
   decimals: number = 18
 ) => {
-  return ethers.formatUnits(value, decimals);
+  const formattedValue = ethers.formatUnits(value, decimals);
+  const number = parseFloat(formattedValue);
+  return number % 1 === 0 ? number.toString() : number.toFixed(3);
 };

@@ -4,13 +4,13 @@ import Loading from "@/components/Loading/Loading";
 import BoxContent from "@/components/BoxContent";
 import useTokenDetails from "@/hooks/useTokenDetails";
 import OverviewToken from "./components/InfoToken/OverviewToken/OverviewToken";
-import MarketToken from "./components/InfoToken/MarketToken/MarketToken";
 import OtherInfoToken from "./components/InfoToken/OtherInfoToken/OtherInfoToken";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import InteractContract from "./components/InteractContract/InteractContract";
 import { useEffect } from "react";
 import useTokenDetailStore from "@/store/tokenDetailState";
 import Transfers from "./components/Transfers/Transfers";
+import Holder from "./components/Holder/Holder";
 
 const DetailToken = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,23 +36,24 @@ const DetailToken = () => {
     <div>
       {!isErrorContractAddress ? (
         <div>
-          <div className="flex items-center pb-5 border-b border-b-[#dadbdd]">
-            <CoinsIcon className="w-10 h-10 text-white" />
-            <h2 className="ml-3 mr-1 text-[20px] font-semibold text-white">
-              {infoToken ? infoToken[0]?.name : ""}
-            </h2>
-            <h3 className="text-[20px] text-[#6c757d] font-semibold">
-              {infoToken ? `(${infoToken[0]?.symbol})` : ""}
-            </h3>
+          <div className="flex items-center gap-4 pb-6 border-b border-b-[#dadbdd]/20">
+            <div className="p-3 bg-[#1e1e1e] rounded-lg">
+              <CoinsIcon className="w-8 h-8 text-white" />
+            </div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-white">
+                {infoToken ? infoToken[0]?.name : ""}
+              </h2>
+              <span className="text-xl text-[#6c757d] font-medium">
+                {infoToken ? `(${infoToken[0]?.symbol})` : ""}
+              </span>
+            </div>
           </div>
-          <div className="grid md:grid-cols-2 grid-cols-1 lg:grid-cols-3 gap-4 mt-5">
-            <BoxContent extendClassName="col-span-3 lg:col-span-1 rounded-[6px] p-4">
+          <div className="grid md:grid-cols-2 grid-cols-1 lg:grid-cols-2 gap-4 mt-5">
+            <BoxContent extendClassName="col-span-2 lg:col-span-1 rounded-[6px] p-4">
               <OverviewToken totalSupply={infoToken[0]?.totalSupply} />
             </BoxContent>
-            <BoxContent extendClassName="col-span-3 lg:col-span-1 rounded-[6px] p-4">
-              <MarketToken />
-            </BoxContent>
-            <BoxContent extendClassName="col-span-3 lg:col-span-1 rounded-[6px] p-4">
+            <BoxContent extendClassName="col-span-2 lg:col-span-1 rounded-[6px] p-4">
               <OtherInfoToken
                 tokenAddress={id}
                 decimals={infoToken[0]?.decimals}
@@ -62,12 +63,31 @@ const DetailToken = () => {
           <div className="mt-4">
             <Tabs defaultValue="Transfers" className="mt-0">
               <TabsList className="gap-2 mb-1 bg-transparent">
-                <TabsTrigger value="Transfers">Transfers</TabsTrigger>
-                <TabsTrigger value="Contract">Contract</TabsTrigger>
+                <TabsTrigger
+                  value="Transfers"
+                  className="text-white border border-white"
+                >
+                  Transfers
+                </TabsTrigger>
+                <TabsTrigger
+                  value="Holder"
+                  className="text-white border border-white"
+                >
+                  Holder
+                </TabsTrigger>
+                <TabsTrigger
+                  value="Contract"
+                  className="text-white border border-white"
+                >
+                  Contract
+                </TabsTrigger>
               </TabsList>
-              <BoxContent extendClassName="min-h-[200px] p-4">
+              <BoxContent extendClassName="min-h-[200px] p-4 mt-2">
                 <TabsContent value="Transfers">
                   <Transfers />
+                </TabsContent>
+                <TabsContent value="Holder">
+                  <Holder />
                 </TabsContent>
                 <TabsContent value="Contract">
                   <InteractContract tokenDetails={infoToken[0]} />

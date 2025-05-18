@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import ConnectButtonCustom from "@/components/ConnectButtonCustom/ConnectButtonCustom";
 import { Textarea } from "@/components/ui/textarea";
 import { MultisigDAO__factory } from "@repo/contracts";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { pinata } from "@/utils/http";
 import ModalStep, { MODAL_STEP } from "@/components/ModalStep/ModalStep";
 import BoxContent from "@/components/BoxContent";
@@ -28,6 +28,7 @@ import {
   CreateDAOContractSchemaType,
 } from "@/utils/Rules";
 import { pinataIdGroup } from "@/config/config";
+import path from "@/constants/path";
 
 export type CreateDAOInfoSchemaType = Pick<
   CreateDAOContractSchemaType,
@@ -44,6 +45,7 @@ const createDAOInfoSchema = createDAOContractSchema.pick({
 
 const UpdateMetadataDAO = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [file, setFile] = useState<File>();
 
   const form = useForm<CreateDAOInfoSchemaType>({
@@ -76,7 +78,7 @@ const UpdateMetadataDAO = () => {
     setStepModal,
     setErrorWrite,
     isConnected,
-  } = useContractWrite();
+  } = useContractWrite("Update Metadata DAO", path.DAODetail);
 
   async function onSubmit(values: CreateDAOInfoSchemaType) {
     try {
@@ -101,10 +103,11 @@ const UpdateMetadataDAO = () => {
         })
         .group(pinataIdGroup.ProposalDesIdGroup);
 
-      const encodedDataProposalDescription = ethers.AbiCoder.defaultAbiCoder().encode(
-        ["string"],
-        [uploadProposalDescriptionJson.cid]
-      );
+      const encodedDataProposalDescription =
+        ethers.AbiCoder.defaultAbiCoder().encode(
+          ["string"],
+          [uploadProposalDescriptionJson.cid]
+        );
 
       const encodedData = ethers.AbiCoder.defaultAbiCoder().encode(
         ["string"],
@@ -267,6 +270,7 @@ const UpdateMetadataDAO = () => {
         setOpen={setStepModal}
         contentStep={errorWrite}
         statusStep={stepModal}
+        handleClose={() => navigate(path.DAODashboard)}
       />
     </BoxContent>
   );

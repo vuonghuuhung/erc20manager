@@ -1,4 +1,4 @@
-const IconRejected = () => {
+const IconPassed = () => {
   return (
     <svg
       className="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium !h-5 !w-5 shrink-0 text-icon-interactive-valid css-vubbuv"
@@ -13,4 +13,4 @@ const IconRejected = () => {
   );
 };
 
-export default IconRejected;
+export default IconPassed;

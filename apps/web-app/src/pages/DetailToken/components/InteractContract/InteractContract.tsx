@@ -6,13 +6,11 @@ import { TokenDetails } from "@/hooks/useTokenDetails";
 const InteractContract = ({ tokenDetails }: { tokenDetails: TokenDetails }) => {
   return (
     <div>
-      <Tabs defaultValue="Code" className="bg-transparent">
+      <Tabs defaultValue="readContract" className="bg-transparent">
         <TabsList className="gap-2 mb-1 bg-transparent">
-          <TabsTrigger value="Code">Code</TabsTrigger>
-          <TabsTrigger value="readContract">Read Contract</TabsTrigger>
-          <TabsTrigger value="writeContract">Write Contract</TabsTrigger>
+          <TabsTrigger value="readContract" className="border-[#e9ecef] border data-[state=active]:border-[#161b26]">Read Contract</TabsTrigger>
+          <TabsTrigger value="writeContract" className="border-[#e9ecef] border data-[state=active]:border-[#161b26]">Write Contract</TabsTrigger>
         </TabsList>
-        <TabsContent value="Code">Code</TabsContent>
         <TabsContent value="readContract">
           <ReadContract
             name={tokenDetails?.name}
