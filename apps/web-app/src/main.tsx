@@ -15,7 +15,7 @@ import App from "./App";
 import "./index.css";
 import { defineChain } from "viem";
 
-import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client";
 
 const holesky = defineChain({
@@ -52,7 +52,7 @@ const holesky = defineChain({
 });
 
 export const config = getDefaultConfig({
-  appName: "My RainbowKit App",
+  appName: "My Token App",
   projectId: "YOUR_PROJECT_ID",
   chains: [mainnet, sepolia, hardhat, holesky],
   ssr: false,
@@ -68,24 +68,9 @@ const queryClient = new QueryClient({
 });
 
 const client = new ApolloClient({
-  uri: "https://flyby-router-demo.herokuapp.com/", // Địa chỉ API GraphQL
+  uri: "http://34.10.143.238/", // Địa chỉ API GraphQL
   cache: new InMemoryCache(), // Quản lý cache
 });
-
-client
-  .query({
-    query: gql`
-      query GetLocations {
-        locations {
-          id
-          name
-          description
-          photo
-        }
-      }
-    `,
-  })
-  .then((result) => console.log(result));
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

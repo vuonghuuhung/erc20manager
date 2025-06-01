@@ -1,12 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useParams } from "react-router-dom";
 import BoxContent from "@/components/BoxContent";
 import TxOverview from "./TxOverview/TxOverview";
 import TxLogs from "./TxLogs/TxLogs";
 
 const TxDetail = () => {
-  const { txHash } = useParams();
-
   return (
     <div className="max-w-7xl mx-auto">
       <BoxContent extendClassName="p-6">
@@ -21,12 +18,12 @@ const TxDetail = () => {
             >
               Overview
             </TabsTrigger>
-            <TabsTrigger
+            {/* <TabsTrigger
               value="logs"
               className="flex-1 !shadow-none data-[state=active]:text-[#223354] data-[state=active]:border-t-[#223354] data-[state=active]:border-t rounded-none text-[#6B7280]"
             >
               Logs
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
           <TabsContent value="overview">
             <div className="p-4">

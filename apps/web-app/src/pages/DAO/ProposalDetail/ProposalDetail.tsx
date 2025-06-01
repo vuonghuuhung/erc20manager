@@ -49,8 +49,8 @@ const ProposalDetail = () => {
   } = useReadContract({
     address: idDao as `0x${string}`,
     abi: MultisigDAO__factory.abi,
-    functionName: "s_isOwner",
-    args: [address as `0x${string}`],
+    functionName: "getOwners",
+    args: [],
     query: {
       enabled: !!idDao && !!idProposal && !!address,
     },
@@ -75,7 +75,6 @@ const ProposalDetail = () => {
 
   console.log("data", data);
   console.log("isOwner", isOwner);
-  console.log("metaData", metaData);
 
   const [messageSuccess, setMessageSuccess] = useState<string>("");
 
@@ -133,7 +132,7 @@ const ProposalDetail = () => {
     }
   }, [isWriteSuccess, setErrorWrite]);
 
-  const totalVotes = data ? Number(data[1]) + Number(data[4]) : 0;
+  const totalVotes = isOwner ? isOwner.length : 0;
   const approvalPercentage =
     totalVotes > 0 && data ? (Number(data[1]) / totalVotes) * 100 : 0;
 
@@ -169,7 +168,7 @@ const ProposalDetail = () => {
 
   useWatchEventDAO({
     id: idDao as `0x${string}`,
-    isOwner: !!isOwner,
+    isOwner: !!isOwner?.includes(address as `0x${string}`),
     refetchStatusProposal: refetch,
   });
 
@@ -277,7 +276,7 @@ const ProposalDetail = () => {
             </div>
           </div>
 
-          {data && data[3] === ProposalStatus.OnVoting && isConnected && (
+          {data && data[3] === ProposalStatus.OnVoting && isConnected && (!data[2] || !data[5]) && (
             <div className="flex gap-4 justify-center">
               <Button
                 onClick={handleApprove}
