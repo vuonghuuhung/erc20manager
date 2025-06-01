@@ -1,15 +1,17 @@
-// import hre from "hardhat";
-// import { ERC20Factory__factory } from "../typechain-types";
+import hre from "hardhat";
+import { MultisigDAO__factory } from "../typechain-types";
 
-// const main = async () => {
-//   const [account] = await hre.ethers.getSigners()
-//   const erc20Factory = ERC20Factory__factory.connect('0x5fbdb2315678afecb367f032d93f642f64180aa3', account);
+const main = async () => {
+  const [account] = await hre.ethers.getSigners()
 
-//   const res = await erc20Factory.mintERC20("Test", "TEST", 10000000);
-//   console.log(res);
-// };
+  console.log(account.address);
+  const dao = MultisigDAO__factory.connect('0x4278C38439831A9217E96E88b7A4685c3054d18e', account);
 
-// main().catch((error) => {
-//   console.log(error);
-// });
+  const res = await dao.getProposalDetails(0);
+  console.log(res);
+};
+
+main().catch((error) => {
+  console.log(error);
+});
 

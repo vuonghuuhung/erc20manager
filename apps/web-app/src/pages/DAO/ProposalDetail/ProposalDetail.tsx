@@ -39,6 +39,7 @@ const ProposalDetail = () => {
     query: {
       enabled: !!idDao && !!idProposal,
     },
+    account: address as `0x${string}`,
   });
 
   const {

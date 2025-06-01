@@ -390,10 +390,10 @@ describe("MultisigDAO Proposal Status", function () {
             );
 
             // First get enough approvals to pass
-            await multisigDAO.connect(owner).approveProposal(0n);
+            // await multisigDAO.connect(owner).approveProposal(0n);
             await multisigDAO.connect(otherAccount1).approveProposal(0n);
 
-            // Then get majority to reject
+            // Then get majority to reject, owner cannot reject because he approved
             await multisigDAO.connect(owner).rejectProposal(0n);
             await multisigDAO.connect(otherAccount2).rejectProposal(0n);
 
@@ -738,16 +738,216 @@ describe("MultisigDAO Proposal Status", function () {
             expect(status).to.equal(ProposalStatus.Passed);
 
             // Now reject to override the Passed status
-            await multisigDAO.connect(owner).rejectProposal(0n);
+            // await multisigDAO.connect(owner).rejectProposal(0n);
             await multisigDAO.connect(otherAccount2).rejectProposal(0n);
 
             status = await multisigDAO.getProposalStatus(0n);
-            expect(status).to.equal(ProposalStatus.Rejected);
+            expect(status).to.equal(ProposalStatus.Passed);
+        });
+    });
 
-            // Try to execute the now-rejected proposal (should fail)
+    describe("Mutual Exclusivity between Approval and Rejection", function () {
+        it("Should prevent rejecting a proposal after approving it", async function () {
+            const { multisigDAO, owner, recipient } = await loadFixture(deployDAOFixture);
+            const amount = hre.ethers.parseUnits("100", 18);
+
+            // Submit a proposal
+            await multisigDAO.connect(owner).submitProposal(
+                recipient.address,
+                amount,
+                Action.Distribute,
+                "0x",
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://mutual-exclusivity-test-1"))
+            );
+
+            // Owner approves the proposal
+            await multisigDAO.connect(owner).approveProposal(0n);
+
+            // Verify approval was recorded
+            const details = await multisigDAO.connect(owner).getProposalDetails(0n);
+            expect(details.isApprovedByCurrentSender).to.be.true;
+            expect(details.approvalCount).to.equal(1n);
+
+            // Owner tries to reject the same proposal - should revert
+            await expect(
+                multisigDAO.connect(owner).rejectProposal(0n)
+            ).to.be.revertedWith("MultisigDAO: You have already approved this proposal");
+
+            // Verify the rejection didn't go through
+            const updatedDetails = await multisigDAO.connect(owner).getProposalDetails(0n);
+            expect(updatedDetails.isRejectedByCurrentSender).to.be.false;
+            expect(updatedDetails.rejectionCount).to.equal(0n);
+            expect(updatedDetails.approvalCount).to.equal(1n); // Still approved
+        });
+
+        it("Should prevent approving a proposal after rejecting it", async function () {
+            const { multisigDAO, owner, recipient } = await loadFixture(deployDAOFixture);
+            const amount = hre.ethers.parseUnits("100", 18);
+
+            // Submit a proposal
+            await multisigDAO.connect(owner).submitProposal(
+                recipient.address,
+                amount,
+                Action.Distribute,
+                "0x",
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://mutual-exclusivity-test-2"))
+            );
+
+            // Owner rejects the proposal
+            await multisigDAO.connect(owner).rejectProposal(0n);
+
+            // Verify rejection was recorded
+            const details = await multisigDAO.connect(owner).getProposalDetails(0n);
+            expect(details.isRejectedByCurrentSender).to.be.true;
+            expect(details.rejectionCount).to.equal(1n);
+
+            // Owner tries to approve the same proposal - should revert
+            await expect(
+                multisigDAO.connect(owner).approveProposal(0n)
+            ).to.be.revertedWith("MultisigDAO: You have already rejected this proposal");
+
+            // Verify the approval didn't go through
+            const updatedDetails = await multisigDAO.connect(owner).getProposalDetails(0n);
+            expect(updatedDetails.isApprovedByCurrentSender).to.be.false;
+            expect(updatedDetails.approvalCount).to.equal(0n);
+            expect(updatedDetails.rejectionCount).to.equal(1n); // Still rejected
+        });
+
+        it("Should allow different members to approve and reject the same proposal", async function () {
+            const { multisigDAO, owner, otherAccount1, otherAccount2, recipient } = await loadFixture(deployDAOFixture);
+            const amount = hre.ethers.parseUnits("100", 18);
+
+            // Submit a proposal
+            await multisigDAO.connect(owner).submitProposal(
+                recipient.address,
+                amount,
+                Action.Distribute,
+                "0x",
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://mutual-exclusivity-test-3"))
+            );
+
+            // Owner approves
+            await multisigDAO.connect(owner).approveProposal(0n);
+
+            // OtherAccount1 rejects (different member, should be allowed)
+            await expect(
+                multisigDAO.connect(otherAccount1).rejectProposal(0n)
+            ).to.not.be.reverted;
+
+            // OtherAccount2 approves (different member, should be allowed)
+            await expect(
+                multisigDAO.connect(otherAccount2).approveProposal(0n)
+            ).to.not.be.reverted;
+
+            // Verify final state
+            const ownerDetails = await multisigDAO.connect(owner).getProposalDetails(0n);
+            const account1Details = await multisigDAO.connect(otherAccount1).getProposalDetails(0n);
+            const account2Details = await multisigDAO.connect(otherAccount2).getProposalDetails(0n);
+
+            expect(ownerDetails.isApprovedByCurrentSender).to.be.true;
+            expect(ownerDetails.isRejectedByCurrentSender).to.be.false;
+
+            expect(account1Details.isApprovedByCurrentSender).to.be.false;
+            expect(account1Details.isRejectedByCurrentSender).to.be.true;
+
+            expect(account2Details.isApprovedByCurrentSender).to.be.true;
+            expect(account2Details.isRejectedByCurrentSender).to.be.false;
+
+            expect(ownerDetails.approvalCount).to.equal(2n); // Owner + otherAccount2
+            expect(ownerDetails.rejectionCount).to.equal(1n); // otherAccount1
+        });
+
+        it("Should handle mutual exclusivity in complex voting scenarios", async function () {
+            const { multisigDAO, owner, otherAccount1, otherAccount2, recipient } = await loadFixture(deployDAOFixture);
+            const amount = hre.ethers.parseUnits("100", 18);
+
+            // Submit a proposal
+            await multisigDAO.connect(owner).submitProposal(
+                recipient.address,
+                amount,
+                Action.Distribute,
+                "0x",
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://complex-voting-test"))
+            );
+
+            // Initial state - OnVoting
+            let status = await multisigDAO.getProposalStatus(0n);
+            expect(status).to.equal(ProposalStatus.OnVoting);
+
+            // Owner approves
+            await multisigDAO.connect(owner).approveProposal(0n);
+
+            // OtherAccount1 also approves (proposal should now be Passed)
+            await multisigDAO.connect(otherAccount1).approveProposal(0n);
+
+            status = await multisigDAO.getProposalStatus(0n);
+            expect(status).to.equal(ProposalStatus.Passed);
+
+            // OtherAccount2 tries to reject but the proposal can still be executed
+            await expect(
+                multisigDAO.connect(otherAccount2).rejectProposal(0n)
+            ).to.not.be.reverted;
+
+            // Proposal should still be Passed (2 approvals >= required, only 1 rejection)
+            status = await multisigDAO.getProposalStatus(0n);
+            expect(status).to.equal(ProposalStatus.Passed);
+
+            // Owner tries to reject their own approved proposal - should fail
+            await expect(
+                multisigDAO.connect(owner).rejectProposal(0n)
+            ).to.be.revertedWith("MultisigDAO: You have already approved this proposal");
+
+            // OtherAccount2 tries to approve after rejecting - should fail
+            await expect(
+                multisigDAO.connect(otherAccount2).approveProposal(0n)
+            ).to.be.revertedWith("MultisigDAO: You have already rejected this proposal");
+
+            // Proposal can still be executed despite the rejection
             await expect(
                 multisigDAO.connect(owner).executeProposal(0n)
-            ).to.be.revertedWith("MultisigDAO: Proposal has been rejected");
+            ).to.not.be.reverted;
+
+            status = await multisigDAO.getProposalStatus(0n);
+            expect(status).to.equal(ProposalStatus.Executed);
+        });
+
+        it("Should prevent double approval and double rejection", async function () {
+            const { multisigDAO, owner, recipient } = await loadFixture(deployDAOFixture);
+            const amount = hre.ethers.parseUnits("100", 18);
+
+            // Submit a proposal
+            await multisigDAO.connect(owner).submitProposal(
+                recipient.address,
+                amount,
+                Action.Distribute,
+                "0x",
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://double-action-test"))
+            );
+
+            // Owner approves
+            await multisigDAO.connect(owner).approveProposal(0n);
+
+            // Owner tries to approve again - should fail
+            await expect(
+                multisigDAO.connect(owner).approveProposal(0n)
+            ).to.be.revertedWithCustomError(multisigDAO as any, "MultisigDAO_AlreadyApproved");
+
+            // Create another proposal for rejection test
+            await multisigDAO.connect(owner).submitProposal(
+                recipient.address,
+                amount,
+                Action.Distribute,
+                "0x",
+                hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://double-rejection-test"))
+            );
+
+            // Owner rejects
+            await multisigDAO.connect(owner).rejectProposal(1n);
+
+            // Owner tries to reject again - should fail
+            await expect(
+                multisigDAO.connect(owner).rejectProposal(1n)
+            ).to.be.revertedWith("MultisigDAO: Already rejected this proposal");
         });
     });
 });
@@ -788,4 +988,36 @@ describe("MultisigDAO with bytes metadata", function () {
         expect(updatedMetadata).to.equal(newMetadataBytes);
         expect(updatedMetadata).to.not.equal(daoMetadataBytes);
     });
-}); 
+});
+
+// Debug
+describe("Debug", function () {
+    it("Debug", async function () {
+        const { multisigDAO, daoMetadataBytes, owner } = await loadFixture(deployDAOFixture);
+
+        // Check that the metadata was stored correctly
+        const storedMetadata = await (multisigDAO as any).getMetadata();
+        expect(storedMetadata).to.equal(daoMetadataBytes);
+
+        // Create a proposal burn
+        await multisigDAO.connect(owner).submitProposal(
+            hre.ethers.ZeroAddress,
+            1n,
+            Action.Burn,
+            "0x",
+            hre.ethers.hexlify(hre.ethers.toUtf8Bytes("ipfs://proposal-metadata"))
+        );
+
+        // Approve
+        await multisigDAO.connect(owner).approveProposal(0n);
+
+        // Get Details 
+        const details = await multisigDAO.getProposalDetails(0n);
+        console.log("details", details);
+
+        // Get Status
+        const status = await multisigDAO.getProposalStatus(0n);
+        console.log("status", status);
+    });
+});
+

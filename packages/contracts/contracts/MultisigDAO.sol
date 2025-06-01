@@ -105,6 +105,22 @@ contract MultisigDAO {
         _;
     }
 
+    modifier notRejectedByUser(uint256 _proposalId) {
+        require(
+            !s_isRejected[_proposalId][msg.sender],
+            "MultisigDAO: You have already rejected this proposal"
+        );
+        _;
+    }
+
+    modifier notApprovedByUser(uint256 _proposalId) {
+        require(
+            !s_isApproved[_proposalId][msg.sender],
+            "MultisigDAO: You have already approved this proposal"
+        );
+        _;
+    }
+
     constructor(
         address[] memory _owners,
         uint256 _required,
@@ -239,6 +255,7 @@ contract MultisigDAO {
         notApproved(_proposalId)
         notExecuted(_proposalId)
         notRejected(_proposalId)
+        notRejectedByUser(_proposalId)
     {
         // Add check: Ensure the proposal can still potentially pass
         require(
@@ -447,7 +464,13 @@ contract MultisigDAO {
      */
     function rejectProposal(
         uint256 _proposalId
-    ) external onlyOwner proposalExists(_proposalId) notExecuted(_proposalId) {
+    )
+        external
+        onlyOwner
+        proposalExists(_proposalId)
+        notExecuted(_proposalId)
+        notApprovedByUser(_proposalId)
+    {
         require(
             !s_isRejected[_proposalId][msg.sender],
             "MultisigDAO: Already rejected this proposal"
