@@ -146,11 +146,11 @@ const useGetStatusProposal = (
             }
           );
           setDataReturn(merged as MetaDataProposalType[]);
+          setIsGetMetaData(false);
         }
       } catch (err) {
         console.error("co loi day", { err });
         setIsErrorContractAddress(true);
-      } finally {
         setIsGetMetaData(false);
       }
     };

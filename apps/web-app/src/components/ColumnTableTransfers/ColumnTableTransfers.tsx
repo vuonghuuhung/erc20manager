@@ -15,30 +15,26 @@ const formatTxHash = (address: string) => {
 };
 
 export type Transfer = {
-  txHash: string;
+  hash: string;
   method: string;
   block: number;
-  age: Date;
+  timestamp: Date;
   from: string;
   to: string;
-  amount: string;
 };
 
 export const columnsTransfers = (tokenId: string): ColumnDef<Transfer>[] => [
   {
-    accessorKey: "txHash",
+    accessorKey: "hash",
     header: () => <div className="">Transaction Hash</div>,
     cell: ({ row }) => {
       return (
         <Link
-          to={`/token/detail/${tokenId}/tx/${row.getValue("txHash")}`}
+          to={`/token/detail/${tokenId}/tx/${row.getValue("hash")}`}
           className="font-medium max-w-[195px] flex items-center text-[#0784c3] hover:text-blue-600 truncate"
         >
-          {formatTxHash(row.getValue("txHash"))}
-          <CopyComponent
-            tokenAddress={row.getValue("txHash")}
-            className="ml-3"
-          />
+          {formatTxHash(row.getValue("hash"))}
+          <CopyComponent tokenAddress={row.getValue("hash")} className="ml-3" />
         </Link>
       );
     },
@@ -70,10 +66,10 @@ export const columnsTransfers = (tokenId: string): ColumnDef<Transfer>[] => [
     ),
   },
   {
-    accessorKey: "age",
+    accessorKey: "timestamp",
     header: "Age",
     cell: ({ row }) => {
-      const date = row.getValue("age") as Date;
+      const date = row.getValue("timestamp") as Date;
       return (
         <div className="min-w-[112px]">
           {formatDistanceToNow(date, { addSuffix: true })}
@@ -85,7 +81,7 @@ export const columnsTransfers = (tokenId: string): ColumnDef<Transfer>[] => [
     accessorKey: "from",
     header: () => <div className=" w-[20%]">From</div>,
     cell: ({ row }) => (
-      <div className="font-medium text-[#0784c3] hover:text-blue-600 truncate">
+      <div className="font-medium text-[#0784c3] hover:text-blue-600 truncate flex items-center">
         {formatAddress(row.getValue("from"))}
         <CopyComponent tokenAddress={row.getValue("txHash")} className="ml-3" />
       </div>
@@ -103,13 +99,5 @@ export const columnsTransfers = (tokenId: string): ColumnDef<Transfer>[] => [
         <CopyComponent tokenAddress={row.getValue("txHash")} />
       </div>
     ),
-  },
-  {
-    accessorKey: "amount",
-    header: "Amount",
-    cell: ({ row }) => {
-      const value = row.getValue("amount") as string;
-      return <div>{value}</div>;
-    },
   },
 ];

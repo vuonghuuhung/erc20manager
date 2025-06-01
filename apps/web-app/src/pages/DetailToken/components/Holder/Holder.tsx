@@ -1,54 +1,51 @@
-import { ColumnTableHolder } from "@/components/ColumnTableHolder/ColumnTableHolder";
+import { ColumnTableHolder, HolderInterface } from "@/components/ColumnTableHolder/ColumnTableHolder";
 import { DataTableTransfers } from "@/components/DataTableTransfers/DataTableTransfers";
+import Loading from "@/components/Loading/Loading";
 import { Button } from "@/components/ui/button";
+import { getTokenHolders } from "@/schema/transactionSchema";
+import { useQuery } from "@apollo/client";
 import { ChevronLeft, ChevronRight, Users } from "lucide-react";
-
-const data = [
-  {
-    rank: 1,
-    chainName: "Binance: Hot Wallet 20",
-    address: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
-    quantity: "1,000,000",
-    percentage: "20.5%",
-    value: "$2,500,000",
-  },
-  {
-    rank: 2,
-    chainName: "Binance: Hot Wallet 20",
-    address: "0x8901DaECbfF9A3e0998BEc9A7Be9730cb4a47BB1",
-    quantity: "750,000",
-    percentage: "15.3%",
-    value: "$1,875,000",
-  },
-  {
-    rank: 3,
-    chainName: "Binance: Hot Wallet 20",
-    address: "0x3F4a286bD32d7c8a53002f51b04F157691174133",
-    quantity: "500,000",
-    percentage: "10.2%",
-    value: "$1,250,000",
-  },
-  {
-    rank: 4,
-    chainName: "Binance: Hot Wallet 20",
-    address: "0x1234567890123456789012345678901234567890",
-    quantity: "250,000",
-    percentage: "5.1%",
-    value: "$625,000",
-  },
-  {
-    rank: 5,
-    chainName: "Binance: Hot Wallet 20",
-    address: "0xabcdef0123456789abcdef0123456789abcdef01",
-    quantity: "100,000",
-    percentage: "2.0%",
-    value: "$250,000",
-  },
-];
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 const Holder = () => {
+  const { id } = useParams<{ id: string }>();
+  const [currentPage, setCurrentPage] = useState(0);
+  const { data, loading, error } = useQuery<{tokenHolders: HolderInterface[]}>(getTokenHolders, {
+    variables: {
+      where: {
+        tokenAddress: {
+          eq: id?.toLocaleLowerCase(),
+        },
+      },
+      orderBy: {
+        balance: {
+          direction: "desc",
+          priority: 0,
+        },
+      },
+      offset: currentPage,
+      limit: 10,
+    },
+  });
+
+  const totalPages = useMemo(
+    () => Math.ceil((data?.tokenHolders?.length || 0) / 10),
+    [data?.tokenHolders?.length]
+  );
+
+  console.log(data);
+
+  useEffect(() => {
+    if (error) {
+      console.log("Error fetching transactions:", { error });
+      toast.error("Something went wrong");
+    }
+  }, [error]);
+
   return (
-    <div className="rounded-xl overflow-hidden">
+    <div className="overflow-hidden">
       <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#E4E7EC]">
         <div className="text-sm text-[#212529]">
           <div className="flex items-center space-x-3">
@@ -68,16 +65,28 @@ const Holder = () => {
                 variant="outline"
                 size="sm"
                 className="border-[#E4E7EC] hover:bg-[#f8f9fa] disabled:bg-[#f8f9fa] py-1 px-2 h-auto"
+                disabled={currentPage === 0}
+                onClick={() => {
+                  if (currentPage > 0) {
+                    setCurrentPage((prev) => prev - 1);
+                  }
+                }}
               >
                 <ChevronLeft />
               </Button>
               <div className="text-[12px] py-1 px-2 bg-[#f8f9fa] text-[#6c757d] rounded-lg border border-[#E4E7EC]">
-                Page {1} of {2}
+                Page {currentPage + 1} of {totalPages || 1}
               </div>
               <Button
                 variant="outline"
                 size="sm"
                 className="border-[#E4E7EC] hover:bg-[#f8f9fa] disabled:bg-[#f8f9fa] py-1 px-2 h-auto"
+                disabled={currentPage + 1 === totalPages}
+                onClick={() => {
+                  if (currentPage < totalPages) {
+                    setCurrentPage((prev) => prev + 1);
+                  }
+                }}
               >
                 <ChevronRight />
               </Button>
@@ -85,7 +94,8 @@ const Holder = () => {
           </div>
         </div>
       </div>
-      <DataTableTransfers columns={ColumnTableHolder} data={data} />
+      <DataTableTransfers columns={ColumnTableHolder} data={data?.tokenHolders || []} />
+      <Loading isLoading={loading} />
     </div>
   );
 };

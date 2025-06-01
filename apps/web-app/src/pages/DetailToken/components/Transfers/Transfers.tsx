@@ -5,63 +5,57 @@ import {
 import { DataTableTransfers } from "@/components/DataTableTransfers/DataTableTransfers";
 import { Button } from "@/components/ui/button";
 import { ArrowDownWideNarrow, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
+import { useQuery } from "@apollo/client";
+import { GetAllTransactions } from "@/schema/transactionSchema";
+import Loading from "@/components/Loading/Loading";
+import { toast } from "sonner";
 
 const Transfers = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [currentPage, setCurrentPage] = useState(0);
   const { id } = useParams<{ id: string }>();
 
-  const data: Transfer[] = [
+  const { data, loading, error } = useQuery<{ transactions: Transfer[] }>(
+    GetAllTransactions,
     {
-      txHash: "0x1234567890abcdef1234567890abcdef12345678",
-      age: new Date(Date.now() - 2 * 60 * 1000),
-      method: "Transfer",
-      block: 12345678,
-      from: "0xabcdef1234567890abcdef1234567890abcdef12",
-      to: "0x9876543210fedcba9876543210fedcba98765432",
-      amount: "1000000",
-    },
-    {
-      txHash: "0x1234567890abcdef1234567890abcdef12345678",
-      age: new Date(Date.now() - 2 * 60 * 1000),
-      method: "Transfer",
-      block: 12345678,
-      from: "0xabcdef1234567890abcdef1234567890abcdef12",
-      to: "0x9876543210fedcba9876543210fedcba98765432",
-      amount: "1000000",
-    },
-    {
-      txHash: "0x1234567890abcdef1234567890abcdef12345678",
-      age: new Date(Date.now() - 2 * 60 * 1000),
-      method: "Transfer",
-      block: 12345678,
-      from: "0xabcdef1234567890abcdef1234567890abcdef12",
-      to: "0x9876543210fedcba9876543210fedcba98765432",
-      amount: "1000000",
-    },
-  ];
+      variables: {
+        where: {
+          erc20Address: {
+            eq: id?.toLocaleLowerCase(),
+          },
+        },
+        offset: currentPage,
+        limit: 10,
+      },
+    }
+  );
+  console.log(data);
 
-  const totalPages = Math.ceil(data.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentData = data.slice(startIndex, endIndex);
+  const totalPages = useMemo(
+    () => Math.ceil((data?.transactions?.length || 0) / 10),
+    [data?.transactions?.length]
+  );
+
+  useEffect(() => {
+    if (error) {
+      console.log("Error fetching transactions:", { error });
+      toast.error("Something went wrong");
+    }
+  }, [error]);
 
   return (
     <div>
-      <div className="rounded-xl overflow-hidden">
+      <div className="overflow-hidden">
         <div className="flex items-center justify-between pb-2 mb-4 border-b border-[#E4E7EC] ">
           <div className="text-sm text-[#212529]">
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2 bg-[#f8f9fa] px-3 py-1.5 rounded-lg">
                 <ArrowDownWideNarrow className="w-4 h-4 text-gray-600" />
-                <span className="font-medium">{data.length} transactions</span>
+                <span className="font-medium">
+                  {data?.transactions?.length || 0} transactions
+                </span>
               </div>
-            </div>
-            <div className="text-xs mt-2">
-              (Showing {startIndex + 1} to {Math.min(endIndex, data.length)}{" "}
-              records)
             </div>
           </div>
           <div>
@@ -70,23 +64,29 @@ const Transfers = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
                   className="border-[#E4E7EC] hover:bg-[#f8f9fa] disabled:bg-[#f8f9fa] py-1 px-2 h-auto"
+                  disabled={currentPage === 0}
+                  onClick={() => {
+                    if (currentPage > 0) {
+                      setCurrentPage((prev) => prev - 1);
+                    }
+                  }}
                 >
                   <ChevronLeft />
                 </Button>
                 <div className="text-[12px] py-1 px-2 bg-[#f8f9fa] text-[#6c757d] rounded-lg border border-[#E4E7EC]">
-                  Page {currentPage} of {totalPages}
+                  Page {currentPage + 1} of {totalPages || 1}
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                  }
                   className="border-[#E4E7EC] hover:bg-[#f8f9fa] disabled:bg-[#f8f9fa] py-1 px-2 h-auto"
+                  disabled={currentPage + 1 === totalPages}
+                  onClick={() => {
+                    if (currentPage < totalPages) {
+                      setCurrentPage((prev) => prev + 1);
+                    }
+                  }}
                 >
                   <ChevronRight />
                 </Button>
@@ -96,9 +96,10 @@ const Transfers = () => {
         </div>
         <DataTableTransfers
           columns={columnsTransfers(id || "")}
-          data={currentData}
+          data={data?.transactions || []}
         />
       </div>
+      <Loading isLoading={loading} />
     </div>
   );
 };

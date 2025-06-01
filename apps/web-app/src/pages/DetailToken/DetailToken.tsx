@@ -67,7 +67,7 @@ const DetailToken = () => {
                   value="Transfers"
                   className="text-white border border-white"
                 >
-                  Transfers
+                  Transactions
                 </TabsTrigger>
                 <TabsTrigger
                   value="Holder"
